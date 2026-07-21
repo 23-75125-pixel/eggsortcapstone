@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+d o<!DOCTYPE html>
 
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
@@ -139,7 +139,7 @@
 </a>
 </li>
 <li>
-<a class="flex items-center gap-4 bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-0 rounded-r-lg py-3 px-3 active:scale-95 duration-150 ease-in-out" href="#">
+<a class="flex items-center gap-4 bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-0 rounded-r-lg py-3 px-3 active:scale-95 duration-150 ease-in-out" href="/sorting-sessions">
 <span class="material-symbols-outlined text-[20px]" data-icon="precision_manufacturing">precision_manufacturing</span>
 <span class="font-button text-button">Sorting Sessions</span>
 </a>
@@ -197,7 +197,7 @@
 </div>
 </div>
 </div>
-" href="/logout">
+                    <a class="flex items-center gap-3 text-surface-variant/70 hover:text-white hover:bg-surface-variant/10 transition-colors py-3 px-3 rounded-lg w-full" href="/logout">
 <span class="material-symbols-outlined text-[20px]" data-icon="logout">logout</span>
 <span class="font-button text-button">Log Out</span>
 </a>
@@ -235,7 +235,7 @@
 <div class="px-6 py-5 border-b border-surface-container">
 <h3 class="font-button text-button text-on-surface">Sorting Session History</h3>
 </div>
-<div class="overflow-x-auto">
+<div class="overflow-x-auto">n the sessi
 <table class="w-full text-left border-collapse">
 <thead>
 <tr class="bg-surface text-secondary font-label-caps text-label-caps border-b border-surface-container-highest">
@@ -250,95 +250,17 @@
 </tr>
 </thead>
 <tbody class="font-body-md text-body-md text-on-background divide-y divide-surface-container-highest">
-<!-- Row 1 -->
-<tr class="hover:bg-surface-container-low/50 transition-colors group">
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="text-primary-container font-button text-button hover:underline cursor-pointer">SES-AA8995</span>
+<!-- Empty State -->
+<tr>
+<td colspan="8" class="py-12 text-center text-tertiary">
+<div class="flex flex-col items-center justify-center opacity-60">
+<span class="material-symbols-outlined text-4xl mb-3 text-outline">history</span>
+<p>No sorting sessions recorded yet.</p>
+</div>
 </td>
-<td class="px-6 py-4 whitespace-nowrap text-secondary">Sorting 5-7/11/2024</td>
-<td class="px-6 py-4 whitespace-nowrap text-secondary">7/11/2024</td>
-<td class="px-6 py-4 whitespace-nowrap text-center">
-<span class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-surface-variant text-on-surface-variant font-label-caps text-[10px] tracking-wide">ENDED</span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">eggsorplus</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button">0</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button text-secondary">0</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button text-error">0</td>
-</tr>
-<!-- Row 2 -->
-<tr class="hover:bg-surface-container-low/50 transition-colors group">
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="text-primary-container font-button text-button hover:underline cursor-pointer">SES-3E3441</span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap text-secondary">Sorting 5-7/11/2024</td>
-<td class="px-6 py-4 whitespace-nowrap text-secondary">7/11/2024</td>
-<td class="px-6 py-4 whitespace-nowrap text-center">
-<span class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-surface-variant text-on-surface-variant font-label-caps text-[10px] tracking-wide">ENDED</span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">eggsorplus</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button">0</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button text-secondary">0</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button text-error">0</td>
-</tr>
-<!-- Row 3 -->
-<tr class="hover:bg-surface-container-low/50 transition-colors group">
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="text-primary-container font-button text-button hover:underline cursor-pointer">SES-4F79ED</span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap text-secondary">Sorting 5-7/11/2024</td>
-<td class="px-6 py-4 whitespace-nowrap text-secondary">7/11/2024</td>
-<td class="px-6 py-4 whitespace-nowrap text-center">
-<span class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-surface-variant text-on-surface-variant font-label-caps text-[10px] tracking-wide">ENDED</span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">eggsorplus</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button">0</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button text-secondary">0</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button text-error">0</td>
-</tr>
-<!-- Row 4 -->
-<tr class="hover:bg-surface-container-low/50 transition-colors group">
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="text-primary-container font-button text-button hover:underline cursor-pointer">SES-6B7C4B</span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap text-secondary">Sorting 5-7/11/2024</td>
-<td class="px-6 py-4 whitespace-nowrap text-secondary">7/11/2024</td>
-<td class="px-6 py-4 whitespace-nowrap text-center">
-<span class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-surface-variant text-on-surface-variant font-label-caps text-[10px] tracking-wide">ENDED</span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">eggsorplus</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button">0</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button text-secondary">0</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button text-error">0</td>
-</tr>
-<!-- Row 5 -->
-<tr class="hover:bg-surface-container-low/50 transition-colors group">
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="text-primary-container font-button text-button hover:underline cursor-pointer">SES-4A2999</span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap text-secondary">Sorting 5-7/11/2024</td>
-<td class="px-6 py-4 whitespace-nowrap text-secondary">7/11/2024</td>
-<td class="px-6 py-4 whitespace-nowrap text-center">
-<span class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-surface-variant text-on-surface-variant font-label-caps text-[10px] tracking-wide">ENDED</span>
-</td>
-<td class="px-6 py-4 whitespace-nowrap">eggsorplus</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button">0</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button text-secondary">0</td>
-<td class="px-6 py-4 whitespace-nowrap text-right font-button text-button text-error">0</td>
 </tr>
 </tbody>
 </table>
-</div>
-<!-- Simple Pagination Footer -->
-<div class="px-6 py-4 border-t border-surface-container bg-surface flex items-center justify-between">
-<p class="font-caption text-caption text-secondary">Showing 1 to 5 of 24 entries</p>
-<div class="flex items-center gap-2">
-<button class="w-8 h-8 flex items-center justify-center rounded border border-surface-variant/50 text-secondary hover:bg-surface-container hover:text-on-surface transition-colors disabled:opacity-50" disabled="">
-<span class="material-symbols-outlined text-[16px]">chevron_left</span>
-</button>
-<button class="w-8 h-8 flex items-center justify-center rounded border border-surface-variant/50 text-secondary hover:bg-surface-container hover:text-on-surface transition-colors">
-<span class="material-symbols-outlined text-[16px]">chevron_right</span>
-</button>
-</div>
 </div>
 </section>
 </div>

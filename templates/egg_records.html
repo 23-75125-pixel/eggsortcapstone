@@ -186,7 +186,7 @@
           <!-- Active Tab -->
           <a
             class="flex items-center gap-3 bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 active:scale-95 duration-150 ease-in-out font-button text-button"
-            href="#"
+            href="/egg-records"
           >
             <span
               class="material-symbols-outlined text-[20px]"
@@ -387,139 +387,25 @@
               </tr>
             </thead>
             <tbody class="text-body-md text-on-surface">
-              <!-- Row 1 -->
-              <tr
-                class="border-b border-surface-variant/20 hover:bg-[#F8F9FA] transition-colors group"
-              >
+              <!-- Empty State -->
+              <tr>
                 <td
-                  class="py-4 px-6 font-mono text-xs text-secondary-fixed-variant"
+                  colspan="6"
+                  class="py-12 text-center text-tertiary"
                 >
-                  egg_1703920120594_0
-                </td>
-                <td class="py-4 px-6">62g</td>
-                <td class="py-4 px-6">
-                  <span
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700"
-                    >Large</span
+                  <div
+                    class="flex flex-col items-center justify-center opacity-60"
                   >
-                </td>
-                <td class="py-4 px-6">
-                  <span
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-200"
-                    >GOOD</span
-                  >
-                </td>
-                <td class="py-4 px-6 text-secondary">7/12/2024 02:45 PM</td>
-                <td class="py-4 px-6 text-blue-600 font-mono text-xs">
-                  SES-47902
-                </td>
-              </tr>
-              <!-- Row 2 -->
-              <tr
-                class="border-b border-surface-variant/20 hover:bg-[#F8F9FA] transition-colors group"
-              >
-                <td
-                  class="py-4 px-6 font-mono text-xs text-secondary-fixed-variant"
-                >
-                  egg_1703920780771_920
-                </td>
-                <td class="py-4 px-6">60g</td>
-                <td class="py-4 px-6">
-                  <span
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700"
-                    >Large</span
-                  >
-                </td>
-                <td class="py-4 px-6">
-                  <span
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-200"
-                    >GOOD</span
-                  >
-                </td>
-                <td class="py-4 px-6 text-secondary">7/12/2024 02:38 PM</td>
-                <td class="py-4 px-6 text-blue-600 font-mono text-xs">
-                  SES-47902
-                </td>
-              </tr>
-              <!-- Row 3 -->
-              <tr
-                class="border-b border-surface-variant/20 hover:bg-[#F8F9FA] transition-colors group"
-              >
-                <td
-                  class="py-4 px-6 font-mono text-xs text-secondary-fixed-variant"
-                >
-                  egg_1703920234111_448
-                </td>
-                <td class="py-4 px-6">64g</td>
-                <td class="py-4 px-6">
-                  <span
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700"
-                    >Large</span
-                  >
-                </td>
-                <td class="py-4 px-6">
-                  <span
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-200"
-                    >GOOD</span
-                  >
-                </td>
-                <td class="py-4 px-6 text-secondary">7/12/2024 02:30 PM</td>
-                <td class="py-4 px-6 text-blue-600 font-mono text-xs">
-                  SES-47902
-                </td>
-              </tr>
-              <!-- Row 4 -->
-              <tr class="hover:bg-[#F8F9FA] transition-colors group">
-                <td
-                  class="py-4 px-6 font-mono text-xs text-secondary-fixed-variant"
-                >
-                  egg_1703920954480_389
-                </td>
-                <td class="py-4 px-6">51g</td>
-                <td class="py-4 px-6">
-                  <span
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-orange-100 text-primary-container"
-                    >Medium</span
-                  >
-                </td>
-                <td class="py-4 px-6">
-                  <span
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-200"
-                    >GOOD</span
-                  >
-                </td>
-                <td class="py-4 px-6 text-secondary">7/12/2024 10:22 AM</td>
-                <td class="py-4 px-6 text-blue-600 font-mono text-xs">
-                  SES-47902
+                    <span
+                      class="material-symbols-outlined text-4xl mb-3 text-outline"
+                      >inventory_2</span
+                    >
+                    <p>No egg records yet. Start a sorting session to generate records.</p>
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
-          <!-- Pagination Footer -->
-          <div
-            class="px-6 py-4 border-t border-surface-variant/30 flex justify-between items-center bg-surface-bright/30"
-          >
-            <span class="text-caption text-secondary"
-              >Presenting 4 of 4 sorted records</span
-            >
-            <div class="flex gap-2 items-center text-caption text-secondary">
-              <button
-                class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-variant/50 transition-colors opacity-50 cursor-not-allowed"
-              >
-                <span class="material-symbols-outlined text-[18px]"
-                  >chevron_left</span
-                >
-              </button>
-              <span>1 / 1</span>
-              <button
-                class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-variant/50 transition-colors opacity-50 cursor-not-allowed"
-              >
-                <span class="material-symbols-outlined text-[18px]"
-                  >chevron_right</span
-                >
-              </button>
-            </div>
-          </div>
         </div>
         <!-- Informational Banner -->
         <div

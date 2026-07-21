@@ -265,14 +265,14 @@
             Operational Dashboard
           </h2>
         </div>
-        <div class="flex items-center gap-4">
+<div class="flex items-center gap-4">
           <div
             class="bg-surface-container-low px-4 py-2 rounded-full flex items-center gap-2 text-primary text-sm font-bold glow-effect"
           >
             <span
               class="w-2 h-2 rounded-full bg-primary-container animate-pulse"
             ></span>
-            Monitoring live farm activity
+            Dashboard ready
           </div>
           <button
             class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors glow-effect"
@@ -304,18 +304,12 @@
             </div>
             <div class="flex items-end justify-between z-10">
               <h3 class="font-headline-lg text-headline-lg text-on-background">
-                4
+                —
               </h3>
               <p
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                Live inventory aggregate
-                <span class="text-primary-container"
-                  >1 hour
-                  <span class="material-symbols-outlined text-xs"
-                    >trending_down</span
-                  ></span
-                >
+                No data yet
               </p>
             </div>
           </div>
@@ -338,13 +332,12 @@
             </div>
             <div class="flex items-end justify-between z-10">
               <h3 class="font-headline-lg text-headline-lg text-on-background">
-                0
+                —
               </h3>
               <p
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                30 Eggs Per Tray standard
-                <span class="text-error font-bold">4 loose units</span>
+                No data yet
               </p>
             </div>
           </div>
@@ -367,15 +360,12 @@
             </div>
             <div class="flex items-end justify-between z-10">
               <h3 class="font-headline-lg text-headline-lg text-on-background">
-                100%
+                —
               </h3>
               <p
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                0 Cracked Detected
-                <a class="text-blue-500 hover:underline" href="#"
-                  >Live calculation</a
-                >
+                No data yet
               </p>
             </div>
           </div>
@@ -403,10 +393,7 @@
               <p
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                All conveyor metrics safe
-                <a class="text-primary hover:underline" href="#"
-                  >View alerts →</a
-                >
+                No active alerts
               </p>
             </div>
           </div>
@@ -435,12 +422,13 @@
                 PHP 0.00
               </h3>
               <p class="font-caption text-caption text-surface-variant/70 mt-1">
-                Calculated from completed invoice ledger
+                No completed sales yet
               </p>
             </div>
           </div>
           <button
             class="bg-primary-container hover:bg-primary transition-colors text-white font-button text-button px-6 py-3 rounded-lg flex items-center gap-2 h-12 whitespace-nowrap z-10 w-full md:w-auto justify-center"
+            onclick="window.location.href='/sales'"
           >
             Open Sales Ledger
             <span class="material-symbols-outlined text-sm">arrow_forward</span>
@@ -448,228 +436,40 @@
         </div>
         <!-- Charts Row -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
-          <!-- Size Distribution (Donut Chart Mockup) -->
+          <!-- Size Distribution (Empty State) -->
           <div
-            class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col"
+            class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col items-center justify-center min-h-[300px]"
           >
-            <div class="mb-6">
+            <div class="text-center">
+              <span class="material-symbols-outlined text-5xl text-secondary-fixed-dim mb-4">donut_large</span>
               <h4
-                class="font-headline-md text-body-lg font-bold text-on-background"
+                class="font-headline-md text-body-lg font-bold text-on-background mb-2"
               >
                 Size Distribution
               </h4>
-              <p class="font-caption text-caption text-secondary mt-1">
-                Proportions of classified items in weight categories
+              <p class="font-caption text-caption text-secondary">
+                No sorting data available yet. Start a sorting session to see size distribution.
               </p>
-            </div>
-            <div
-              class="flex-1 flex items-center justify-center gap-8 md:gap-16"
-            >
-              <!-- Donut Graphic -->
-              <div class="relative w-40 h-40">
-                <!-- SVG Donut -->
-                <svg
-                  class="w-full h-full transform -rotate-90"
-                  viewbox="0 0 100 100"
-                >
-                  <!-- Background Circle -->
-                  <circle
-                    cx="50"
-                    cy="50"
-                    fill="transparent"
-                    r="40"
-                    stroke="#f6faff"
-                    stroke-width="12"
-                  ></circle>
-                  <!-- Segments (Dummy Data) -->
-                  <circle
-                    cx="50"
-                    cy="50"
-                    fill="transparent"
-                    r="40"
-                    stroke="#00C853"
-                    stroke-dasharray="251.2"
-                    stroke-dashoffset="100"
-                    stroke-width="12"
-                  ></circle>
-                  <circle
-                    cx="50"
-                    cy="50"
-                    fill="transparent"
-                    r="40"
-                    stroke="#FF9800"
-                    stroke-dasharray="251.2"
-                    stroke-dashoffset="200"
-                    stroke-width="12"
-                    transform="rotate(210 50 50)"
-                  ></circle>
-                </svg>
-                <!-- Center Text -->
-                <div
-                  class="absolute inset-0 flex flex-col items-center justify-center"
-                >
-                  <span
-                    class="font-label-caps text-label-caps text-secondary uppercase"
-                    >Total</span
-                  >
-                  <span
-                    class="font-headline-md text-headline-md text-on-background"
-                    >4</span
-                  >
-                </div>
-              </div>
-              <!-- Legend -->
-              <div class="flex flex-col gap-3">
-                <div class="flex items-center justify-between gap-6">
-                  <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
-                    <span class="font-caption text-caption text-secondary"
-                      >Small</span
-                    >
-                  </div>
-                  <span
-                    class="font-caption text-caption text-on-background font-bold"
-                    >0%</span
-                  >
-                </div>
-                <div class="flex items-center justify-between gap-6">
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="w-3 h-3 rounded-full bg-primary-container"
-                    ></span>
-                    <span class="font-caption text-caption text-secondary"
-                      >Medium</span
-                    >
-                  </div>
-                  <span
-                    class="font-caption text-caption text-on-background font-bold"
-                    >25%</span
-                  >
-                </div>
-                <div class="flex items-center justify-between gap-6">
-                  <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-green-500"></span>
-                    <span class="font-caption text-caption text-secondary"
-                      >Large</span
-                    >
-                  </div>
-                  <span
-                    class="font-caption text-caption text-on-background font-bold"
-                    >75%</span
-                  >
-                </div>
-                <div class="flex items-center justify-between gap-6">
-                  <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                    <span class="font-caption text-caption text-secondary"
-                      >Extra Large</span
-                    >
-                  </div>
-                  <span
-                    class="font-caption text-caption text-on-background font-bold"
-                    >0%</span
-                  >
-                </div>
-                <div class="flex items-center justify-between gap-6">
-                  <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-purple-500"></span>
-                    <span class="font-caption text-caption text-secondary"
-                      >Jumbo</span
-                    >
-                  </div>
-                  <span
-                    class="font-caption text-caption text-on-background font-bold"
-                    >0%</span
-                  >
-                </div>
-              </div>
             </div>
           </div>
-          <!-- Daily Sorting Trend (Bar Chart Mockup) -->
+          <!-- Daily Sorting Trend (Empty State) -->
           <div
-            class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col"
+            class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col items-center justify-center min-h-[300px]"
           >
-            <div class="flex justify-between items-start mb-6">
-              <div>
-                <h4
-                  class="font-headline-md text-body-lg font-bold text-on-background"
-                >
-                  Daily Sorting Trend
-                </h4>
-                <p class="font-caption text-caption text-secondary mt-1">
-                  Comparison of qualified vs cracked eggs in last cycles
-                </p>
-              </div>
-              <div class="flex items-center gap-4">
-                <div class="flex items-center gap-1">
-                  <span class="w-2 h-2 rounded-full bg-primary-container"></span
-                  ><span class="font-caption text-caption text-secondary"
-                    >Good</span
-                  >
-                </div>
-                <div class="flex items-center gap-1">
-                  <span class="w-2 h-2 rounded-full bg-red-500"></span
-                  ><span class="font-caption text-caption text-secondary"
-                    >Cracked</span
-                  >
-                </div>
-              </div>
-            </div>
-            <!-- Bar Chart Area -->
-            <div
-              class="flex-1 flex items-end justify-center gap-12 pb-6 border-b border-surface-variant relative mt-8"
-            >
-              <!-- Y-Axis Lines -->
-              <div
-                class="absolute inset-0 flex flex-col justify-between pointer-events-none"
+            <div class="text-center">
+              <span class="material-symbols-outlined text-5xl text-secondary-fixed-dim mb-4">bar_chart</span>
+              <h4
+                class="font-headline-md text-body-lg font-bold text-on-background mb-2"
               >
-                <div class="w-full h-px bg-surface-variant/30"></div>
-                <div class="w-full h-px bg-surface-variant/30"></div>
-                <div class="w-full h-px bg-surface-variant/30"></div>
-                <div class="w-full h-px bg-surface-variant/30"></div>
-              </div>
-              <!-- Bar Group 1 -->
-              <div
-                class="flex flex-col items-center gap-2 z-10 h-full justify-end"
-              >
-                <div class="flex items-end gap-1">
-                  <div
-                    class="w-4 bg-primary-container rounded-t-sm"
-                    style="height: 120px"
-                  ></div>
-                  <div
-                    class="w-4 bg-red-500 rounded-t-sm"
-                    style="height: 10px"
-                  ></div>
-                </div>
-                <span class="font-caption text-caption text-secondary"
-                  >Jul 12</span
-                >
-              </div>
-              <!-- Placeholder for empty days to maintain layout -->
-              <div
-                class="flex flex-col items-center gap-2 z-10 h-full justify-end opacity-0 pointer-events-none"
-              >
-                <div class="flex items-end gap-1">
-                  <div class="w-4 bg-primary-container h-10"></div>
-                </div>
-                <span>Jul 13</span>
-              </div>
-            </div>
-            <div class="mt-4 flex justify-between items-center">
-              <p
-                class="font-caption text-caption text-secondary flex items-center gap-1"
-              >
-                <span class="material-symbols-outlined text-sm">schedule</span>
-                Standard interval sorting
-              </p>
-              <p class="font-caption text-caption text-on-background font-bold">
-                Peak Volume: 4 units
+                Daily Sorting Trend
+              </h4>
+              <p class="font-caption text-caption text-secondary">
+                No sorting sessions recorded yet. Data will appear here after the first session.
               </p>
             </div>
           </div>
         </div>
-        <!-- Audit Logs -->
+        <!-- Audit Logs (Empty State) -->
         <div
           class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 mb-8"
         >
@@ -685,77 +485,10 @@
                 machine sorting events
               </p>
             </div>
-            <a
-              class="text-primary hover:text-primary-container font-button text-button flex items-center gap-1"
-              href="#"
-              >Manage audit files
-              <span class="material-symbols-outlined text-sm"
-                >arrow_forward</span
-              ></a
-            >
           </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="border-b border-surface-variant">
-                  <th
-                    class="py-3 px-4 font-label-caps text-label-caps text-secondary uppercase font-bold tracking-wider"
-                  >
-                    Timestamp
-                  </th>
-                  <th
-                    class="py-3 px-4 font-label-caps text-label-caps text-secondary uppercase font-bold tracking-wider"
-                  >
-                    User
-                  </th>
-                  <th
-                    class="py-3 px-4 font-label-caps text-label-caps text-secondary uppercase font-bold tracking-wider"
-                  >
-                    Action
-                  </th>
-                  <th
-                    class="py-3 px-4 font-label-caps text-label-caps text-secondary uppercase font-bold tracking-wider"
-                  >
-                    Node Address
-                  </th>
-                  <th
-                    class="py-3 px-4 font-label-caps text-label-caps text-secondary uppercase font-bold tracking-wider"
-                  >
-                    Telemetry Description
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Empty state or single row to show structure -->
-                <tr
-                  class="border-b border-surface-variant/30 hover:bg-surface-container-low transition-colors"
-                >
-                  <td class="py-4 px-4 font-body-md text-secondary">
-                    2023-10-27 14:32:01
-                  </td>
-                  <td
-                    class="py-4 px-4 font-body-md text-on-background font-bold"
-                  >
-                    eggsorplus
-                  </td>
-                  <td class="py-4 px-4">
-                    <span
-                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                    >
-                      Session Start
-                    </span>
-                  </td>
-                  <td
-                    class="py-4 px-4 font-body-md text-secondary font-mono text-sm"
-                  >
-                    192.168.1.104
-                  </td>
-                  <td class="py-4 px-4 font-body-md text-secondary">
-                    Sorting sequence initiated.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="flex flex-col items-center justify-center py-12 text-center">
+            <span class="material-symbols-outlined text-4xl text-secondary-fixed-dim mb-4">history</span>
+            <p class="font-body-md text-body-md text-secondary">No audit log entries yet.</p>
           </div>
         </div>
       </div>

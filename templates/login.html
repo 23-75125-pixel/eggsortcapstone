@@ -1,24 +1,261 @@
-{% extends "base.html" %} {% block title %} Login - EggSort {% endblock %} {%
-block content %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Login - Eggsort+</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Manrope", "sans-serif"],
+            },
+            colors: {
+              brand: {
+                DEFAULT: "#E67E00",
+                hover: "#CC7000",
+                text: "#1E293B",
+                muted: "#64748B",
+                border: "#E2E8F0",
+                bg: "#F8FAFC",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style data-purpose="custom-styles">
+      body {
+        background-color: #e2e8f0;
+      }
+      .login-container {
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .bg-illustration {
+        background: radial-gradient(
+          circle at 70% 30%,
+          rgba(255, 245, 230, 0.8) 0%,
+          rgba(255, 255, 255, 1) 60%
+        );
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+    <div
+      class="login-container w-full max-w-[1100px] bg-white rounded-[32px] overflow-hidden flex flex-col md:flex-row h-auto md:h-[700px]"
+    >
+      <!-- Left Form Section -->
+      <div
+        class="w-full md:w-1/2 p-10 lg:p-16 flex flex-col justify-center relative"
+      >
+        <div class="max-w-[400px] w-full mx-auto flex flex-col h-full">
+          <!-- Header -->
+          <div class="mb-10">
+            <h1
+              class="text-4xl font-extrabold text-[#1a202c] mb-2 tracking-tight"
+            >
+              Welcome Back
+            </h1>
+            <p class="text-gray-500 font-medium">
+              Sign in to continue to your account
+            </p>
+          </div>
 
-<h2>Login</h2>
+          <!-- Flash Error Message -->
+          {% if error %}
+          <div
+            class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-sm font-medium"
+          >
+            {{ error }}
+          </div>
+          {% endif %}
 
-<form method="POST">
-  <label>Username</label>
-  <input type="text" name="username" placeholder="Enter username" required />
+          <!-- Form: Added method="POST" -->
+          <form
+            class="space-y-6 flex-grow"
+            method="POST"
+            action="{{ url_for('login') }}"
+          >
+            <!-- Username Input: Added name="username" -->
+            <div>
+              <label
+                class="block text-sm font-bold text-gray-700 tracking-wider mb-2"
+                for="username"
+                >USERNAME</label
+              >
+              <div class="relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewbox="0 0 24 24"
+                  >
+                    <path
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                    ></path>
+                  </svg>
+                </div>
+                <input
+                  name="username"
+                  class="block w-full pl-11 pr-3 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50 text-gray-900 placeholder-gray-400 transition-colors"
+                  id="username"
+                  placeholder="Enter your username"
+                  type="text"
+                  required
+                />
+              </div>
+            </div>
 
-  <label>Password</label>
-  <input
-    type="password"
-    name="password"
-    placeholder="Enter password"
-    required
-  />
+            <!-- Password Input: Added name="password" -->
+            <div>
+              <label
+                class="block text-sm font-bold text-gray-700 tracking-wider mb-2"
+                for="password"
+                >PASSWORD</label
+              >
+              <div class="relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewbox="0 0 24 24"
+                  >
+                    <path
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                    ></path>
+                  </svg>
+                </div>
+                <input
+                  name="password"
+                  class="block w-full pl-11 pr-11 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50 text-gray-900 placeholder-gray-400 transition-colors"
+                  id="password"
+                  placeholder="••••••••"
+                  type="password"
+                  required
+                />
+              </div>
+            </div>
 
-  <button type="submit">Login</button>
-  <a href="{{ url_for('register') }}"> Create account </a>
-</form>
+            <!-- Options -->
+            <div class="flex items-center justify-between pt-1">
+              <div class="flex items-center">
+                <input
+                  checked=""
+                  class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                />
+                <label
+                  class="ml-2 block text-sm text-gray-600 font-medium cursor-pointer"
+                  for="remember-me"
+                  >Remember me</label
+                >
+              </div>
+              <div class="text-sm">
+                <a
+                  class="font-bold text-brand hover:text-brand-hover transition-colors"
+                  href="#"
+                  >Forgot password?</a
+                >
+              </div>
+            </div>
 
-{% if error %}
-<p class="error">{{ error }}</p>
-{% endif %} {% endblock %}
+            <!-- Submit Button -->
+            <button
+              class="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-lg font-bold text-white bg-brand hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-colors mt-8"
+              type="submit"
+            >
+              Sign In
+              <svg
+                class="ml-2 h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewbox="0 0 24 24"
+              >
+                <path
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                ></path>
+              </svg>
+            </button>
+          </form>
+
+          <!-- Divider -->
+          <div class="mt-8 relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-200"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span
+                class="px-3 bg-white text-gray-400 font-bold uppercase tracking-wider"
+                >OR</span
+              >
+            </div>
+          </div>
+
+          <p class="mt-6 text-center text-sm text-gray-500 font-medium">
+            Don't have an account?
+            <a href="{{ url_for('register') }}" class="text-brand font-bold"
+              >Register</a
+            >
+          </p>
+
+          <!-- Footer -->
+          <div class="mt-auto pt-10 text-center">
+            <p class="text-xs font-mono text-gray-400">
+              © 2026 EGGSort+ Systems. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Illustration Section -->
+      <div
+        class="hidden md:flex w-1/2 bg-illustration relative items-center justify-center border-l border-gray-100"
+      >
+        <div
+          class="relative w-full h-full flex flex-col items-center justify-center p-12"
+        >
+          <div
+            class="absolute top-1/4 right-1/4 w-64 h-64 bg-yellow-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70"
+          ></div>
+          <div
+            class="relative z-10 w-full h-full flex items-center justify-center"
+          >
+            <div
+              class="w-full h-full bg-no-repeat bg-center bg-contain"
+              style="
+                background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuBMUfengIylEJjnWd9QH4Lo0cEtuAc24Fpc9P1qNQkM__4BzBKmHn4lRiliF8eCysv43MIeZmrnZU2xSYtSjwfToaxlW5qHLTB4GG9P7Hiiedf1JSq2sWVKCOpC6EOiapG7C64rX4LvKOAaUYtjj2MTiO3HPkKg2A2yr01zeDW2XFHBcr6qiw5WtL1vYLJQScx1JDd57UChoxA7rRML2i69qu-7xrfEuWSuwMFlywnbRPuDdE0Jl4NdlsR-kLgYdxkLoMFc85Qfzw&quot;);
+              "
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

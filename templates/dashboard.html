@@ -1,33 +1,764 @@
-{% extends "base.html" %}
+<!doctype html>
 
-{% block title %}
-Dashboard - EggSort
-{% endblock %}
-
-
-{% block content %}
-
-<h2>Dashboard</h2>
-
-<p>
-    Welcome, <b>{{ username }}</b>
-</p>
-
-
-<div>
-    <h3>Egg Statistics</h3>
-
-    <p>Total Eggs: 0</p>
-    <p>Good Eggs: 0</p>
-    <p>Defective Eggs: 0</p>
-</div>
-
-
-<br>
-
-<a class="logout" href="{{ url_for('logout') }}">
-    Logout
-</a>
-
-
-{% endblock %}
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>EGGSor+ Operational Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              surface: "#f6faff",
+              "surface-container": "#e6eff8",
+              "on-tertiary": "#ffffff",
+              "primary-container": "#e67e00",
+              "secondary-container": "#d7e0f5",
+              background: "#f6faff",
+              "surface-container-low": "#ecf5fe",
+              "primary-fixed": "#ffdcc3",
+              "surface-variant": "#dbe4ed",
+              "on-secondary": "#ffffff",
+              "inverse-primary": "#ffb77d",
+              "inverse-on-surface": "#e9f2fb",
+              "on-surface-variant": "#554335",
+              "outline-variant": "#dcc2af",
+              "on-secondary-fixed-variant": "#3e4758",
+              "on-primary-container": "#4e2700",
+              primary: "#904d00",
+              "on-tertiary-container": "#2f3132",
+              secondary: "#565f71",
+              "tertiary-fixed": "#e1e3e4",
+              "tertiary-fixed-dim": "#c5c7c8",
+              "on-secondary-container": "#5a6375",
+              "primary-fixed-dim": "#ffb77d",
+              "inverse-surface": "#293138",
+              "surface-dim": "#d2dbe4",
+              "surface-bright": "#f6faff",
+              error: "#ba1a1a",
+              "on-error": "#ffffff",
+              "error-container": "#ffdad6",
+              "tertiary-container": "#97999a",
+              "surface-tint": "#904d00",
+              "on-secondary-fixed": "#131c2b",
+              "on-error-container": "#93000a",
+              "secondary-fixed-dim": "#bec7dc",
+              "on-tertiary-fixed-variant": "#454748",
+              "surface-container-high": "#e0e9f2",
+              "surface-container-highest": "#dbe4ed",
+              tertiary: "#5c5f60",
+              "on-background": "#141d23",
+              "on-tertiary-fixed": "#191c1d",
+              outline: "#897363",
+              "secondary-fixed": "#dae2f8",
+              "on-surface": "#141d23",
+              "on-primary-fixed": "#2f1500",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#ffffff",
+              "on-primary-fixed-variant": "#6e3900",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              xs: "4px",
+              xl: "64px",
+              lg: "40px",
+              base: "8px",
+              sm: "12px",
+              gutter: "24px",
+              md: "24px",
+              margin: "32px",
+            },
+            fontFamily: {
+              caption: ["Manrope"],
+              "headline-md": ["Manrope"],
+              button: ["Manrope"],
+              "headline-lg": ["Manrope"],
+              "body-lg": ["Manrope"],
+              "label-caps": ["Manrope"],
+              "headline-lg-mobile": ["Manrope"],
+              "body-md": ["Manrope"],
+            },
+            fontSize: {
+              caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }],
+              "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "700" }],
+              button: ["15px", { lineHeight: "1", fontWeight: "700" }],
+              "headline-lg": [
+                "32px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "800",
+                },
+              ],
+              "body-lg": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+              "label-caps": [
+                "12px",
+                { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "700" },
+              ],
+              "headline-lg-mobile": [
+                "26px",
+                { lineHeight: "1.2", fontWeight: "800" },
+              ],
+              "body-md": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .material-symbols-outlined.filled {
+        font-variation-settings: "FILL" 1;
+      }
+      .glow-effect {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      }
+      .nav-active-glow {
+        box-shadow: -4px 0 0 0 theme("colors.primary-container") inset;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background text-on-background font-body-md antialiased overflow-x-hidden min-h-screen flex"
+  >
+    <!-- SideNavBar -->
+    <nav
+      class="h-screen w-64 flex-col fixed left-0 top-0 bg-inverse-surface border-r border-outline-variant/10 shadow-xl flex z-50"
+    >
+      <!-- Brand -->
+      <div class="px-gutter py-margin flex items-center gap-sm">
+        <div
+          class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white"
+        >
+          <span class="material-symbols-outlined filled">egg</span>
+        </div>
+        <div>
+          <h1
+            class="text-headline-md font-headline-md text-primary-fixed tracking-tight"
+          >
+            EGGSor+
+          </h1>
+          <p
+            class="font-label-caps text-label-caps text-surface-variant/70 tracking-widest mt-xs"
+          >
+            IOT EGG SORTING SYS
+          </p>
+        </div>
+      </div>
+      <!-- Links -->
+      <div class="flex flex-col h-full py-gutter px-2 flex-grow">
+        <!-- Active Tab: Dashboard -->
+        <a
+          class="bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 flex items-center gap-3 active:scale-95 duration-150 ease-in-out nav-active-glow"
+          href="/dashboard"
+        >
+          <span class="material-symbols-outlined">dashboard</span>
+          <span class="font-button text-button">Dashboard</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/sorting-sessions"
+        >
+          <span class="material-symbols-outlined">precision_manufacturing</span>
+          <span class="font-button text-button">Sorting Sessions</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/egg-records"
+        >
+          <span class="material-symbols-outlined">inventory_2</span>
+          <span class="font-button text-button">Egg Records</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/alerts"
+        >
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="font-button text-button">Alerts</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/sales"
+        >
+          <span class="material-symbols-outlined">payments</span>
+          <span class="font-button text-button">Sales</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/reports"
+        >
+          <span class="material-symbols-outlined">assessment</span>
+          <span class="font-button text-button">Reports</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/user-management"
+        >
+          <span class="material-symbols-outlined">manage_accounts</span>
+          <span class="font-button text-button">User Management</span>
+        </a>
+      </div>
+      <!-- Footer -->
+      <div class="p-4 mb-4">
+        <div class="bg-black/20 rounded-xl p-4 flex items-center gap-3 mb-4">
+          <img
+            class="w-10 h-10 rounded-full object-cover"
+            data-alt="A small circular avatar of an industrial worker wearing safety glasses in a bright, modern control room setting. Light mode aesthetic, professional, clean."
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQQF4iDYqHOvmzaoQqP41Jm0E7V6LW4C2WySa3LMXLUu1vWlLz3uTWH70nmkpofN9JPpOhb0rx9adWcOdMRWpZ7ay0499J2ILiu5UB5hvnCETpKEOp4stqynJxTS4e1tjrcJy5aMHqdchIta60UpVtvX-mBDs7Fw265hI06ITD-52d2Kn_4roOyeYhVQNru-ib7Vn4jr5yQ5_Ll_0fpGtNtMHbZ0UaSELuOs8064yqVEt7NKmRRVR0YhzD6RFfVO3_D0-gsc96Hw"
+          />
+          <div>
+            <p class="text-white font-bold text-sm">eggsorplus</p>
+            <p class="text-surface-variant/70 text-xs flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-primary-container"></span>
+              Admin
+            </p>
+          </div>
+        </div>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg justify-center border border-white/10"
+          href="/logout"
+        >
+          <span class="material-symbols-outlined">logout</span>
+          <span class="font-button text-button">Log Out</span>
+        </a>
+      </div>
+    </nav>
+    <!-- Main Content Canvas -->
+    <main class="ml-64 flex-1 flex flex-col min-h-screen">
+      <!-- TopAppBar (Minimal, Content Zone) -->
+      <header
+        class="w-full h-20 sticky top-0 z-40 bg-surface/90 backdrop-blur-md flex justify-between items-center px-margin pt-4 pb-2"
+      >
+        <div>
+          <p
+            class="font-label-caps text-label-caps text-primary tracking-widest uppercase mb-1"
+          >
+            Operations Portal / Admin
+          </p>
+          <h2 class="font-headline-lg text-headline-lg text-on-background">
+            Operational Dashboard
+          </h2>
+        </div>
+        <div class="flex items-center gap-4">
+          <div
+            class="bg-surface-container-low px-4 py-2 rounded-full flex items-center gap-2 text-primary text-sm font-bold glow-effect"
+          >
+            <span
+              class="w-2 h-2 rounded-full bg-primary-container animate-pulse"
+            ></span>
+            Monitoring live farm activity
+          </div>
+          <button
+            class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors glow-effect"
+          >
+            <span class="material-symbols-outlined">refresh</span>
+          </button>
+        </div>
+      </header>
+      <!-- Dashboard Content -->
+      <div class="p-margin pt-gutter flex-1 flex flex-col gap-gutter">
+        <!-- KPI Cards Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-sm">
+          <!-- Card 1 -->
+          <div
+            class="bg-white rounded-xl p-6 glow-effect border-l-4 border-primary-container flex flex-col justify-between h-32 relative overflow-hidden group"
+          >
+            <div
+              class="absolute -right-4 -top-4 w-24 h-24 bg-primary-container/5 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"
+            ></div>
+            <div class="flex justify-between items-start z-10">
+              <p
+                class="font-label-caps text-label-caps text-secondary uppercase tracking-wider"
+              >
+                Total Eggs Sorted
+              </p>
+              <span class="material-symbols-outlined text-primary-container"
+                >egg_alt</span
+              >
+            </div>
+            <div class="flex items-end justify-between z-10">
+              <h3 class="font-headline-lg text-headline-lg text-on-background">
+                4
+              </h3>
+              <p
+                class="font-caption text-caption text-secondary flex items-center gap-1"
+              >
+                Live inventory aggregate
+                <span class="text-primary-container"
+                  >1 hour
+                  <span class="material-symbols-outlined text-xs"
+                    >trending_down</span
+                  ></span
+                >
+              </p>
+            </div>
+          </div>
+          <!-- Card 2 -->
+          <div
+            class="bg-white rounded-xl p-6 glow-effect border-l-4 border-primary-container flex flex-col justify-between h-32 relative overflow-hidden group"
+          >
+            <div
+              class="absolute -right-4 -top-4 w-24 h-24 bg-primary-container/5 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"
+            ></div>
+            <div class="flex justify-between items-start z-10">
+              <p
+                class="font-label-caps text-label-caps text-secondary uppercase tracking-wider"
+              >
+                Trays Completed
+              </p>
+              <span class="material-symbols-outlined text-primary-container"
+                >widgets</span
+              >
+            </div>
+            <div class="flex items-end justify-between z-10">
+              <h3 class="font-headline-lg text-headline-lg text-on-background">
+                0
+              </h3>
+              <p
+                class="font-caption text-caption text-secondary flex items-center gap-1"
+              >
+                30 Eggs Per Tray standard
+                <span class="text-error font-bold">4 loose units</span>
+              </p>
+            </div>
+          </div>
+          <!-- Card 3 -->
+          <div
+            class="bg-white rounded-xl p-6 glow-effect border-l-4 border-blue-500 flex flex-col justify-between h-32 relative overflow-hidden group"
+          >
+            <div
+              class="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/5 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"
+            ></div>
+            <div class="flex justify-between items-start z-10">
+              <p
+                class="font-label-caps text-label-caps text-secondary uppercase tracking-wider"
+              >
+                Quality Rate
+              </p>
+              <span class="material-symbols-outlined text-blue-500"
+                >verified</span
+              >
+            </div>
+            <div class="flex items-end justify-between z-10">
+              <h3 class="font-headline-lg text-headline-lg text-on-background">
+                100%
+              </h3>
+              <p
+                class="font-caption text-caption text-secondary flex items-center gap-1"
+              >
+                0 Cracked Detected
+                <a class="text-blue-500 hover:underline" href="#"
+                  >Live calculation</a
+                >
+              </p>
+            </div>
+          </div>
+          <!-- Card 4 -->
+          <div
+            class="bg-white rounded-xl p-6 glow-effect border-l-4 border-surface-variant flex flex-col justify-between h-32 relative overflow-hidden group"
+          >
+            <div
+              class="absolute -right-4 -top-4 w-24 h-24 bg-surface-variant/20 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"
+            ></div>
+            <div class="flex justify-between items-start z-10">
+              <p
+                class="font-label-caps text-label-caps text-secondary uppercase tracking-wider"
+              >
+                Active Alerts
+              </p>
+              <span class="material-symbols-outlined text-secondary"
+                >warning</span
+              >
+            </div>
+            <div class="flex items-end justify-between z-10">
+              <h3 class="font-headline-lg text-headline-lg text-on-background">
+                0
+              </h3>
+              <p
+                class="font-caption text-caption text-secondary flex items-center gap-1"
+              >
+                All conveyor metrics safe
+                <a class="text-primary hover:underline" href="#"
+                  >View alerts →</a
+                >
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- Revenue Banner -->
+        <div
+          class="bg-inverse-surface rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden"
+        >
+          <!-- Abstract glowing background element -->
+          <div
+            class="absolute -right-20 -bottom-20 w-64 h-64 bg-primary-container rounded-full blur-[80px] opacity-20 pointer-events-none"
+          ></div>
+          <div class="flex items-center gap-4 z-10">
+            <div
+              class="w-12 h-12 rounded-xl bg-primary-container/20 border border-primary-container/30 flex items-center justify-center text-primary-fixed"
+            >
+              <span class="material-symbols-outlined">payments</span>
+            </div>
+            <div>
+              <p
+                class="font-label-caps text-label-caps text-primary-fixed uppercase tracking-widest mb-1"
+              >
+                Consolidated Customer Revenue
+              </p>
+              <h3 class="font-headline-lg text-headline-lg text-white">
+                PHP 0.00
+              </h3>
+              <p class="font-caption text-caption text-surface-variant/70 mt-1">
+                Calculated from completed invoice ledger
+              </p>
+            </div>
+          </div>
+          <button
+            class="bg-primary-container hover:bg-primary transition-colors text-white font-button text-button px-6 py-3 rounded-lg flex items-center gap-2 h-12 whitespace-nowrap z-10 w-full md:w-auto justify-center"
+          >
+            Open Sales Ledger
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+          </button>
+        </div>
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+          <!-- Size Distribution (Donut Chart Mockup) -->
+          <div
+            class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col"
+          >
+            <div class="mb-6">
+              <h4
+                class="font-headline-md text-body-lg font-bold text-on-background"
+              >
+                Size Distribution
+              </h4>
+              <p class="font-caption text-caption text-secondary mt-1">
+                Proportions of classified items in weight categories
+              </p>
+            </div>
+            <div
+              class="flex-1 flex items-center justify-center gap-8 md:gap-16"
+            >
+              <!-- Donut Graphic -->
+              <div class="relative w-40 h-40">
+                <!-- SVG Donut -->
+                <svg
+                  class="w-full h-full transform -rotate-90"
+                  viewbox="0 0 100 100"
+                >
+                  <!-- Background Circle -->
+                  <circle
+                    cx="50"
+                    cy="50"
+                    fill="transparent"
+                    r="40"
+                    stroke="#f6faff"
+                    stroke-width="12"
+                  ></circle>
+                  <!-- Segments (Dummy Data) -->
+                  <circle
+                    cx="50"
+                    cy="50"
+                    fill="transparent"
+                    r="40"
+                    stroke="#00C853"
+                    stroke-dasharray="251.2"
+                    stroke-dashoffset="100"
+                    stroke-width="12"
+                  ></circle>
+                  <circle
+                    cx="50"
+                    cy="50"
+                    fill="transparent"
+                    r="40"
+                    stroke="#FF9800"
+                    stroke-dasharray="251.2"
+                    stroke-dashoffset="200"
+                    stroke-width="12"
+                    transform="rotate(210 50 50)"
+                  ></circle>
+                </svg>
+                <!-- Center Text -->
+                <div
+                  class="absolute inset-0 flex flex-col items-center justify-center"
+                >
+                  <span
+                    class="font-label-caps text-label-caps text-secondary uppercase"
+                    >Total</span
+                  >
+                  <span
+                    class="font-headline-md text-headline-md text-on-background"
+                    >4</span
+                  >
+                </div>
+              </div>
+              <!-- Legend -->
+              <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-6">
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                    <span class="font-caption text-caption text-secondary"
+                      >Small</span
+                    >
+                  </div>
+                  <span
+                    class="font-caption text-caption text-on-background font-bold"
+                    >0%</span
+                  >
+                </div>
+                <div class="flex items-center justify-between gap-6">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="w-3 h-3 rounded-full bg-primary-container"
+                    ></span>
+                    <span class="font-caption text-caption text-secondary"
+                      >Medium</span
+                    >
+                  </div>
+                  <span
+                    class="font-caption text-caption text-on-background font-bold"
+                    >25%</span
+                  >
+                </div>
+                <div class="flex items-center justify-between gap-6">
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                    <span class="font-caption text-caption text-secondary"
+                      >Large</span
+                    >
+                  </div>
+                  <span
+                    class="font-caption text-caption text-on-background font-bold"
+                    >75%</span
+                  >
+                </div>
+                <div class="flex items-center justify-between gap-6">
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                    <span class="font-caption text-caption text-secondary"
+                      >Extra Large</span
+                    >
+                  </div>
+                  <span
+                    class="font-caption text-caption text-on-background font-bold"
+                    >0%</span
+                  >
+                </div>
+                <div class="flex items-center justify-between gap-6">
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+                    <span class="font-caption text-caption text-secondary"
+                      >Jumbo</span
+                    >
+                  </div>
+                  <span
+                    class="font-caption text-caption text-on-background font-bold"
+                    >0%</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Daily Sorting Trend (Bar Chart Mockup) -->
+          <div
+            class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col"
+          >
+            <div class="flex justify-between items-start mb-6">
+              <div>
+                <h4
+                  class="font-headline-md text-body-lg font-bold text-on-background"
+                >
+                  Daily Sorting Trend
+                </h4>
+                <p class="font-caption text-caption text-secondary mt-1">
+                  Comparison of qualified vs cracked eggs in last cycles
+                </p>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-primary-container"></span
+                  ><span class="font-caption text-caption text-secondary"
+                    >Good</span
+                  >
+                </div>
+                <div class="flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-red-500"></span
+                  ><span class="font-caption text-caption text-secondary"
+                    >Cracked</span
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- Bar Chart Area -->
+            <div
+              class="flex-1 flex items-end justify-center gap-12 pb-6 border-b border-surface-variant relative mt-8"
+            >
+              <!-- Y-Axis Lines -->
+              <div
+                class="absolute inset-0 flex flex-col justify-between pointer-events-none"
+              >
+                <div class="w-full h-px bg-surface-variant/30"></div>
+                <div class="w-full h-px bg-surface-variant/30"></div>
+                <div class="w-full h-px bg-surface-variant/30"></div>
+                <div class="w-full h-px bg-surface-variant/30"></div>
+              </div>
+              <!-- Bar Group 1 -->
+              <div
+                class="flex flex-col items-center gap-2 z-10 h-full justify-end"
+              >
+                <div class="flex items-end gap-1">
+                  <div
+                    class="w-4 bg-primary-container rounded-t-sm"
+                    style="height: 120px"
+                  ></div>
+                  <div
+                    class="w-4 bg-red-500 rounded-t-sm"
+                    style="height: 10px"
+                  ></div>
+                </div>
+                <span class="font-caption text-caption text-secondary"
+                  >Jul 12</span
+                >
+              </div>
+              <!-- Placeholder for empty days to maintain layout -->
+              <div
+                class="flex flex-col items-center gap-2 z-10 h-full justify-end opacity-0 pointer-events-none"
+              >
+                <div class="flex items-end gap-1">
+                  <div class="w-4 bg-primary-container h-10"></div>
+                </div>
+                <span>Jul 13</span>
+              </div>
+            </div>
+            <div class="mt-4 flex justify-between items-center">
+              <p
+                class="font-caption text-caption text-secondary flex items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-sm">schedule</span>
+                Standard interval sorting
+              </p>
+              <p class="font-caption text-caption text-on-background font-bold">
+                Peak Volume: 4 units
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- Audit Logs -->
+        <div
+          class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 mb-8"
+        >
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h4
+                class="font-headline-md text-body-lg font-bold text-on-background"
+              >
+                System Security Audit Logs
+              </h4>
+              <p class="font-caption text-caption text-secondary mt-1">
+                Chronological directory of operator logins &amp; physical
+                machine sorting events
+              </p>
+            </div>
+            <a
+              class="text-primary hover:text-primary-container font-button text-button flex items-center gap-1"
+              href="#"
+              >Manage audit files
+              <span class="material-symbols-outlined text-sm"
+                >arrow_forward</span
+              ></a
+            >
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-surface-variant">
+                  <th
+                    class="py-3 px-4 font-label-caps text-label-caps text-secondary uppercase font-bold tracking-wider"
+                  >
+                    Timestamp
+                  </th>
+                  <th
+                    class="py-3 px-4 font-label-caps text-label-caps text-secondary uppercase font-bold tracking-wider"
+                  >
+                    User
+                  </th>
+                  <th
+                    class="py-3 px-4 font-label-caps text-label-caps text-secondary uppercase font-bold tracking-wider"
+                  >
+                    Action
+                  </th>
+                  <th
+                    class="py-3 px-4 font-label-caps text-label-caps text-secondary uppercase font-bold tracking-wider"
+                  >
+                    Node Address
+                  </th>
+                  <th
+                    class="py-3 px-4 font-label-caps text-label-caps text-secondary uppercase font-bold tracking-wider"
+                  >
+                    Telemetry Description
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Empty state or single row to show structure -->
+                <tr
+                  class="border-b border-surface-variant/30 hover:bg-surface-container-low transition-colors"
+                >
+                  <td class="py-4 px-4 font-body-md text-secondary">
+                    2023-10-27 14:32:01
+                  </td>
+                  <td
+                    class="py-4 px-4 font-body-md text-on-background font-bold"
+                  >
+                    eggsorplus
+                  </td>
+                  <td class="py-4 px-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    >
+                      Session Start
+                    </span>
+                  </td>
+                  <td
+                    class="py-4 px-4 font-body-md text-secondary font-mono text-sm"
+                  >
+                    192.168.1.104
+                  </td>
+                  <td class="py-4 px-4 font-body-md text-secondary">
+                    Sorting sequence initiated.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

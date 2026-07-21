@@ -1,0 +1,513 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>EGGSor+ - Sales Ledger</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              surface: "#f6faff",
+              "surface-bright": "#f6faff",
+              "secondary-fixed": "#dae2f8",
+              "on-background": "#141d23",
+              "surface-container-lowest": "#ffffff",
+              "surface-container": "#e6eff8",
+              "on-secondary-container": "#5a6375",
+              "on-primary-fixed": "#2f1500",
+              "tertiary-container": "#97999a",
+              "inverse-primary": "#ffb77d",
+              secondary: "#565f71",
+              "surface-container-high": "#e0e9f2",
+              "on-secondary-fixed": "#131c2b",
+              "on-error-container": "#93000a",
+              "on-primary": "#ffffff",
+              "on-error": "#ffffff",
+              "surface-tint": "#904d00",
+              "on-surface": "#141d23",
+              "surface-container-low": "#ecf5fe",
+              "surface-container-highest": "#dbe4ed",
+              error: "#ba1a1a",
+              "on-tertiary": "#ffffff",
+              "outline-variant": "#dcc2af",
+              tertiary: "#5c5f60",
+              "primary-fixed": "#ffdcc3",
+              "on-secondary": "#ffffff",
+              "error-container": "#ffdad6",
+              "on-secondary-fixed-variant": "#3e4758",
+              "on-tertiary-container": "#2f3132",
+              "on-primary-container": "#4e2700",
+              "on-primary-fixed-variant": "#6e3900",
+              background: "#f6faff",
+              "tertiary-fixed": "#e1e3e4",
+              "primary-fixed-dim": "#ffb77d",
+              "on-surface-variant": "#554335",
+              "secondary-fixed-dim": "#bec7dc",
+              "secondary-container": "#d7e0f5",
+              primary: "#904d00",
+              "surface-dim": "#d2dbe4",
+              "primary-container": "#e67e00",
+              outline: "#897363",
+              "on-tertiary-fixed-variant": "#454748",
+              "inverse-surface": "#293138",
+              "inverse-on-surface": "#e9f2fb",
+              "surface-variant": "#dbe4ed",
+              "on-tertiary-fixed": "#191c1d",
+              "tertiary-fixed-dim": "#c5c7c8",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              margin: "32px",
+              lg: "40px",
+              xl: "64px",
+              base: "8px",
+              xs: "4px",
+              md: "24px",
+              sm: "12px",
+              gutter: "24px",
+            },
+            fontFamily: {
+              "headline-md": ["Manrope"],
+              "body-md": ["Manrope"],
+              "headline-lg": ["Manrope"],
+              caption: ["Manrope"],
+              "label-caps": ["Manrope"],
+              button: ["Manrope"],
+              "headline-lg-mobile": ["Manrope"],
+              "body-lg": ["Manrope"],
+            },
+            fontSize: {
+              "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "700" }],
+              "body-md": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+              "headline-lg": [
+                "32px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "800",
+                },
+              ],
+              caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }],
+              "label-caps": [
+                "12px",
+                { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "700" },
+              ],
+              button: ["15px", { lineHeight: "1", fontWeight: "700" }],
+              "headline-lg-mobile": [
+                "26px",
+                { lineHeight: "1.2", fontWeight: "800" },
+              ],
+              "body-lg": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Manrope", sans-serif;
+        background-color: #f6faff;
+        color: #141d23;
+      }
+      .material-symbols-outlined {
+        font-family: "Material Symbols Outlined";
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: "liga";
+        -webkit-font-smoothing: antialiased;
+      }
+      .ambient-shadow {
+        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04);
+      }
+    </style>
+  </head>
+  <body class="flex h-screen overflow-hidden bg-background">
+    <!-- Side Navigation -->
+    <aside
+      class="h-screen w-64 flex-col fixed left-0 top-0 bg-inverse-surface border-r border-outline-variant/10 shadow-xl flex flex-col py-gutter z-50"
+    >
+      <div class="px-6 mb-8 flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-white font-bold text-xl"
+        >
+          E
+        </div>
+        <div>
+          <h1
+            class="font-headline-md text-headline-md text-primary-fixed tracking-tight"
+          >
+            EGGSor+
+          </h1>
+          <p
+            class="font-caption text-caption text-surface-variant/70 uppercase tracking-wider"
+          >
+            IoT EGG SORTING SYS
+          </p>
+        </div>
+      </div>
+      <nav class="flex-1 px-2 space-y-1 overflow-y-auto">
+        <a
+          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          href="/dashboard"
+        >
+          <span
+            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
+            >dashboard</span
+          >
+          <span class="font-button text-button">Dashboard</span>
+        </a>
+        <a
+          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          href="/sorting-sessions"
+        >
+          <span
+            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
+            >precision_manufacturing</span
+          >
+          <span class="font-button text-button">Sorting Sessions</span>
+        </a>
+        <a
+          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          href="/egg-records"
+        >
+          <span
+            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
+            >inventory_2</span
+          >
+          <span class="font-button text-button">Egg Records</span>
+        </a>
+        <a
+          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          href="/alerts"
+        >
+          <span
+            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
+            >notifications</span
+          >
+          <span class="font-button text-button">Alerts</span>
+        </a>
+        <a
+          class="flex items-center gap-3 bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 active:scale-95 duration-150 ease-in-out"
+          href="#"
+        >
+          <span
+            class="material-symbols-outlined"
+            style="font-variation-settings: &quot;FILL&quot; 1"
+            >payments</span
+          >
+          <span class="font-button text-button">Sales</span>
+        </a>
+        <a
+          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          href="/reports"
+        >
+          <span
+            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
+            >assessment</span
+          >
+          <span class="font-button text-button">Reports</span>
+        </a>
+        <a
+          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          href="/user-management"
+        >
+          <span
+            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
+            >manage_accounts</span
+          >
+          <span class="font-button text-button">User Management</span>
+        </a>
+      </nav>
+      <div class="mt-auto px-6 border-t border-outline-variant/10 pt-4">
+        <div
+          class="flex items-center gap-3 mb-4 p-3 rounded-lg bg-surface-variant/5"
+        >
+          <div
+            class="w-10 h-10 rounded-full bg-surface-variant/20 flex items-center justify-center overflow-hidden"
+          >
+            <img
+              class="w-full h-full object-cover"
+              data-alt="A small circular avatar placeholder image showing a generic user silhouette in a professional light mode setting. The overall style is clean, modern, and suitable for a corporate IoT dashboard. Colors are muted greys and whites."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8SHe8Ei_sQxVU1x-Tr8l0h4XvXqK7vgTzPaMumA0Mue1NxtqCdrKCQQYEzPyuQcX8WiV9a2pMuyosEGPCf8GllRPrII0bwQsSgzpuakeZyMRB6nlTjCGH0nuDrWXUGogOidCJzcvniZAWeDLVlJswd3wKOW1PYjOJy4rJQtJKXFDuENTFjzxQx180YkAayKUMSeAFUfEX_esXYv-USahg_OhGQrPXNIl7rPPNIy65YMUkz57pc6XVRjbnpACVWmNDvYuGKzUxZQ"
+            />
+          </div>
+          <div>
+            <p class="font-button text-button text-white">Roxie Farm</p>
+            <p class="font-caption text-caption text-surface-variant/70">
+              Admin
+            </p>
+          </div>
+        </div>
+        <a
+          class="flex items-center gap-3 text-surface-variant/70 hover:text-error transition-colors py-3 px-2 rounded-lg hover:bg-error/10 group"
+          href="/logout"
+        >
+          <span
+            class="material-symbols-outlined group-hover:text-error transition-colors"
+            >logout</span
+          >
+          <span class="font-button text-button">Log Out</span>
+        </a>
+      </div>
+    </aside>
+    <!-- Main Content -->
+    <main class="flex-1 ml-64 bg-background overflow-y-auto">
+      <div class="max-w-7xl mx-auto px-margin py-margin">
+        <!-- Header Section -->
+        <header class="flex justify-between items-start mb-xl">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span
+                class="font-label-caps text-label-caps text-primary uppercase tracking-widest"
+                >OPERATIONS PORTAL</span
+              >
+              <span class="text-tertiary-container text-xs">/</span>
+              <span
+                class="font-label-caps text-label-caps text-secondary uppercase tracking-widest"
+                >ADMIN</span
+              >
+            </div>
+            <h2 class="font-headline-lg text-headline-lg text-on-background">
+              Egg Sales Ledger
+            </h2>
+          </div>
+          <button
+            class="bg-primary-container text-white px-6 h-12 rounded-lg font-button text-button hover:bg-primary transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <span class="material-symbols-outlined">add</span>
+            Record New Sale
+            <span class="font-bold ml-1">→</span>
+          </button>
+        </header>
+        <!-- Immediate Sellable Stocks -->
+        <section
+          class="mb-xl bg-surface-container-lowest rounded-xl p-md ambient-shadow border border-surface-container"
+        >
+          <div class="mb-6 border-b border-surface-container pb-4">
+            <h3
+              class="font-label-caps text-label-caps text-secondary uppercase tracking-widest"
+            >
+              IMMEDIATE SELLABLE STOCKS (FORMATTED IN DOZENS)
+            </h3>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-sm">
+            <!-- Small -->
+            <div
+              class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
+            >
+              <span
+                class="font-body-md text-body-md text-on-surface-variant mb-1"
+                >Small</span
+              >
+              <div class="flex items-baseline gap-1">
+                <span class="font-headline-md text-headline-md text-error"
+                  >0</span
+                >
+                <span class="font-caption text-caption text-error font-bold"
+                  >doz</span
+                >
+              </div>
+              <span class="font-caption text-caption text-tertiary mt-1"
+                >(0 units)</span
+              >
+            </div>
+            <!-- Medium -->
+            <div
+              class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
+            >
+              <span
+                class="font-body-md text-body-md text-on-surface-variant mb-1"
+                >Medium</span
+              >
+              <div class="flex items-baseline gap-1">
+                <span class="font-headline-md text-headline-md text-error"
+                  >0</span
+                >
+                <span class="font-caption text-caption text-error font-bold"
+                  >doz</span
+                >
+              </div>
+              <span class="font-caption text-caption text-tertiary mt-1"
+                >(0 units)</span
+              >
+            </div>
+            <!-- Large -->
+            <div
+              class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
+            >
+              <span
+                class="font-body-md text-body-md text-on-surface-variant mb-1"
+                >Large</span
+              >
+              <div class="flex items-baseline gap-1">
+                <span class="font-headline-md text-headline-md text-error"
+                  >0</span
+                >
+                <span class="font-caption text-caption text-error font-bold"
+                  >doz</span
+                >
+              </div>
+              <span class="font-caption text-caption text-tertiary mt-1"
+                >(0 units)</span
+              >
+            </div>
+            <!-- Extra Large -->
+            <div
+              class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
+            >
+              <span
+                class="font-body-md text-body-md text-on-surface-variant mb-1"
+                >Extra Large</span
+              >
+              <div class="flex items-baseline gap-1">
+                <span class="font-headline-md text-headline-md text-error"
+                  >0</span
+                >
+                <span class="font-caption text-caption text-error font-bold"
+                  >doz</span
+                >
+              </div>
+              <span class="font-caption text-caption text-tertiary mt-1"
+                >(0 units)</span
+              >
+            </div>
+            <!-- Jumbo -->
+            <div
+              class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
+            >
+              <span
+                class="font-body-md text-body-md text-on-surface-variant mb-1"
+                >Jumbo</span
+              >
+              <div class="flex items-baseline gap-1">
+                <span class="font-headline-md text-headline-md text-error"
+                  >0</span
+                >
+                <span class="font-caption text-caption text-error font-bold"
+                  >doz</span
+                >
+              </div>
+              <span class="font-caption text-caption text-tertiary mt-1"
+                >(0 units)</span
+              >
+            </div>
+          </div>
+        </section>
+        <!-- Ledger Invoice Directory -->
+        <section
+          class="bg-surface-container-lowest rounded-xl ambient-shadow border border-surface-container overflow-hidden"
+        >
+          <div
+            class="p-md border-b border-surface-container flex justify-between items-center bg-surface-bright"
+          >
+            <h3 class="font-button text-button text-on-background">
+              Ledger Invoice Directory
+            </h3>
+            <div class="font-caption text-caption text-secondary">
+              Total Deals: <span class="font-bold text-on-background">0</span>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr
+                  class="bg-surface-container-low border-b border-surface-container"
+                >
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    INVOICE ID
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    BUYER NAME
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    DATE FILED
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    COMMODITY SUMMARY
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    BILLING TOTAL
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    METHOD
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    STATE
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase text-right"
+                  >
+                    ACTION
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Empty State -->
+                <tr>
+                  <td
+                    class="py-12 text-center text-tertiary font-body-md bg-white"
+                    colspan="8"
+                  >
+                    <div
+                      class="flex flex-col items-center justify-center opacity-60"
+                    >
+                      <span
+                        class="material-symbols-outlined text-4xl mb-3 text-outline"
+                        >receipt_long</span
+                      >
+                      <p>No invoices recorded yet.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

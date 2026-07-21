@@ -1,97 +1,85 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>
-        {% block title %}EggSort{% endblock %}
-    </title>
+    <title>{% block title %}EggSort{% endblock %}</title>
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f2f2f2;
-            margin: 0;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f2f2f2;
+        margin: 0;
+      }
 
-        .navbar {
-            background: #28a745;
-            color: white;
-            padding: 15px;
-            text-align: center;
-        }
+      .navbar {
+        background: #28a745;
+        color: white;
+        padding: 15px;
+        text-align: center;
+      }
 
-        .container {
-            width: 90%;
-            max-width: 500px;
-            margin: 40px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px #aaa;
-        }
+      .container {
+        width: 90%;
+        max-width: 500px;
+        margin: 40px auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #aaa;
+      }
 
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            box-sizing: border-box;
-        }
+      input {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        box-sizing: border-box;
+      }
 
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
+      button {
+        width: 100%;
+        padding: 10px;
+        background: #28a745;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
 
-        button:hover {
-            background: #218838;
-        }
+      button:hover {
+        background: #218838;
+      }
 
-        .error {
-            color: red;
-            text-align: center;
-        }
+      .error {
+        color: red;
+        text-align: center;
+      }
 
-        .logout {
-            display: inline-block;
-            background: red;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-        }
+      .logout {
+        display: inline-block;
+        background: red;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+      }
 
-        footer {
-            text-align: center;
-            margin-top: 30px;
-        }
+      footer {
+        text-align: center;
+        margin-top: 30px;
+      }
     </style>
+  </head>
 
-</head>
+  <body>
+    <div class="navbar">
+      <h1>EggSort System</h1>
+    </div>
 
-<body>
+    <div class="container">{% block content %} {% endblock %}</div>
 
-<div class="navbar">
-    <h1>EggSort System</h1>
-</div>
-
-
-<div class="container">
-
-    {% block content %}
-    {% endblock %}
-
-</div>
-
-
-<footer>
-    <p>© 2026 EggSort</p>
-</footer>
-
-</body>
+    <footer>
+      <p>© 2026 EggSort</p>
+    </footer>
+  </body>
 </html>

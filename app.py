@@ -155,6 +155,108 @@ def dashboard():
 
 
 
+# Sorting Sessions
+@app.route("/sorting-sessions")
+def sorting_sessions():
+
+    if "user_id" not in session:
+        return redirect(
+            url_for("login")
+        )
+
+
+    return render_template(
+        "sorting_session.html",
+        username=session["username"]
+    )
+
+
+
+# Egg Records
+@app.route("/egg-records")
+def egg_records():
+
+    if "user_id" not in session:
+        return redirect(
+            url_for("login")
+        )
+
+
+    return render_template(
+        "egg_records.html",
+        username=session["username"]
+    )
+
+
+
+# Alerts
+@app.route("/alerts")
+def alerts():
+
+    if "user_id" not in session:
+        return redirect(
+            url_for("login")
+        )
+
+
+    return render_template(
+        "alerts.html",
+        username=session["username"]
+    )
+
+
+
+# Sales
+@app.route("/sales")
+def sales():
+
+    if "user_id" not in session:
+        return redirect(
+            url_for("login")
+        )
+
+
+    return render_template(
+        "sales.html",
+        username=session["username"]
+    )
+
+
+
+# Reports
+@app.route("/reports")
+def reports():
+
+    if "user_id" not in session:
+        return redirect(
+            url_for("login")
+        )
+
+
+    return render_template(
+        "reports.html",
+        username=session["username"]
+    )
+
+
+
+# User Management
+@app.route("/user-management")
+def user_management():
+
+    if "user_id" not in session:
+        return redirect(
+            url_for("login")
+        )
+
+
+    return render_template(
+        "user_management.html",
+        username=session["username"]
+    )
+
+
+
 # Logout
 @app.route("/logout")
 def logout():

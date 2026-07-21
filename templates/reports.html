@@ -1,0 +1,518 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>EGGSor+ Reports Management</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              surface: "#f6faff",
+              "surface-container": "#e6eff8",
+              "on-tertiary": "#ffffff",
+              "primary-container": "#e67e00",
+              "secondary-container": "#d7e0f5",
+              background: "#f6faff",
+              "surface-container-low": "#ecf5fe",
+              "primary-fixed": "#ffdcc3",
+              "surface-variant": "#dbe4ed",
+              "on-secondary": "#ffffff",
+              "inverse-primary": "#ffb77d",
+              "inverse-on-surface": "#e9f2fb",
+              "on-surface-variant": "#554335",
+              "outline-variant": "#dcc2af",
+              "on-secondary-fixed-variant": "#3e4758",
+              "on-primary-container": "#4e2700",
+              primary: "#904d00",
+              "on-tertiary-container": "#2f3132",
+              secondary: "#565f71",
+              "tertiary-fixed": "#e1e3e4",
+              "tertiary-fixed-dim": "#c5c7c8",
+              "on-secondary-container": "#5a6375",
+              "primary-fixed-dim": "#ffb77d",
+              "inverse-surface": "#293138",
+              "surface-dim": "#d2dbe4",
+              "surface-bright": "#f6faff",
+              error: "#ba1a1a",
+              "on-error": "#ffffff",
+              "error-container": "#ffdad6",
+              "tertiary-container": "#97999a",
+              "surface-tint": "#904d00",
+              "on-secondary-fixed": "#131c2b",
+              "on-error-container": "#93000a",
+              "secondary-fixed-dim": "#bec7dc",
+              "on-tertiary-fixed-variant": "#454748",
+              "surface-container-high": "#e0e9f2",
+              "surface-container-highest": "#dbe4ed",
+              tertiary: "#5c5f60",
+              "on-background": "#141d23",
+              "on-tertiary-fixed": "#191c1d",
+              outline: "#897363",
+              "secondary-fixed": "#dae2f8",
+              "on-surface": "#141d23",
+              "on-primary-fixed": "#2f1500",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#ffffff",
+              "on-primary-fixed-variant": "#6e3900",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              xs: "4px",
+              xl: "64px",
+              lg: "40px",
+              base: "8px",
+              sm: "12px",
+              gutter: "24px",
+              md: "24px",
+              margin: "32px",
+            },
+            fontFamily: {
+              caption: ["Manrope"],
+              "headline-md": ["Manrope"],
+              button: ["Manrope"],
+              "headline-lg": ["Manrope"],
+              "body-lg": ["Manrope"],
+              "label-caps": ["Manrope"],
+              "headline-lg-mobile": ["Manrope"],
+              "body-md": ["Manrope"],
+            },
+            fontSize: {
+              caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }],
+              "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "700" }],
+              button: ["15px", { lineHeight: "1", fontWeight: "700" }],
+              "headline-lg": [
+                "32px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "800",
+                },
+              ],
+              "body-lg": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+              "label-caps": [
+                "12px",
+                { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "700" },
+              ],
+              "headline-lg-mobile": [
+                "26px",
+                { lineHeight: "1.2", fontWeight: "800" },
+              ],
+              "body-md": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .icon-fill {
+        font-variation-settings: "FILL" 1;
+      }
+    </style>
+  </head>
+  <body class="bg-background text-on-background font-body-md flex min-h-screen">
+    <!-- SideNavBar -->
+    <aside
+      class="bg-inverse-surface dark:bg-black text-primary dark:text-primary-fixed h-screen w-64 flex-col fixed left-0 top-0 border-r border-outline-variant/10 shadow-xl flex py-gutter z-50"
+    >
+      <div class="px-6 mb-8 flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded bg-primary-container flex items-center justify-center text-white"
+        >
+          <span class="material-symbols-outlined">egg_alt</span>
+        </div>
+        <div>
+          <h1
+            class="text-headline-md font-headline-md text-primary-fixed tracking-tight"
+          >
+            EGGSor+
+          </h1>
+          <p class="text-caption font-caption text-surface-variant/70">
+            IoT EGG SORTING SYS
+          </p>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto">
+        <ul class="space-y-1">
+          <li>
+            <a
+              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
+              href="/dashboard"
+            >
+              <span class="material-symbols-outlined">dashboard</span>
+              <span class="font-button text-button">Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
+              href="/sorting-sessions"
+            >
+              <span class="material-symbols-outlined"
+                >precision_manufacturing</span
+              >
+              <span class="font-button text-button">Sorting Sessions</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
+              href="/egg-records"
+            >
+              <span class="material-symbols-outlined">inventory_2</span>
+              <span class="font-button text-button">Egg Records</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
+              href="/alerts"
+            >
+              <span class="material-symbols-outlined">notifications</span>
+              <span class="font-button text-button">Alerts</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
+              href="/sales"
+            >
+              <span class="material-symbols-outlined">payments</span>
+              <span class="font-button text-button">Sales</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="flex items-center gap-4 bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 active:scale-95 duration-150 ease-in-out"
+              href="#"
+            >
+              <span class="material-symbols-outlined icon-fill"
+                >assessment</span
+              >
+              <span class="font-button text-button">Reports</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
+              href="/user-management"
+            >
+              <span class="material-symbols-outlined">manage_accounts</span>
+              <span class="font-button text-button">User Management</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div class="px-6 mt-auto">
+        <a
+          class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
+          href="/logout"
+        >
+          <span class="material-symbols-outlined">logout</span>
+          <span class="font-button text-button">Log Out</span>
+        </a>
+      </div>
+    </aside>
+    <!-- Main Content Area -->
+    <main
+      class="flex-1 ml-64 flex flex-col min-h-screen bg-background relative overflow-hidden"
+    >
+      <!-- Header -->
+      <header
+        class="w-full h-20 sticky top-0 z-40 bg-surface dark:bg-surface-dim flex justify-between items-center px-margin border-b border-surface-variant/50"
+      >
+        <div>
+          <p
+            class="text-label-caps font-label-caps text-secondary tracking-widest mb-1 uppercase"
+          >
+            Operations Portal / Live Data
+          </p>
+          <h2 class="text-headline-md font-headline-md text-on-surface">
+            Reports Management
+          </h2>
+        </div>
+        <button
+          class="bg-inverse-surface text-white h-12 px-6 rounded flex items-center gap-2 hover:bg-surface-tint transition-colors active:scale-95 font-button text-button"
+        >
+          <span class="material-symbols-outlined text-sm">print</span>
+          Print current report
+        </button>
+      </header>
+      <!-- Content Canvas -->
+      <div
+        class="p-margin flex-1 max-w-7xl w-full mx-auto space-y-6 relative z-10"
+      >
+        <!-- Filters & Controls -->
+        <div
+          class="bg-surface-container-lowest rounded-xl border border-surface-variant p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]"
+        >
+          <div class="flex flex-col md:flex-row gap-6 items-end">
+            <div class="flex-1">
+              <label
+                class="block text-label-caps font-label-caps text-secondary mb-2 uppercase"
+                >Sampling</label
+              >
+              <div class="relative">
+                <span
+                  class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary"
+                  >tune</span
+                >
+                <select
+                  class="w-full bg-[#F8F9FA] border border-surface-variant rounded h-12 pl-10 pr-4 appearance-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-on-surface"
+                >
+                  <option>Daily</option>
+                  <option>Weekly</option>
+                  <option>Monthly</option>
+                </select>
+                <span
+                  class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-secondary pointer-events-none"
+                  >expand_more</span
+                >
+              </div>
+            </div>
+            <div class="flex-1">
+              <label
+                class="block text-label-caps font-label-caps text-secondary mb-2 uppercase"
+                >Start Date</label
+              >
+              <div class="relative">
+                <span
+                  class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary"
+                  >calendar_today</span
+                >
+                <input
+                  class="w-full bg-[#F8F9FA] border border-surface-variant rounded h-12 pl-10 pr-4 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-on-surface"
+                  type="text"
+                  value="07/15/2026"
+                />
+              </div>
+            </div>
+            <div class="flex-1">
+              <label
+                class="block text-label-caps font-label-caps text-secondary mb-2 uppercase"
+                >End Date</label
+              >
+              <div class="relative">
+                <span
+                  class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary"
+                  >calendar_today</span
+                >
+                <input
+                  class="w-full bg-[#F8F9FA] border border-surface-variant rounded h-12 pl-10 pr-4 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-on-surface"
+                  type="text"
+                  value="07/15/2026"
+                />
+              </div>
+            </div>
+            <button
+              class="bg-[#E67E00] text-white h-12 px-8 rounded flex items-center justify-center gap-2 hover:bg-primary-container/90 transition-colors active:scale-95 font-button text-button w-full md:w-auto shrink-0"
+            >
+              Refresh live data
+              <span class="material-symbols-outlined text-sm"
+                >arrow_forward</span
+              >
+            </button>
+          </div>
+        </div>
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <!-- Card 1 -->
+          <div
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+          >
+            <h3
+              class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
+            >
+              Total Sorted
+            </h3>
+            <div class="text-headline-md font-headline-md text-on-surface">
+              4
+            </div>
+          </div>
+          <!-- Card 2 -->
+          <div
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+          >
+            <h3
+              class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
+            >
+              Good Quality
+            </h3>
+            <div class="text-headline-md font-headline-md text-on-surface">
+              4
+            </div>
+          </div>
+          <!-- Card 3 -->
+          <div
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+          >
+            <h3
+              class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
+            >
+              Cracked
+            </h3>
+            <div class="text-headline-md font-headline-md text-on-surface">
+              0
+            </div>
+          </div>
+          <!-- Card 4 -->
+          <div
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+          >
+            <h3
+              class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
+            >
+              Quality Rate
+            </h3>
+            <div class="text-headline-md font-headline-md text-on-surface">
+              100.0%
+            </div>
+          </div>
+          <!-- Card 5 -->
+          <div
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+          >
+            <h3
+              class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
+            >
+              Proj Revenue
+            </h3>
+            <div
+              class="text-headline-md font-headline-md text-on-surface flex items-center gap-1"
+            >
+              <span class="text-body-md font-body-md text-secondary">PHP</span>
+              0
+            </div>
+          </div>
+        </div>
+        <!-- Main Data Table -->
+        <div
+          class="bg-surface-container-lowest border border-surface-variant rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] overflow-hidden"
+        >
+          <div
+            class="p-6 border-b border-surface-variant flex justify-between items-start"
+          >
+            <div>
+              <h3 class="text-body-lg font-body-lg font-bold text-on-surface">
+                Daily Report
+              </h3>
+              <p class="text-caption font-caption text-secondary mt-1">
+                Automatically refreshes every 30 seconds.
+              </p>
+            </div>
+            <button
+              class="text-primary-container hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container"
+            >
+              <span class="material-symbols-outlined">sync</span>
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-[#F8F9FA] border-b border-surface-variant">
+                  <th
+                    class="p-4 text-label-caps font-label-caps text-secondary uppercase tracking-widest w-1/4"
+                  >
+                    Period
+                  </th>
+                  <th
+                    class="p-4 text-label-caps font-label-caps text-secondary uppercase tracking-widest text-right"
+                  >
+                    Sorted
+                  </th>
+                  <th
+                    class="p-4 text-label-caps font-label-caps text-secondary uppercase tracking-widest text-right"
+                  >
+                    Good
+                  </th>
+                  <th
+                    class="p-4 text-label-caps font-label-caps text-secondary uppercase tracking-widest text-right"
+                  >
+                    Cracked
+                  </th>
+                  <th
+                    class="p-4 text-label-caps font-label-caps text-secondary uppercase tracking-widest text-right"
+                  >
+                    Trays
+                  </th>
+                  <th
+                    class="p-4 text-label-caps font-label-caps text-secondary uppercase tracking-widest text-right"
+                  >
+                    Quality
+                  </th>
+                  <th
+                    class="p-4 text-label-caps font-label-caps text-secondary uppercase tracking-widest text-right"
+                  >
+                    Proj Revenue
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="text-body-md font-body-md">
+                <tr
+                  class="border-b border-surface-variant hover:bg-surface-container-low transition-colors"
+                >
+                  <td class="p-4 text-on-surface">Jul 15, 2026</td>
+                  <td class="p-4 text-right">4</td>
+                  <td class="p-4 text-right text-emerald-600 font-bold">4</td>
+                  <td class="p-4 text-right text-error">0</td>
+                  <td class="p-4 text-right">0</td>
+                  <td class="p-4 text-right">100%</td>
+                  <td class="p-4 text-right text-secondary">PHP 0</td>
+                </tr>
+                <tr
+                  class="bg-surface-container font-bold border-b-2 border-primary-container/20"
+                >
+                  <td class="p-4 text-on-surface">TOTAL</td>
+                  <td class="p-4 text-right">4</td>
+                  <td class="p-4 text-right">4</td>
+                  <td class="p-4 text-right">0</td>
+                  <td class="p-4 text-right">0</td>
+                  <td class="p-4 text-right">100.0%</td>
+                  <td class="p-4 text-right">PHP 0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div
+            class="p-4 bg-[#F8F9FA] flex items-center gap-2 text-caption font-caption text-secondary"
+          >
+            <span
+              class="material-symbols-outlined text-primary-container text-sm"
+              >info</span
+            >
+            Every value in this report is calculated from your current egg
+            records and paid sales. No sample or forecast values are used.
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

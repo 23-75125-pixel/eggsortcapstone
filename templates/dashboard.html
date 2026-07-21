@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}
+Dashboard - EggSort
+{% endblock %}
+
+
+{% block content %}
+
+<h2>Dashboard</h2>
+
+<p>
+    Welcome, <b>{{ username }}</b>
+</p>
+
+
+<div>
+    <h3>Egg Statistics</h3>
+
+    <p>Total Eggs: 0</p>
+    <p>Good Eggs: 0</p>
+    <p>Defective Eggs: 0</p>
+</div>
+
+
+<br>
+
+<a class="logout" href="{{ url_for('logout') }}">
+    Logout
+</a>
+
+
+{% endblock %}

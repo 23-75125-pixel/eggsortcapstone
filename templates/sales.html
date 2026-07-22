@@ -150,143 +150,121 @@
       .ambient-shadow {
         box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04);
       }
+      .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
     </style>
   </head>
   <body class="flex h-screen overflow-hidden bg-background">
-    <!-- Side Navigation -->
-    <aside
-      class="h-screen w-64 flex-col fixed left-0 top-0 bg-inverse-surface border-r border-outline-variant/10 shadow-xl flex flex-col py-gutter z-50"
+    <!-- SideNavBar -->
+    <nav
+      id="sidebar"
+      class="h-screen w-64 flex-col fixed left-0 top-0 bg-inverse-surface border-r border-outline-variant/10 shadow-xl flex z-50 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out"
     >
-      <div class="px-6 mb-8 flex items-center gap-3">
+      <!-- Brand -->
+      <div class="px-gutter py-margin flex items-center gap-sm">
         <div
-          class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-white font-bold text-xl"
+          class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white"
         >
-          E
+          <span class="material-symbols-outlined filled">egg</span>
         </div>
         <div>
           <h1
-            class="font-headline-md text-headline-md text-primary-fixed tracking-tight"
+            class="text-headline-md font-headline-md text-primary-fixed tracking-tight"
           >
             EGGSor+
           </h1>
           <p
-            class="font-caption text-caption text-surface-variant/70 uppercase tracking-wider"
+            class="font-label-caps text-label-caps text-surface-variant/70 tracking-widest mt-xs"
           >
-            IoT EGG SORTING SYS
+            IOT EGG SORTING SYS
           </p>
         </div>
       </div>
-      <nav class="flex-1 px-2 space-y-1 overflow-y-auto">
+      <!-- Links -->
+      <div class="flex flex-col h-full py-gutter px-2 flex-grow">
         <a
-          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
           href="/dashboard"
         >
-          <span
-            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
-            >dashboard</span
-          >
+          <span class="material-symbols-outlined">dashboard</span>
           <span class="font-button text-button">Dashboard</span>
         </a>
         <a
-          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
           href="/sorting-sessions"
         >
-          <span
-            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
-            >precision_manufacturing</span
-          >
+          <span class="material-symbols-outlined">precision_manufacturing</span>
           <span class="font-button text-button">Sorting Sessions</span>
         </a>
         <a
-          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
           href="/egg-records"
         >
-          <span
-            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
-            >inventory_2</span
-          >
+          <span class="material-symbols-outlined">inventory_2</span>
           <span class="font-button text-button">Egg Records</span>
         </a>
         <a
-          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
           href="/alerts"
         >
-          <span
-            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
-            >notifications</span
-          >
+          <span class="material-symbols-outlined">notifications</span>
           <span class="font-button text-button">Alerts</span>
         </a>
         <a
-          class="flex items-center gap-3 bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 active:scale-95 duration-150 ease-in-out"
-            href="/sales"
+          class="bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 flex items-center gap-3 active:scale-95 duration-150 ease-in-out nav-active-glow"
+          href="/sales"
         >
-          <span
-            class="material-symbols-outlined"
-            style="font-variation-settings: &quot;FILL&quot; 1"
-            >payments</span
-          >
+          <span class="material-symbols-outlined">payments</span>
           <span class="font-button text-button">Sales</span>
         </a>
         <a
-          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
           href="/reports"
         >
-          <span
-            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
-            >assessment</span
-          >
+          <span class="material-symbols-outlined">assessment</span>
           <span class="font-button text-button">Reports</span>
         </a>
         <a
-          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-4 rounded-lg hover:bg-surface-variant/10 group active:scale-95 duration-150 ease-in-out"
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
           href="/user-management"
         >
-          <span
-            class="material-symbols-outlined group-hover:text-primary-fixed transition-colors"
-            >manage_accounts</span
-          >
+          <span class="material-symbols-outlined">manage_accounts</span>
           <span class="font-button text-button">User Management</span>
         </a>
-      </nav>
-      <div class="mt-auto px-6 border-t border-outline-variant/10 pt-4">
+      </div>
+      <!-- Footer -->
+      <div class="p-4 mb-4">
         <div
-          class="flex items-center gap-3 mb-4 p-3 rounded-lg bg-surface-variant/5"
+          class="bg-black/20 rounded-xl p-4 flex items-center gap-3 mb-4"
         >
-          <div
-            class="w-10 h-10 rounded-full bg-surface-variant/20 flex items-center justify-center overflow-hidden"
-          >
-            <img
-              class="w-full h-full object-cover"
-              data-alt="A small circular avatar placeholder image showing a generic user silhouette in a professional light mode setting. The overall style is clean, modern, and suitable for a corporate IoT dashboard. Colors are muted greys and whites."
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8SHe8Ei_sQxVU1x-Tr8l0h4XvXqK7vgTzPaMumA0Mue1NxtqCdrKCQQYEzPyuQcX8WiV9a2pMuyosEGPCf8GllRPrII0bwQsSgzpuakeZyMRB6nlTjCGH0nuDrWXUGogOidCJzcvniZAWeDLVlJswd3wKOW1PYjOJy4rJQtJKXFDuENTFjzxQx180YkAayKUMSeAFUfEX_esXYv-USahg_OhGQrPXNIl7rPPNIy65YMUkz57pc6XVRjbnpACVWmNDvYuGKzUxZQ"
-            />
+          <div class="w-10 h-10 rounded-full bg-primary-container/30 flex items-center justify-center">
+            <span class="material-symbols-outlined text-white">account_circle</span>
           </div>
           <div>
-            <p class="font-button text-button text-white">Roxie Farm</p>
-            <p class="font-caption text-caption text-surface-variant/70">
-              Admin
-            </p>
+            <p class="text-white font-bold text-sm">Roxie Farm</p>
+            <p class="text-surface-variant/70 text-xs flex items-center gap-1">Admin</p>
           </div>
         </div>
         <a
-          class="flex items-center gap-3 text-surface-variant/70 hover:text-error transition-colors py-3 px-2 rounded-lg hover:bg-error/10 group"
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg justify-center border border-white/10"
           href="/logout"
         >
-          <span
-            class="material-symbols-outlined group-hover:text-error transition-colors"
-            >logout</span
-          >
+          <span class="material-symbols-outlined">logout</span>
           <span class="font-button text-button">Log Out</span>
         </a>
       </div>
-    </aside>
+    </nav>
+    <!-- Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden hidden"></div>
     <!-- Main Content -->
-    <main class="flex-1 ml-64 bg-background overflow-y-auto">
+    <main class="flex-1 md:ml-64 bg-background overflow-y-auto">
       <div class="max-w-7xl mx-auto px-margin py-margin">
         <!-- Header Section -->
-        <header class="flex justify-between items-start mb-xl">
-          <div>
+        <header class="flex flex-col md:flex-row justify-between items-start mb-xl gap-4">
+          <div class="flex items-center gap-3">
+            <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors shrink-0">
+              <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div>
             <div class="flex items-center gap-2 mb-2">
               <span
                 class="font-label-caps text-label-caps text-primary uppercase tracking-widest"
@@ -510,5 +488,13 @@
         </section>
       </div>
     </main>
+    <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    }
+    </script>
   </body>
 </html>

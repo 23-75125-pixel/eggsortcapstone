@@ -136,18 +136,21 @@
       .icon-fill {
         font-variation-settings: "FILL" 1;
       }
+      .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
     </style>
   </head>
   <body class="bg-background text-on-background font-body-md flex min-h-screen">
     <!-- SideNavBar -->
-    <aside
-      class="bg-inverse-surface dark:bg-black text-primary dark:text-primary-fixed h-screen w-64 flex-col fixed left-0 top-0 border-r border-outline-variant/10 shadow-xl flex py-gutter z-50"
+    <nav
+      id="sidebar"
+      class="h-screen w-64 flex-col fixed left-0 top-0 bg-inverse-surface border-r border-outline-variant/10 shadow-xl flex z-50 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out"
     >
-      <div class="px-6 mb-8 flex items-center gap-3">
+      <!-- Brand -->
+      <div class="px-gutter py-margin flex items-center gap-sm">
         <div
-          class="w-10 h-10 rounded bg-primary-container flex items-center justify-center text-white"
+          class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white"
         >
-          <span class="material-symbols-outlined">egg_alt</span>
+          <span class="material-symbols-outlined filled">egg</span>
         </div>
         <div>
           <h1
@@ -155,101 +158,91 @@
           >
             EGGSor+
           </h1>
-          <p class="text-caption font-caption text-surface-variant/70">
-            IoT EGG SORTING SYS
+          <p
+            class="font-label-caps text-label-caps text-surface-variant/70 tracking-widest mt-xs"
+          >
+            IOT EGG SORTING SYS
           </p>
         </div>
       </div>
-      <nav class="flex-1 overflow-y-auto">
-        <ul class="space-y-1">
-          <li>
-            <a
-              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
-              href="/dashboard"
-            >
-              <span class="material-symbols-outlined">dashboard</span>
-              <span class="font-button text-button">Dashboard</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
-              href="/sorting-sessions"
-            >
-              <span class="material-symbols-outlined"
-                >precision_manufacturing</span
-              >
-              <span class="font-button text-button">Sorting Sessions</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
-              href="/egg-records"
-            >
-              <span class="material-symbols-outlined">inventory_2</span>
-              <span class="font-button text-button">Egg Records</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
-              href="/alerts"
-            >
-              <span class="material-symbols-outlined">notifications</span>
-              <span class="font-button text-button">Alerts</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
-              href="/sales"
-            >
-              <span class="material-symbols-outlined">payments</span>
-              <span class="font-button text-button">Sales</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-4 bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 active:scale-95 duration-150 ease-in-out"
-            href="/reports"
-            >
-              <span class="material-symbols-outlined icon-fill"
-                >assessment</span
-              >
-              <span class="font-button text-button">Reports</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
-              href="/user-management"
-            >
-              <span class="material-symbols-outlined">manage_accounts</span>
-              <span class="font-button text-button">User Management</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-      <div class="px-6 mt-auto">
+      <!-- Links -->
+      <div class="flex flex-col h-full py-gutter px-2 flex-grow">
         <a
-          class="flex items-center gap-4 text-surface-variant/70 hover:text-white transition-colors py-3 hover:bg-surface-variant/10 hover:text-white transition-all active:scale-95 duration-150 ease-in-out"
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/dashboard"
+        >
+          <span class="material-symbols-outlined">dashboard</span>
+          <span class="font-button text-button">Dashboard</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/sorting-sessions"
+        >
+          <span class="material-symbols-outlined">precision_manufacturing</span>
+          <span class="font-button text-button">Sorting Sessions</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/egg-records"
+        >
+          <span class="material-symbols-outlined">inventory_2</span>
+          <span class="font-button text-button">Egg Records</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/alerts"
+        >
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="font-button text-button">Alerts</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/sales"
+        >
+          <span class="material-symbols-outlined">payments</span>
+          <span class="font-button text-button">Sales</span>
+        </a>
+        <a
+          class="bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 flex items-center gap-3 active:scale-95 duration-150 ease-in-out nav-active-glow"
+          href="/reports"
+        >
+          <span class="material-symbols-outlined">assessment</span>
+          <span class="font-button text-button">Reports</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/user-management"
+        >
+          <span class="material-symbols-outlined">manage_accounts</span>
+          <span class="font-button text-button">User Management</span>
+        </a>
+      </div>
+      <!-- Footer -->
+      <div class="p-4 mb-4">
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg justify-center border border-white/10"
           href="/logout"
         >
           <span class="material-symbols-outlined">logout</span>
           <span class="font-button text-button">Log Out</span>
         </a>
       </div>
-    </aside>
+    </nav>
+    <!-- Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden hidden"></div>
     <!-- Main Content Area -->
     <main
-      class="flex-1 ml-64 flex flex-col min-h-screen bg-background relative overflow-hidden"
+      class="flex-1 md:ml-64 flex flex-col min-h-screen bg-background relative overflow-hidden"
     >
       <!-- Header -->
       <header
-        class="w-full h-20 sticky top-0 z-40 bg-surface dark:bg-surface-dim flex justify-between items-center px-margin border-b border-surface-variant/50"
+        class="w-full h-20 sticky top-0 z-30 bg-surface dark:bg-surface-dim flex justify-between items-center px-margin border-b border-surface-variant/50"
       >
-        <div>
+        <div class="flex items-center gap-3">
+          <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors shrink-0">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+          <div>
           <p
             class="text-label-caps font-label-caps text-secondary tracking-widest mb-1 uppercase"
           >
@@ -436,5 +429,13 @@
         </div>
       </div>
     </main>
-  </body>
+  <script>
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('-translate-x-full');
+  overlay.classList.toggle('hidden');
+}
+</script>
+</body>
 </html>

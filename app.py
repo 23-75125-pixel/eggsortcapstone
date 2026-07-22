@@ -1,3 +1,6 @@
+import os
+from functools import wraps
+from typing import Callable, Any
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -5,7 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-app.secret_key = "change_this_secret_key"
+app.secret_key = os.environ.get("SECRET_KEY", "change_this_secret_key")
 
 
 # SQLite database configuration
@@ -45,49 +48,45 @@ with app.app_context():
 
 # Home
 @app.route("/")
-def home():
+def home() -> Any:
     return redirect(url_for("login"))
 
 
 
 # Register user
 @app.route("/register", methods=["GET", "POST"])
-def register():
+def register() -> Any:
 
     error = None
 
     if request.method == "POST":
 
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
 
-
-        existing_user = User.query.filter_by(
-            username=username
-        ).first()
-
-
-        if existing_user:
-            error = "Username already exists"
-
+        if not username or not password:
+            error = "Username and password are required"
         else:
+            existing_user = User.query.filter_by(
+                username=username
+            ).first()
 
-            hashed_password = generate_password_hash(
-                password
-            )
+            if existing_user:
+                error = "Username already exists"
+            else:
+                hashed_password = generate_password_hash(
+                    password
+                )
 
-            user = User(
-                username=username,
-                password=hashed_password
-            )
+                user = User(
+                    username=username,
+                    password=hashed_password
+                )
 
+                db.session.add(user)
+                db.session.commit()
 
-            db.session.add(user)
-            db.session.commit()
-
-
-            return redirect(url_for("login"))
-
+                return redirect(url_for("login"))
 
     return render_template(
         "register.html",
@@ -98,38 +97,36 @@ def register():
 
 # Login
 @app.route("/login", methods=["GET", "POST"])
-def login():
+def login() -> Any:
 
     error = None
 
-
     if request.method == "POST":
 
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
 
-
-        user = User.query.filter_by(
-            username=username
-        ).first()
-
-
-        if user and check_password_hash(
-            user.password,
-            password
-        ):
-
-            session["user_id"] = user.id
-            session["username"] = user.username
-
-
-            return redirect(
-                url_for("dashboard")
-            )
-
+        if not username or not password:
+            error = "Username and password are required"
         else:
-            error = "Invalid username or password"
+            user = User.query.filter_by(
+                username=username
+            ).first()
 
+            if user and check_password_hash(
+                user.password,
+                password
+            ):
+
+                session["user_id"] = user.id
+                session["username"] = user.username
+
+                return redirect(
+                    url_for("dashboard")
+                )
+
+            else:
+                error = "Invalid username or password"
 
     return render_template(
         "login.html",
@@ -138,16 +135,19 @@ def login():
 
 
 
+def login_required(f: Callable[..., Any]) -> Callable[..., Any]:
+    @wraps(f)
+    def decorated_function(*args: Any, **kwargs: Any) -> Any:
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 # Dashboard
 @app.route("/dashboard")
-def dashboard():
-
-    if "user_id" not in session:
-        return redirect(
-            url_for("login")
-        )
-
-
+@login_required
+def dashboard() -> Any:
     return render_template(
         "dashboard.html",
         username=session["username"]
@@ -157,14 +157,8 @@ def dashboard():
 
 # Sorting Sessions
 @app.route("/sorting-sessions")
-def sorting_sessions():
-
-    if "user_id" not in session:
-        return redirect(
-            url_for("login")
-        )
-
-
+@login_required
+def sorting_sessions() -> Any:
     return render_template(
         "sorting_session.html",
         username=session["username"]
@@ -174,14 +168,8 @@ def sorting_sessions():
 
 # Egg Records
 @app.route("/egg-records")
-def egg_records():
-
-    if "user_id" not in session:
-        return redirect(
-            url_for("login")
-        )
-
-
+@login_required
+def egg_records() -> Any:
     return render_template(
         "egg_records.html",
         username=session["username"]
@@ -191,14 +179,8 @@ def egg_records():
 
 # Alerts
 @app.route("/alerts")
-def alerts():
-
-    if "user_id" not in session:
-        return redirect(
-            url_for("login")
-        )
-
-
+@login_required
+def alerts() -> Any:
     return render_template(
         "alerts.html",
         username=session["username"]
@@ -208,14 +190,8 @@ def alerts():
 
 # Sales
 @app.route("/sales")
-def sales():
-
-    if "user_id" not in session:
-        return redirect(
-            url_for("login")
-        )
-
-
+@login_required
+def sales() -> Any:
     return render_template(
         "sales.html",
         username=session["username"]
@@ -225,14 +201,8 @@ def sales():
 
 # Reports
 @app.route("/reports")
-def reports():
-
-    if "user_id" not in session:
-        return redirect(
-            url_for("login")
-        )
-
-
+@login_required
+def reports() -> Any:
     return render_template(
         "reports.html",
         username=session["username"]
@@ -242,14 +212,8 @@ def reports():
 
 # User Management
 @app.route("/user-management")
-def user_management():
-
-    if "user_id" not in session:
-        return redirect(
-            url_for("login")
-        )
-
-
+@login_required
+def user_management() -> Any:
     return render_template(
         "user_management.html",
         username=session["username"]
@@ -259,7 +223,7 @@ def user_management():
 
 # Logout
 @app.route("/logout")
-def logout():
+def logout() -> Any:
 
     session.clear()
 

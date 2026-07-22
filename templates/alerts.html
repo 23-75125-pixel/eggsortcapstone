@@ -133,151 +133,122 @@
           "GRAD" 0,
           "opsz" 24;
       }
+      .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
     </style>
   </head>
   <body class="bg-background text-on-background font-body-md antialiased flex">
     <!-- SideNavBar -->
     <nav
-      class="bg-inverse-surface dark:bg-black text-primary dark:text-primary-fixed h-screen w-64 flex-col fixed left-0 top-0 border-r border-outline-variant/10 shadow-xl flex py-gutter z-50"
+      id="sidebar"
+      class="h-screen w-64 flex-col fixed left-0 top-0 bg-inverse-surface border-r border-outline-variant/10 shadow-xl flex z-50 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out"
     >
-      <!-- Header -->
-      <div class="px-6 mb-8 flex items-center gap-3">
+      <!-- Brand -->
+      <div class="px-gutter py-margin flex items-center gap-sm">
         <div
-          class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white shadow-sm overflow-hidden flex-shrink-0"
+          class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white"
         >
-          <span
-            class="material-symbols-outlined"
-            data-icon="egg"
-            data-weight="fill"
-            >egg</span
-          >
+          <span class="material-symbols-outlined filled">egg</span>
         </div>
         <div>
           <h1
-            class="font-headline-md text-headline-md text-primary-fixed tracking-tight m-0 p-0 leading-tight"
+            class="text-headline-md font-headline-md text-primary-fixed tracking-tight"
           >
             EGGSor+
           </h1>
           <p
-            class="font-caption text-caption text-secondary-fixed-dim uppercase tracking-wider"
+            class="font-label-caps text-label-caps text-surface-variant/70 tracking-widest mt-xs"
           >
-            IoT EGG SORTING SYS
+            IOT EGG SORTING SYS
           </p>
         </div>
       </div>
-      <!-- Navigation Links -->
-      <div class="flex-1 overflow-y-auto">
-        <ul class="space-y-1">
-          <li>
-            <a
-              class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 active:scale-95 duration-150 ease-in-out"
-              href="/dashboard"
-            >
-              <span class="material-symbols-outlined">dashboard</span>
-              <span class="font-button text-button">Dashboard</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 active:scale-95 duration-150 ease-in-out"
-              href="/sorting-sessions"
-            >
-              <span class="material-symbols-outlined"
-                >precision_manufacturing</span
-              >
-              <span class="font-button text-button">Sorting Sessions</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 active:scale-95 duration-150 ease-in-out"
-              href="/egg-records"
-            >
-              <span class="material-symbols-outlined">inventory_2</span>
-              <span class="font-button text-button">Egg Records</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-3 bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 active:scale-95 duration-150 ease-in-out"
-              href="/alerts"
-            >
-              <span class="material-symbols-outlined">notifications</span>
-              <span class="font-button text-button">Alerts</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 active:scale-95 duration-150 ease-in-out"
-              href="/sales"
-            >
-              <span class="material-symbols-outlined">payments</span>
-              <span class="font-button text-button">Sales</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 active:scale-95 duration-150 ease-in-out"
-              href="/reports"
-            >
-              <span class="material-symbols-outlined">assessment</span>
-              <span class="font-button text-button">Reports</span>
-            </a>
-          </li>
-          <li>
-            <a
-              class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 active:scale-95 duration-150 ease-in-out"
-              href="/user-management"
-            >
-              <span class="material-symbols-outlined">manage_accounts</span>
-              <span class="font-button text-button">User Management</span>
-            </a>
-          </li>
-        </ul>
+      <!-- Links -->
+      <div class="flex flex-col h-full py-gutter px-2 flex-grow">
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/dashboard"
+        >
+          <span class="material-symbols-outlined">dashboard</span>
+          <span class="font-button text-button">Dashboard</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/sorting-sessions"
+        >
+          <span class="material-symbols-outlined">precision_manufacturing</span>
+          <span class="font-button text-button">Sorting Sessions</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/egg-records"
+        >
+          <span class="material-symbols-outlined">inventory_2</span>
+          <span class="font-button text-button">Egg Records</span>
+        </a>
+        <a
+          class="bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 flex items-center gap-3 active:scale-95 duration-150 ease-in-out nav-active-glow"
+          href="/alerts"
+        >
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="font-button text-button">Alerts</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/sales"
+        >
+          <span class="material-symbols-outlined">payments</span>
+          <span class="font-button text-button">Sales</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/reports"
+        >
+          <span class="material-symbols-outlined">assessment</span>
+          <span class="font-button text-button">Reports</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/user-management"
+        >
+          <span class="material-symbols-outlined">manage_accounts</span>
+          <span class="font-button text-button">User Management</span>
+        </a>
       </div>
       <!-- Footer -->
-      <div class="px-6 mt-auto">
+      <div class="p-4 mb-4">
         <div
-          class="bg-surface-variant/10 p-4 rounded-xl mb-4 flex items-center gap-3"
+          class="bg-black/20 rounded-xl p-4 flex items-center gap-3 mb-4"
         >
-          <div
-            class="w-10 h-10 rounded-full bg-surface-container overflow-hidden"
-          >
-            <img
-              class="w-full h-full object-cover"
-              data-alt="A detailed headshot portrait of an industrial site manager in front of sorting machinery. The lighting is soft and professional, capturing a bright modern corporate light-mode aesthetic with a crisp white background. Orange highlights catch the edge of their collar."
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbt2EDSeu7SAJrQZNwk-NOR_R_WfwPmv2uX3dKeSdFSGc1OGlocwRlXm_h6LdlNlis23DRqsjXbcEj2H63TBC-gEAv8p2R08Zg0Id6NzmZNM1paxJH-6dUeo7WEEnMr4tr6I8lsSOHBgtbw3gCqpPGX4PICu9x7xe3nXWHsuHoAvPAstkkA6sOX_kPahQKCcbOGPhYSeMwnq7XSSLQLuZAUGdgw7xA8hYtiOOmEVH8xn-1KCbL0hYBZN0nypiBkN8kSg_ZR0aT0g"
-            />
+          <div class="w-10 h-10 rounded-full bg-primary-container/30 flex items-center justify-center">
+            <span class="material-symbols-outlined text-white">account_circle</span>
           </div>
           <div>
-            <p class="font-button text-button text-white m-0 leading-tight">
-              Admin User
-            </p>
-            <p class="font-caption text-caption text-surface-variant/70">
-              Site Manager
-            </p>
+            <p class="text-white font-bold text-sm">Admin User</p>
+            <p class="text-surface-variant/70 text-xs flex items-center gap-1">Site Manager</p>
           </div>
         </div>
-        <ul>
-          <li>
-            <a
-              class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-3 px-6 hover:bg-surface-variant/10 active:scale-95 duration-150 ease-in-out rounded-lg"
-              href="/logout"
-            >
-              <span class="material-symbols-outlined">logout</span>
-              <span class="font-button text-button">Log Out</span>
-            </a>
-          </li>
-        </ul>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg justify-center border border-white/10"
+          href="/logout"
+        >
+          <span class="material-symbols-outlined">logout</span>
+          <span class="font-button text-button">Log Out</span>
+        </a>
       </div>
     </nav>
+    <!-- Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden hidden"></div>
     <!-- Main Content Canvas -->
-    <main class="ml-64 flex-1 min-h-screen p-margin flex flex-col">
+    <main class="md:ml-64 flex-1 min-h-screen p-margin flex flex-col">
       <!-- Page Header -->
       <header
-        class="flex justify-between items-end mb-margin pb-4 border-b border-surface-variant"
+        class="flex flex-col md:flex-row justify-between items-start md:items-end mb-margin pb-4 border-b border-surface-variant gap-4"
       >
-        <div>
+        <div class="flex items-center gap-3">
+          <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors shrink-0">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+          <div>
           <p class="font-label-caps text-label-caps text-primary mb-2">
             OPERATIONS PORTAL / ADMIN
           </p>
@@ -294,10 +265,10 @@
       </header>
       <!-- Filter Bar -->
       <div
-        class="bg-surface-container-lowest border border-surface-variant rounded-xl p-4 mb-md flex items-center justify-between shadow-sm relative z-10"
+        class="bg-surface-container-lowest border border-surface-variant rounded-xl p-4 mb-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-sm relative z-10"
         style="box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02)"
       >
-        <div class="flex items-center gap-4 w-1/2">
+        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full md:w-1/2">
           <span class="font-body-md text-secondary">Filter Alerts:</span>
           <div class="relative w-full max-w-sm">
             <span
@@ -312,15 +283,15 @@
           </div>
         </div>
         <div
-          class="flex bg-surface-container-low rounded-lg p-1 border border-surface-variant/50"
+          class="flex bg-surface-container-low rounded-lg p-1 border border-surface-variant/50 overflow-x-auto"
         >
           <button
-            class="px-6 py-2 rounded-md font-button text-button text-secondary hover:text-on-surface transition-colors"
+            class="px-4 md:px-6 py-2 rounded-md font-button text-button text-secondary hover:text-on-surface transition-colors whitespace-nowrap"
           >
             All Alerts
           </button>
           <button
-            class="px-6 py-2 rounded-md font-button text-button bg-inverse-surface text-white shadow-sm"
+            class="px-4 md:px-6 py-2 rounded-md font-button text-button bg-inverse-surface text-white shadow-sm whitespace-nowrap"
           >
             Unread
             <span
@@ -329,7 +300,7 @@
             >
           </button>
           <button
-            class="px-6 py-2 rounded-md font-button text-button text-secondary hover:text-on-surface transition-colors flex items-center gap-1"
+            class="px-4 md:px-6 py-2 rounded-md font-button text-button text-secondary hover:text-on-surface transition-colors flex items-center gap-1 whitespace-nowrap"
           >
             Critical
             <span class="material-symbols-outlined text-[14px] text-error"
@@ -391,5 +362,13 @@
         </div>
       </div>
     </main>
+    <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    }
+    </script>
   </body>
 </html>

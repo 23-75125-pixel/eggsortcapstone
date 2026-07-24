@@ -177,6 +177,7 @@
               </div>
               <div class="text-sm">
                 <a
+                  id="forgot-password"
                   class="font-bold text-brand hover:text-brand-hover transition-colors"
                   href="#"
                   >Forgot password?</a
@@ -258,5 +259,11 @@
         </div>
       </div>
     </div>
+    <script>
+      document.getElementById('forgot-password').addEventListener('click', (event) => {
+        event.preventDefault();
+        window.alert('Ask a signed-in administrator to reset your password from User Management.');
+      });
+    </script>
   </body>
 </html>

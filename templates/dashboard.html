@@ -261,6 +261,9 @@
             Dashboard ready
           </div>
           <button
+            id="refresh-dashboard"
+            type="button"
+            title="Refresh dashboard"
             class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors glow-effect"
           >
             <span class="material-symbols-outlined">refresh</span>
@@ -408,10 +411,10 @@
               >
                 Consolidated Customer Revenue
               </p>
-              <h3 class="font-headline-lg text-headline-lg text-white">
+              <h3 id="dashboard-revenue" class="font-headline-lg text-headline-lg text-white">
                 PHP 0.00
               </h3>
-              <p class="font-caption text-caption text-surface-variant/70 mt-1">
+              <p id="dashboard-revenue-note" class="font-caption text-caption text-surface-variant/70 mt-1">
                 No completed sales yet
               </p>
             </div>
@@ -521,6 +524,13 @@
           stats.camera_eggs_visible;
         document.getElementById('dashboard-camera-note').textContent =
           stats.camera_running ? 'Live camera detection' : 'Camera session stopped';
+        document.getElementById('dashboard-revenue').textContent =
+          `PHP ${Number(stats.total_revenue || 0).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })}`;
+        document.getElementById('dashboard-revenue-note').textContent =
+          stats.total_revenue > 0 ? 'Completed sales revenue' : 'No completed sales yet';
 
         const distribution = document.getElementById('dashboard-size-distribution');
         const maxCount = Math.max(1, ...Object.values(stats.size_counts));
@@ -546,6 +556,7 @@
       }
     }
 
+    document.getElementById('refresh-dashboard').addEventListener('click', refreshDashboard);
     refreshDashboard();
     window.setInterval(refreshDashboard, 750);
     </script>

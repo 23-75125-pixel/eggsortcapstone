@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime, time, timedelta, timezone
 from functools import wraps
 from typing import Callable, Any
 from flask import (
@@ -14,7 +14,7 @@ from flask import (
     url_for,
 )
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
+from sqlalchemy import String, cast, func, or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from camera_session import CAMERA_SESSION, CameraSessionError
 from egg_standards import SIZE_ORDER, classify_egg_size
@@ -29,6 +29,7 @@ from detection_service import (
 app = Flask(__name__)
 
 app.secret_key = os.environ.get("SECRET_KEY", "change_this_secret_key")
+app.permanent_session_lifetime = timedelta(days=30)
 
 
 # SQLite database configuration
@@ -120,6 +121,37 @@ class TrayAlert(db.Model):
         }
 
 
+class Sale(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    buyer_name = db.Column(db.String(120), nullable=False)
+    size = db.Column(db.String(30), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    total_amount = db.Column(db.Float, nullable=False)
+    payment_method = db.Column(db.String(30), nullable=False)
+    status = db.Column(db.String(30), nullable=False, default="Completed")
+    sold_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    def to_dict(self) -> dict[str, Any]:
+        sold_at = self.sold_at
+        if sold_at.tzinfo is None:
+            sold_at = sold_at.replace(tzinfo=timezone.utc)
+        return {
+            "id": self.id,
+            "invoice_id": f"INV-{self.id:06d}",
+            "buyer_name": self.buyer_name,
+            "size": self.size,
+            "quantity": self.quantity,
+            "total_amount": round(self.total_amount, 2),
+            "payment_method": self.payment_method,
+            "status": self.status,
+            "sold_at": sold_at.isoformat(),
+        }
+
+
 # Create database
 with app.app_context():
     db.create_all()
@@ -132,6 +164,38 @@ QUALITY_NAMES = {
     "dirty": "Dirty",
     "good": "Good",
 }
+
+SALE_SIZES = ["Small", "Medium", "Large", "Extra Large", "Jumbo"]
+
+
+def parse_date_boundary(value: str | None, end: bool = False) -> datetime | None:
+    if not value:
+        return None
+    parsed_date = datetime.strptime(value, "%Y-%m-%d").date()
+    boundary = time.max if end else time.min
+    return datetime.combine(parsed_date, boundary, tzinfo=timezone.utc)
+
+
+def sellable_stock_counts() -> dict[str, int]:
+    available_rows = (
+        db.session.query(EggRecord.size, func.count(EggRecord.id))
+        .filter(EggRecord.quality == "Good")
+        .group_by(EggRecord.size)
+        .all()
+    )
+    sold_rows = (
+        db.session.query(Sale.size, func.coalesce(func.sum(Sale.quantity), 0))
+        .filter(Sale.status != "Cancelled")
+        .group_by(Sale.size)
+        .all()
+    )
+    available = {size: 0 for size in SALE_SIZES}
+    available.update({size: count for size, count in available_rows})
+    sold = {size: count for size, count in sold_rows}
+    return {
+        size: max(0, int(available.get(size, 0)) - int(sold.get(size, 0)))
+        for size in SALE_SIZES
+    }
 
 
 def create_tray_alert_if_needed(
@@ -292,6 +356,7 @@ def login() -> Any:
 
                 session["user_id"] = user.id
                 session["username"] = user.username
+                session.permanent = request.form.get("remember-me") == "on"
 
                 return redirect(
                     url_for("dashboard")
@@ -432,13 +497,35 @@ def trigger_stopper() -> Any:
 def egg_records_data() -> Any:
     after_id = request.args.get("after_id", default=0, type=int)
     limit = min(request.args.get("limit", default=100, type=int), 500)
-    records = (
-        EggRecord.query
-        .filter(EggRecord.id > after_id)
-        .order_by(EggRecord.id.desc())
-        .limit(limit)
-        .all()
-    )
+    query = EggRecord.query.filter(EggRecord.id > after_id)
+    search = request.args.get("q", "").strip()
+    size = request.args.get("size", "").strip()
+    quality = request.args.get("quality", "").strip()
+    try:
+        start_date = parse_date_boundary(request.args.get("start_date"))
+        end_date = parse_date_boundary(request.args.get("end_date"), end=True)
+    except ValueError:
+        return jsonify(error="Dates must use YYYY-MM-DD format."), 400
+
+    if search:
+        numeric = "".join(character for character in search if character.isdigit())
+        conditions = [
+            EggRecord.session_ref.ilike(f"%{search}%"),
+            cast(EggRecord.weight_grams, String).ilike(f"%{search}%"),
+        ]
+        if numeric:
+            conditions.append(EggRecord.id == int(numeric))
+        query = query.filter(or_(*conditions))
+    if size and size != "All Sizes":
+        query = query.filter(EggRecord.size == size)
+    if quality and quality != "All Qualities":
+        query = query.filter(EggRecord.quality == quality)
+    if start_date is not None:
+        query = query.filter(EggRecord.sorted_at >= start_date)
+    if end_date is not None:
+        query = query.filter(EggRecord.sorted_at <= end_date)
+
+    records = query.order_by(EggRecord.id.desc()).limit(limit).all()
     return jsonify(
         records=[record.to_dict() for record in records],
         latest_id=max((record.id for record in records), default=after_id),
@@ -480,6 +567,14 @@ def dashboard_stats() -> Any:
         latest_record=latest_record.to_dict() if latest_record else None,
         hardware=ARDUINO_BRIDGE.status(),
         unread_alerts=TrayAlert.query.filter_by(is_read=False).count(),
+        total_revenue=round(
+            float(
+                db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))
+                .filter(Sale.status == "Completed")
+                .scalar()
+            ),
+            2,
+        ),
     )
 
 
@@ -506,6 +601,213 @@ def mark_all_alerts_read() -> Any:
     )
     db.session.commit()
     return jsonify(ok=True, unread_count=0)
+
+
+@app.get("/api/sales")
+@login_required
+def sales_data() -> Any:
+    search = request.args.get("q", "").strip()
+    status = request.args.get("status", "").strip()
+    query = Sale.query
+    if search:
+        numeric = "".join(character for character in search if character.isdigit())
+        conditions = [
+            Sale.buyer_name.ilike(f"%{search}%"),
+            Sale.size.ilike(f"%{search}%"),
+        ]
+        if numeric:
+            conditions.append(Sale.id == int(numeric))
+        query = query.filter(or_(*conditions))
+    if status and status != "All Statuses":
+        query = query.filter(Sale.status == status)
+    sales_list = query.order_by(Sale.id.desc()).limit(500).all()
+    return jsonify(
+        sales=[sale.to_dict() for sale in sales_list],
+        stocks=sellable_stock_counts(),
+        total_deals=Sale.query.count(),
+        total_revenue=round(
+            float(
+                db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))
+                .filter(Sale.status == "Completed")
+                .scalar()
+            ),
+            2,
+        ),
+    )
+
+
+@app.post("/api/sales")
+@login_required
+def create_sale() -> Any:
+    payload = request.get_json(silent=True) or {}
+    buyer_name = str(payload.get("buyer_name", "")).strip()
+    size = str(payload.get("size", "")).strip()
+    payment_method = str(payload.get("payment_method", "")).strip()
+    try:
+        quantity = int(payload.get("quantity", 0))
+        total_amount = round(float(payload.get("total_amount", 0)), 2)
+    except (TypeError, ValueError):
+        return jsonify(error="Quantity and total amount must be numbers."), 400
+
+    if not buyer_name:
+        return jsonify(error="Buyer name is required."), 400
+    if size not in SALE_SIZES:
+        return jsonify(error="Select a valid egg size."), 400
+    if quantity <= 0 or total_amount < 0:
+        return jsonify(error="Quantity must be positive and amount cannot be negative."), 400
+    if payment_method not in {"Cash", "GCash", "Bank Transfer"}:
+        return jsonify(error="Select a valid payment method."), 400
+    available = sellable_stock_counts().get(size, 0)
+    if quantity > available:
+        return jsonify(
+            error=f"Only {available} sellable {size} eggs are available."
+        ), 409
+
+    sale = Sale(
+        buyer_name=buyer_name,
+        size=size,
+        quantity=quantity,
+        total_amount=total_amount,
+        payment_method=payment_method,
+        status="Completed",
+    )
+    db.session.add(sale)
+    db.session.commit()
+    return jsonify(sale=sale.to_dict()), 201
+
+
+@app.get("/api/reports")
+@login_required
+def reports_data() -> Any:
+    sampling = request.args.get("sampling", "daily").lower()
+    if sampling not in {"daily", "weekly", "monthly"}:
+        return jsonify(error="Invalid sampling period."), 400
+    try:
+        start_date = parse_date_boundary(request.args.get("start_date"))
+        end_date = parse_date_boundary(request.args.get("end_date"), end=True)
+    except ValueError:
+        return jsonify(error="Dates must use YYYY-MM-DD format."), 400
+    if start_date and end_date and start_date > end_date:
+        return jsonify(error="Start date cannot be after end date."), 400
+
+    query = EggRecord.query
+    if start_date:
+        query = query.filter(EggRecord.sorted_at >= start_date)
+    if end_date:
+        query = query.filter(EggRecord.sorted_at <= end_date)
+    records = query.order_by(EggRecord.sorted_at.asc()).all()
+
+    groups: dict[str, dict[str, Any]] = {}
+    for record in records:
+        sorted_at = record.sorted_at
+        if sorted_at.tzinfo is None:
+            sorted_at = sorted_at.replace(tzinfo=timezone.utc)
+        if sampling == "daily":
+            key = sorted_at.strftime("%Y-%m-%d")
+        elif sampling == "weekly":
+            iso_year, iso_week, _ = sorted_at.isocalendar()
+            key = f"{iso_year}-W{iso_week:02d}"
+        else:
+            key = sorted_at.strftime("%Y-%m")
+        row = groups.setdefault(
+            key,
+            {"period": key, "total": 0, "good": 0, "damaged": 0, "dirty": 0},
+        )
+        row["total"] += 1
+        quality_key = record.quality.lower()
+        if quality_key in row:
+            row[quality_key] += 1
+
+    total = len(records)
+    good = sum(1 for record in records if record.quality == "Good")
+    damaged = sum(1 for record in records if record.quality == "Damaged")
+    return jsonify(
+        rows=list(groups.values()),
+        summary={
+            "total": total,
+            "good": good,
+            "damaged": damaged,
+            "quality_rate": round((good / total * 100) if total else 0, 1),
+            "revenue": round(
+                float(
+                    db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))
+                    .filter(Sale.status == "Completed")
+                    .scalar()
+                ),
+                2,
+            ),
+        },
+    )
+
+
+@app.get("/api/users")
+@login_required
+def users_data() -> Any:
+    users_list = User.query.order_by(User.username.asc()).all()
+    return jsonify(
+        users=[
+            {
+                "id": user.id,
+                "username": user.username,
+                "is_current": user.id == session["user_id"],
+            }
+            for user in users_list
+        ]
+    )
+
+
+@app.post("/api/users")
+@login_required
+def create_user() -> Any:
+    payload = request.get_json(silent=True) or {}
+    username = str(payload.get("username", "")).strip()
+    password = str(payload.get("password", ""))
+    if not username or not password:
+        return jsonify(error="Username and password are required."), 400
+    if len(password) < 6:
+        return jsonify(error="Password must contain at least 6 characters."), 400
+    if User.query.filter_by(username=username).first():
+        return jsonify(error="That username is already registered."), 409
+    user = User(username=username, password=generate_password_hash(password))
+    db.session.add(user)
+    db.session.commit()
+    return jsonify(id=user.id, username=user.username), 201
+
+
+@app.patch("/api/users/<int:user_id>")
+@login_required
+def update_user(user_id: int) -> Any:
+    user = db.get_or_404(User, user_id)
+    payload = request.get_json(silent=True) or {}
+    username = str(payload.get("username", "")).strip()
+    password = str(payload.get("password", ""))
+    if not username:
+        return jsonify(error="Username is required."), 400
+    duplicate = User.query.filter(User.username == username, User.id != user_id).first()
+    if duplicate:
+        return jsonify(error="That username is already registered."), 409
+    if password and len(password) < 6:
+        return jsonify(error="Password must contain at least 6 characters."), 400
+    user.username = username
+    if password:
+        user.password = generate_password_hash(password)
+    if user.id == session["user_id"]:
+        session["username"] = username
+    db.session.commit()
+    return jsonify(id=user.id, username=user.username)
+
+
+@app.delete("/api/users/<int:user_id>")
+@login_required
+def delete_user(user_id: int) -> Any:
+    if user_id == session["user_id"]:
+        return jsonify(error="You cannot delete the account currently signed in."), 409
+    user = db.get_or_404(User, user_id)
+    if User.query.count() <= 1:
+        return jsonify(error="At least one operator account must remain."), 409
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify(ok=True)
 
 
 

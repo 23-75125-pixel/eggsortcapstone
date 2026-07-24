@@ -263,6 +263,8 @@
             </div>
           </div>
           <button
+            id="open-sale-modal"
+            type="button"
             class="w-full md:w-auto bg-primary-container text-white px-6 h-12 rounded-lg font-button text-button hover:bg-primary transition-colors flex items-center justify-center gap-2 shadow-sm"
           >
             <span class="material-symbols-outlined">add</span>
@@ -284,6 +286,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-sm">
             <!-- Small -->
             <div
+              data-stock-size="Small"
               class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
             >
               <span
@@ -291,19 +294,20 @@
                 >Small</span
               >
               <div class="flex items-baseline gap-1">
-                <span class="font-headline-md text-headline-md text-error"
+                <span class="stock-dozens font-headline-md text-headline-md text-error"
                   >0</span
                 >
                 <span class="font-caption text-caption text-error font-bold"
                   >doz</span
                 >
               </div>
-              <span class="font-caption text-caption text-tertiary mt-1"
+              <span class="stock-units font-caption text-caption text-tertiary mt-1"
                 >(0 units)</span
               >
             </div>
             <!-- Medium -->
             <div
+              data-stock-size="Medium"
               class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
             >
               <span
@@ -311,19 +315,20 @@
                 >Medium</span
               >
               <div class="flex items-baseline gap-1">
-                <span class="font-headline-md text-headline-md text-error"
+                <span class="stock-dozens font-headline-md text-headline-md text-error"
                   >0</span
                 >
                 <span class="font-caption text-caption text-error font-bold"
                   >doz</span
                 >
               </div>
-              <span class="font-caption text-caption text-tertiary mt-1"
+              <span class="stock-units font-caption text-caption text-tertiary mt-1"
                 >(0 units)</span
               >
             </div>
             <!-- Large -->
             <div
+              data-stock-size="Large"
               class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
             >
               <span
@@ -331,19 +336,20 @@
                 >Large</span
               >
               <div class="flex items-baseline gap-1">
-                <span class="font-headline-md text-headline-md text-error"
+                <span class="stock-dozens font-headline-md text-headline-md text-error"
                   >0</span
                 >
                 <span class="font-caption text-caption text-error font-bold"
                   >doz</span
                 >
               </div>
-              <span class="font-caption text-caption text-tertiary mt-1"
+              <span class="stock-units font-caption text-caption text-tertiary mt-1"
                 >(0 units)</span
               >
             </div>
             <!-- Extra Large -->
             <div
+              data-stock-size="Extra Large"
               class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
             >
               <span
@@ -351,19 +357,20 @@
                 >Extra Large</span
               >
               <div class="flex items-baseline gap-1">
-                <span class="font-headline-md text-headline-md text-error"
+                <span class="stock-dozens font-headline-md text-headline-md text-error"
                   >0</span
                 >
                 <span class="font-caption text-caption text-error font-bold"
                   >doz</span
                 >
               </div>
-              <span class="font-caption text-caption text-tertiary mt-1"
+              <span class="stock-units font-caption text-caption text-tertiary mt-1"
                 >(0 units)</span
               >
             </div>
             <!-- Jumbo -->
             <div
+              data-stock-size="Jumbo"
               class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
             >
               <span
@@ -371,14 +378,14 @@
                 >Jumbo</span
               >
               <div class="flex items-baseline gap-1">
-                <span class="font-headline-md text-headline-md text-error"
+                <span class="stock-dozens font-headline-md text-headline-md text-error"
                   >0</span
                 >
                 <span class="font-caption text-caption text-error font-bold"
                   >doz</span
                 >
               </div>
-              <span class="font-caption text-caption text-tertiary mt-1"
+              <span class="stock-units font-caption text-caption text-tertiary mt-1"
                 >(0 units)</span
               >
             </div>
@@ -388,6 +395,20 @@
         <section
           class="bg-surface-container-lowest rounded-xl ambient-shadow border border-surface-container overflow-hidden"
         >
+          <div class="p-4 border-b border-surface-container flex flex-col sm:flex-row gap-3">
+            <input id="sale-search" type="search" placeholder="Search invoice, buyer, or size..."
+              class="flex-1 bg-[#F8F9FA] border border-surface-variant rounded-lg px-4 py-3 focus:outline-none focus:border-primary" />
+            <select id="sale-status-filter"
+              class="bg-[#F8F9FA] border border-surface-variant rounded-lg px-4 py-3">
+              <option>All Statuses</option>
+              <option>Completed</option>
+              <option>Cancelled</option>
+            </select>
+            <button id="reset-sale-filters" type="button"
+              class="px-5 py-3 rounded-lg border border-surface-variant text-secondary hover:bg-surface-container">
+              Reset
+            </button>
+          </div>
           <div
             class="p-md border-b border-surface-container flex justify-between items-center bg-surface-bright"
           >
@@ -395,7 +416,7 @@
               Ledger Invoice Directory
             </h3>
             <div class="font-caption text-caption text-secondary">
-              Total Deals: <span class="font-bold text-on-background">0</span>
+              Total Deals: <span id="total-deals" class="font-bold text-on-background">0</span>
             </div>
           </div>
           <div class="overflow-x-auto">
@@ -446,7 +467,7 @@
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="sales-body">
                 <!-- Empty State -->
                 <tr>
                   <td
@@ -470,6 +491,42 @@
         </section>
       </div>
     </main>
+    <div id="sale-modal" class="hidden fixed inset-0 z-[80] bg-black/50 p-4 items-center justify-center">
+      <form id="sale-form" class="w-full max-w-lg bg-white rounded-xl p-6 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-headline-md text-headline-md">Record New Sale</h3>
+          <button id="close-sale-modal" type="button" class="p-2 rounded-lg hover:bg-surface-container" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <p id="sale-error" class="hidden rounded-lg bg-error-container text-error p-3" role="alert"></p>
+        <label class="block">Buyer Name
+          <input name="buyer_name" required class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
+        </label>
+        <label class="block">Egg Size
+          <select name="size" required class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3">
+            <option>Small</option><option>Medium</option><option>Large</option>
+            <option>Extra Large</option><option>Jumbo</option>
+          </select>
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label>Quantity (eggs)
+            <input name="quantity" type="number" min="1" required class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
+          </label>
+          <label>Total Amount (PHP)
+            <input name="total_amount" type="number" min="0" step="0.01" required class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
+          </label>
+        </div>
+        <label class="block">Payment Method
+          <select name="payment_method" required class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3">
+            <option>Cash</option><option>GCash</option><option>Bank Transfer</option>
+          </select>
+        </label>
+        <button type="submit" class="w-full h-12 rounded-lg bg-primary-container text-white font-button">
+          Save Sale
+        </button>
+      </form>
+    </div>
     <script>
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
@@ -477,6 +534,123 @@
       sidebar.classList.toggle('-translate-x-full');
       overlay.classList.toggle('hidden');
     }
+
+    const salesBody = document.getElementById('sales-body');
+    const saleModal = document.getElementById('sale-modal');
+    const saleForm = document.getElementById('sale-form');
+    const saleError = document.getElementById('sale-error');
+    const saleSearch = document.getElementById('sale-search');
+    const saleStatus = document.getElementById('sale-status-filter');
+    let saleSearchTimer = null;
+
+    function openSaleModal() {
+      saleModal.classList.remove('hidden');
+      saleModal.classList.add('flex');
+      saleError.classList.add('hidden');
+      saleForm.elements.buyer_name.focus();
+    }
+
+    function closeSaleModal() {
+      saleModal.classList.add('hidden');
+      saleModal.classList.remove('flex');
+      saleForm.reset();
+    }
+
+    function renderSales(sales) {
+      salesBody.replaceChildren();
+      if (!sales.length) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 8;
+        cell.className = 'py-12 text-center text-tertiary';
+        cell.textContent = 'No invoices match the current search and filters.';
+        row.appendChild(cell);
+        salesBody.appendChild(row);
+        return;
+      }
+      sales.forEach((sale) => {
+        const row = document.createElement('tr');
+        row.className = 'border-b border-surface-container';
+        const values = [
+          sale.invoice_id,
+          sale.buyer_name,
+          new Date(sale.sold_at).toLocaleString(),
+          `${sale.quantity} ${sale.size} eggs`,
+          `PHP ${Number(sale.total_amount).toFixed(2)}`,
+          sale.payment_method,
+          sale.status
+        ];
+        values.forEach((value) => {
+          const cell = document.createElement('td');
+          cell.className = 'py-4 px-6 whitespace-nowrap';
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+        const action = document.createElement('td');
+        action.className = 'py-4 px-6 text-right text-secondary';
+        action.textContent = 'Recorded';
+        row.appendChild(action);
+        salesBody.appendChild(row);
+      });
+    }
+
+    async function refreshSales() {
+      const params = new URLSearchParams({
+        q: saleSearch.value.trim(),
+        status: saleStatus.value
+      });
+      const response = await fetch(`/api/sales?${params}`);
+      if (response.redirected) {
+        window.location.href = response.url;
+        return;
+      }
+      const payload = await response.json();
+      if (!response.ok) return;
+      document.getElementById('total-deals').textContent = payload.total_deals;
+      Object.entries(payload.stocks).forEach(([size, units]) => {
+        const card = document.querySelector(`[data-stock-size="${size}"]`);
+        if (!card) return;
+        card.querySelector('.stock-dozens').textContent = Math.floor(units / 12);
+        card.querySelector('.stock-units').textContent = `(${units} units)`;
+      });
+      renderSales(payload.sales);
+    }
+
+    document.getElementById('open-sale-modal').addEventListener('click', openSaleModal);
+    document.getElementById('close-sale-modal').addEventListener('click', closeSaleModal);
+    saleModal.addEventListener('click', (event) => {
+      if (event.target === saleModal) closeSaleModal();
+    });
+    saleSearch.addEventListener('input', () => {
+      clearTimeout(saleSearchTimer);
+      saleSearchTimer = setTimeout(refreshSales, 250);
+    });
+    saleStatus.addEventListener('change', refreshSales);
+    document.getElementById('reset-sale-filters').addEventListener('click', () => {
+      saleSearch.value = '';
+      saleStatus.value = 'All Statuses';
+      refreshSales();
+    });
+    saleForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(saleForm);
+      const response = await fetch('/api/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(formData.entries()))
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        saleError.textContent = payload.error || 'Unable to save sale.';
+        saleError.classList.remove('hidden');
+        return;
+      }
+      closeSaleModal();
+      refreshSales();
+    });
+
+    refreshSales();
+    setInterval(refreshSales, 3000);
     </script>
   </body>
 </html>

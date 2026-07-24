@@ -246,6 +246,8 @@
           </div>
         </div>
         <button
+          id="print-report"
+          type="button"
           class="w-full sm:w-auto bg-inverse-surface text-white h-12 px-6 rounded flex items-center justify-center gap-2 hover:bg-surface-tint transition-colors active:scale-95 font-button text-button"
         >
           <span class="material-symbols-outlined text-sm">print</span>
@@ -272,6 +274,7 @@
                   >tune</span
                 >
                 <select
+                  id="report-sampling"
                   class="w-full bg-[#F8F9FA] border border-surface-variant rounded h-12 pl-10 pr-4 appearance-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-on-surface"
                 >
                   <option>Daily</option>
@@ -295,9 +298,9 @@
                   >calendar_today</span
                 >
                 <input
+                  id="report-start-date"
                   class="w-full bg-[#F8F9FA] border border-surface-variant rounded h-12 pl-10 pr-4 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-on-surface"
-                  type="text"
-                  value="07/15/2026"
+                  type="date"
                 />
               </div>
             </div>
@@ -312,13 +315,15 @@
                   >calendar_today</span
                 >
                 <input
+                  id="report-end-date"
                   class="w-full bg-[#F8F9FA] border border-surface-variant rounded h-12 pl-10 pr-4 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-on-surface"
-                  type="text"
-                  value="07/15/2026"
+                  type="date"
                 />
               </div>
             </div>
             <button
+              id="refresh-report"
+              type="button"
               class="bg-[#E67E00] text-white h-12 px-8 rounded flex items-center justify-center gap-2 hover:bg-primary-container/90 transition-colors active:scale-95 font-button text-button w-full md:w-auto shrink-0"
             >
               Refresh live data
@@ -339,7 +344,7 @@
             >
               Total Sorted
             </h3>
-            <div class="text-headline-md font-headline-md text-on-surface">
+            <div id="report-total" class="text-headline-md font-headline-md text-on-surface">
               —
             </div>
           </div>
@@ -352,7 +357,7 @@
             >
               Good Quality
             </h3>
-            <div class="text-headline-md font-headline-md text-on-surface">
+            <div id="report-good" class="text-headline-md font-headline-md text-on-surface">
               —
             </div>
           </div>
@@ -363,9 +368,9 @@
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
             >
-              Cracked
+              Damaged
             </h3>
-            <div class="text-headline-md font-headline-md text-on-surface">
+            <div id="report-damaged" class="text-headline-md font-headline-md text-on-surface">
               0
             </div>
           </div>
@@ -378,7 +383,7 @@
             >
               Quality Rate
             </h3>
-            <div class="text-headline-md font-headline-md text-on-surface">
+            <div id="report-quality-rate" class="text-headline-md font-headline-md text-on-surface">
               —
             </div>
           </div>
@@ -391,7 +396,7 @@
             >
               Proj Revenue
             </h3>
-            <div
+            <div id="report-revenue"
               class="text-headline-md font-headline-md text-on-surface flex items-center gap-1"
             >
               <span class="text-body-md font-body-md text-secondary">PHP</span>
@@ -410,14 +415,24 @@
               <h3 class="text-body-lg font-body-lg font-bold text-on-surface">
                 Daily Report
               </h3>
-              <p class="text-caption font-caption text-secondary mt-1">
+              <p id="report-description" class="text-caption font-caption text-secondary mt-1">
                 No data available. Start sorting sessions to generate reports.
               </p>
             </div>
           </div>
-          <div class="flex flex-col items-center justify-center py-12 text-center">
-            <span class="material-symbols-outlined text-4xl text-secondary-fixed-dim mb-4">bar_chart</span>
-            <p class="font-body-md text-body-md text-secondary">No report data yet. Data will appear after the first sorting session and sale are completed.</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low border-b border-surface-variant">
+                  <th class="py-3 px-5">PERIOD</th>
+                  <th class="py-3 px-5">TOTAL</th>
+                  <th class="py-3 px-5">GOOD</th>
+                  <th class="py-3 px-5">DIRTY</th>
+                  <th class="py-3 px-5">DAMAGED</th>
+                </tr>
+              </thead>
+              <tbody id="report-rows"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -429,6 +444,83 @@ function toggleSidebar() {
   sidebar.classList.toggle('-translate-x-full');
   overlay.classList.toggle('hidden');
 }
+
+const reportStart = document.getElementById('report-start-date');
+const reportEnd = document.getElementById('report-end-date');
+const reportSampling = document.getElementById('report-sampling');
+const reportRows = document.getElementById('report-rows');
+
+function setDefaultReportDates() {
+  const now = new Date();
+  const end = now.toISOString().slice(0, 10);
+  const startDate = new Date(now);
+  startDate.setDate(startDate.getDate() - 29);
+  reportStart.value = startDate.toISOString().slice(0, 10);
+  reportEnd.value = end;
+}
+
+function renderReportRows(rows) {
+  reportRows.replaceChildren();
+  if (!rows.length) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 5;
+    cell.className = 'py-12 px-5 text-center text-secondary';
+    cell.textContent = 'No sorting records match this date range.';
+    row.appendChild(cell);
+    reportRows.appendChild(row);
+    return;
+  }
+  rows.forEach((entry) => {
+    const row = document.createElement('tr');
+    row.className = 'border-b border-surface-variant/50';
+    [entry.period, entry.total, entry.good, entry.dirty, entry.damaged].forEach((value) => {
+      const cell = document.createElement('td');
+      cell.className = 'py-3 px-5';
+      cell.textContent = value;
+      row.appendChild(cell);
+    });
+    reportRows.appendChild(row);
+  });
+}
+
+async function refreshReport() {
+  const params = new URLSearchParams({
+    sampling: reportSampling.value.toLowerCase(),
+    start_date: reportStart.value,
+    end_date: reportEnd.value
+  });
+  const response = await fetch(`/api/reports?${params}`);
+  if (response.redirected) {
+    window.location.href = response.url;
+    return;
+  }
+  const payload = await response.json();
+  if (!response.ok) {
+    window.alert(payload.error || 'Unable to generate report.');
+    return;
+  }
+  document.getElementById('report-total').textContent = payload.summary.total;
+  document.getElementById('report-good').textContent = payload.summary.good;
+  document.getElementById('report-damaged').textContent = payload.summary.damaged;
+  document.getElementById('report-quality-rate').textContent = `${payload.summary.quality_rate}%`;
+  document.getElementById('report-revenue').textContent =
+    `PHP ${Number(payload.summary.revenue).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
+  document.getElementById('report-description').textContent =
+    `${reportSampling.value} totals from ${reportStart.value} through ${reportEnd.value}.`;
+  renderReportRows(payload.rows);
+}
+
+setDefaultReportDates();
+document.getElementById('refresh-report').addEventListener('click', refreshReport);
+document.getElementById('print-report').addEventListener('click', () => window.print());
+reportSampling.addEventListener('change', refreshReport);
+reportStart.addEventListener('change', refreshReport);
+reportEnd.addEventListener('change', refreshReport);
+refreshReport();
 </script>
 </body>
 </html>

@@ -248,28 +248,36 @@
       <!-- Tab Navigation -->
       <div class="border-b border-surface-variant mb-lg flex gap-6 overflow-x-auto">
         <button
+          id="tab-operators"
+          type="button"
           class="pb-3 border-b-2 border-primary-container text-on-surface font-button text-button whitespace-nowrap shrink-0"
         >
           Operators Registry
         </button>
         <button
+          id="tab-audit"
+          type="button"
           class="pb-3 border-b-2 border-transparent text-secondary hover:text-on-surface transition-colors font-button text-button whitespace-nowrap shrink-0"
         >
           Audit History Trail
         </button>
         <button
+          id="tab-docs"
+          type="button"
           class="pb-3 border-b-2 border-transparent text-secondary hover:text-on-surface transition-colors font-button text-button whitespace-nowrap shrink-0"
         >
           Systems Architect Docs
         </button>
       </div>
       <!-- Content Area -->
-      <section>
+      <section id="operators-panel">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
           <h2 class="font-headline-md text-headline-md text-on-surface">
             Authorized Farm Handlers
           </h2>
           <button
+            id="register-operator"
+            type="button"
             class="w-full sm:w-auto bg-primary-container text-white h-12 px-6 rounded-lg font-button text-button flex items-center justify-center gap-2 hover:bg-primary transition-colors active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.04)]"
           >
             <span class="material-symbols-outlined text-sm">add</span>
@@ -277,7 +285,7 @@
           </button>
         </div>
         <!-- Bento Grid / Cards Area -->
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div id="users-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <!-- User Card -->
           <div
             class="bg-surface-container-lowest border border-surface-variant rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow"
@@ -344,7 +352,42 @@
           </div>
         </div>
       </section>
+      <section id="audit-panel" class="hidden bg-white border border-surface-variant rounded-xl p-6">
+        <h2 class="font-headline-md text-headline-md">Audit History Trail</h2>
+        <p class="text-secondary mt-3">Sign-in and account audit entries are not recorded yet. This panel intentionally shows no fabricated activity.</p>
+      </section>
+      <section id="docs-panel" class="hidden bg-white border border-surface-variant rounded-xl p-6">
+        <h2 class="font-headline-md text-headline-md">Systems Architect Docs</h2>
+        <div class="mt-4 space-y-2 text-secondary">
+          <p>Operators can access live sorting, records, alerts, sales, and reports.</p>
+          <p>Only non-current operator accounts can be deleted, and at least one account must remain.</p>
+        </div>
+      </section>
     </main>
+    <div id="user-modal" class="hidden fixed inset-0 z-[80] bg-black/50 p-4 items-center justify-center">
+      <form id="user-form" class="w-full max-w-md bg-white rounded-xl p-6 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 id="user-modal-title" class="font-headline-md text-headline-md">Register Operator</h3>
+          <button id="close-user-modal" type="button" class="p-2 rounded-lg hover:bg-surface-container" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <p id="user-error" class="hidden rounded-lg bg-error-container text-error p-3" role="alert"></p>
+        <input name="user_id" type="hidden" />
+        <label class="block">Username
+          <input name="username" required autocomplete="off"
+            class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
+        </label>
+        <label class="block">Password
+          <input name="password" type="password" minlength="6"
+            class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
+          <span id="password-help" class="text-xs text-secondary">Minimum 6 characters.</span>
+        </label>
+        <button type="submit" class="w-full h-12 rounded-lg bg-primary-container text-white font-button">
+          Save Operator
+        </button>
+      </form>
+    </div>
     <script>
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
@@ -352,6 +395,147 @@
       sidebar.classList.toggle('-translate-x-full');
       overlay.classList.toggle('hidden');
     }
+
+    const usersGrid = document.getElementById('users-grid');
+    const userModal = document.getElementById('user-modal');
+    const userForm = document.getElementById('user-form');
+    const userError = document.getElementById('user-error');
+    let usersCache = [];
+
+    function showPanel(name) {
+      const mappings = [
+        ['operators', 'tab-operators', 'operators-panel'],
+        ['audit', 'tab-audit', 'audit-panel'],
+        ['docs', 'tab-docs', 'docs-panel']
+      ];
+      mappings.forEach(([value, tabId, panelId]) => {
+        const active = value === name;
+        document.getElementById(panelId).classList.toggle('hidden', !active);
+        const tab = document.getElementById(tabId);
+        tab.classList.toggle('border-primary-container', active);
+        tab.classList.toggle('text-on-surface', active);
+        tab.classList.toggle('border-transparent', !active);
+        tab.classList.toggle('text-secondary', !active);
+      });
+    }
+
+    function openUserModal(user = null) {
+      userForm.reset();
+      userError.classList.add('hidden');
+      userForm.elements.user_id.value = user?.id || '';
+      userForm.elements.username.value = user?.username || '';
+      userForm.elements.password.required = !user;
+      document.getElementById('user-modal-title').textContent =
+        user ? 'Edit Operator' : 'Register Operator';
+      document.getElementById('password-help').textContent =
+        user ? 'Leave blank to keep the current password.' : 'Minimum 6 characters.';
+      userModal.classList.remove('hidden');
+      userModal.classList.add('flex');
+      userForm.elements.username.focus();
+    }
+
+    function closeUserModal() {
+      userModal.classList.add('hidden');
+      userModal.classList.remove('flex');
+    }
+
+    function renderUsers(users) {
+      usersGrid.replaceChildren();
+      users.forEach((user) => {
+        const card = document.createElement('article');
+        card.className = 'bg-white border border-surface-variant rounded-xl p-5 flex items-center justify-between gap-4 shadow-sm';
+        const details = document.createElement('div');
+        const title = document.createElement('h3');
+        title.className = 'font-button text-button text-on-surface';
+        title.textContent = user.username;
+        const meta = document.createElement('p');
+        meta.className = 'font-caption text-caption text-secondary mt-2';
+        meta.textContent = user.is_current ? 'ADMIN • CURRENT SESSION' : 'OPERATOR • ACTIVE';
+        details.append(title, meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'flex gap-2';
+        const edit = document.createElement('button');
+        edit.type = 'button';
+        edit.className = 'p-2 rounded-lg text-secondary hover:bg-surface-container';
+        edit.title = 'Edit operator';
+        edit.innerHTML = '<span class="material-symbols-outlined">edit</span>';
+        edit.addEventListener('click', () => openUserModal(user));
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'p-2 rounded-lg text-secondary hover:bg-error-container hover:text-error disabled:opacity-40';
+        remove.title = user.is_current ? 'Cannot delete current account' : 'Delete operator';
+        remove.disabled = user.is_current;
+        remove.innerHTML = '<span class="material-symbols-outlined">delete</span>';
+        remove.addEventListener('click', async () => {
+          if (!window.confirm(`Delete operator "${user.username}"?`)) return;
+          const response = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
+          const payload = await response.json();
+          if (!response.ok) {
+            window.alert(payload.error || 'Unable to delete operator.');
+            return;
+          }
+          refreshUsers();
+        });
+        actions.append(edit, remove);
+        card.append(details, actions);
+        usersGrid.appendChild(card);
+      });
+
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'bg-surface-container-low border border-dashed border-outline-variant/50 rounded-xl p-6 min-h-[120px] text-secondary hover:bg-surface-container';
+      add.textContent = '+ Add New Handler';
+      add.addEventListener('click', () => openUserModal());
+      usersGrid.appendChild(add);
+    }
+
+    async function refreshUsers() {
+      const response = await fetch('/api/users');
+      if (response.redirected) {
+        window.location.href = response.url;
+        return;
+      }
+      const payload = await response.json();
+      if (response.ok) {
+        usersCache = payload.users;
+        renderUsers(usersCache);
+      }
+    }
+
+    document.getElementById('tab-operators').addEventListener('click', () => showPanel('operators'));
+    document.getElementById('tab-audit').addEventListener('click', () => showPanel('audit'));
+    document.getElementById('tab-docs').addEventListener('click', () => showPanel('docs'));
+    document.getElementById('register-operator').addEventListener('click', () => openUserModal());
+    document.getElementById('close-user-modal').addEventListener('click', closeUserModal);
+    userModal.addEventListener('click', (event) => {
+      if (event.target === userModal) closeUserModal();
+    });
+    userForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(userForm);
+      const userId = formData.get('user_id');
+      const payload = {
+        username: formData.get('username'),
+        password: formData.get('password')
+      };
+      const response = await fetch(userId ? `/api/users/${userId}` : '/api/users', {
+        method: userId ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        userError.textContent = result.error || 'Unable to save operator.';
+        userError.classList.remove('hidden');
+        return;
+      }
+      closeUserModal();
+      refreshUsers();
+    });
+
+    showPanel('operators');
+    refreshUsers();
     </script>
   </body>
 </html>

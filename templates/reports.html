@@ -138,6 +138,7 @@
       }
       .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
     </style>
+    <link rel="stylesheet" href="/static/responsive.css" />
   </head>
   <body class="bg-background text-on-background font-body-md flex min-h-screen">
     <!-- SideNavBar -->
@@ -236,7 +237,7 @@
     >
       <!-- Header -->
       <header
-        class="w-full h-20 sticky top-0 z-30 bg-surface dark:bg-surface-dim flex justify-between items-center px-margin border-b border-surface-variant/50"
+        class="w-full min-h-20 sticky top-0 z-30 bg-surface dark:bg-surface-dim flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 px-margin py-3 border-b border-surface-variant/50"
       >
         <div class="flex items-center gap-3">
           <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors shrink-0">
@@ -251,9 +252,10 @@
           <h2 class="text-headline-md font-headline-md text-on-surface">
             Reports Management
           </h2>
+          </div>
         </div>
         <button
-          class="bg-inverse-surface text-white h-12 px-6 rounded flex items-center gap-2 hover:bg-surface-tint transition-colors active:scale-95 font-button text-button"
+          class="w-full sm:w-auto bg-inverse-surface text-white h-12 px-6 rounded flex items-center justify-center gap-2 hover:bg-surface-tint transition-colors active:scale-95 font-button text-button"
         >
           <span class="material-symbols-outlined text-sm">print</span>
           Print current report
@@ -265,7 +267,7 @@
       >
         <!-- Filters & Controls -->
         <div
-          class="bg-surface-container-lowest rounded-xl border border-surface-variant p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]"
+          class="bg-surface-container-lowest rounded-xl border border-surface-variant p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]"
         >
           <div class="flex flex-col md:flex-row gap-6 items-end">
             <div class="flex-1">
@@ -336,10 +338,10 @@
           </div>
         </div>
         <!-- KPI Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
           <!-- Card 1 -->
           <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
           >
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
@@ -352,7 +354,7 @@
           </div>
           <!-- Card 2 -->
           <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
           >
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
@@ -365,7 +367,7 @@
           </div>
           <!-- Card 3 -->
           <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
           >
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
@@ -378,7 +380,7 @@
           </div>
           <!-- Card 4 -->
           <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
           >
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
@@ -391,7 +393,7 @@
           </div>
           <!-- Card 5 -->
           <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
           >
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
@@ -411,7 +413,7 @@
           class="bg-surface-container-lowest border border-surface-variant rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] overflow-hidden"
         >
           <div
-            class="p-6 border-b border-surface-variant flex justify-between items-start"
+            class="p-4 sm:p-6 border-b border-surface-variant flex justify-between items-start"
           >
             <div>
               <h3 class="text-body-lg font-body-lg font-bold text-on-surface">

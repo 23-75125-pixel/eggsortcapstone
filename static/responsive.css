@@ -1,0 +1,152 @@
+/*
+ * Shared mobile-first layout safeguards.
+ * Page-specific Tailwind utilities enhance these defaults at larger breakpoints.
+ */
+:root {
+  --mobile-page-padding: 1rem;
+  --touch-target: 2.75rem;
+}
+
+html {
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  width: 100%;
+  min-width: 0;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+main,
+header,
+section,
+form,
+nav,
+div {
+  min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+  font: inherit;
+}
+
+button,
+[role="button"],
+a {
+  touch-action: manipulation;
+}
+
+button,
+[role="button"] {
+  min-height: var(--touch-target);
+}
+
+table {
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  /* The custom Tailwind spacing tokens are desktop-oriented. */
+  .p-margin {
+    padding: var(--mobile-page-padding) !important;
+  }
+
+  .px-margin {
+    padding-left: var(--mobile-page-padding) !important;
+    padding-right: var(--mobile-page-padding) !important;
+  }
+
+  .py-margin {
+    padding-top: var(--mobile-page-padding) !important;
+    padding-bottom: var(--mobile-page-padding) !important;
+  }
+
+  .pt-margin {
+    padding-top: var(--mobile-page-padding) !important;
+  }
+
+  .pb-margin {
+    padding-bottom: var(--mobile-page-padding) !important;
+  }
+
+  .mb-margin {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .mt-margin {
+    margin-top: 1.5rem !important;
+  }
+
+  .gap-gutter,
+  .gap-margin {
+    gap: 1rem !important;
+  }
+
+  .p-xl {
+    padding: 2rem 1rem !important;
+  }
+
+  .text-headline-lg {
+    font-size: clamp(1.625rem, 8vw, 2rem) !important;
+    line-height: 1.2 !important;
+    overflow-wrap: anywhere;
+  }
+
+  #sidebar {
+    width: min(16rem, 88vw);
+    max-width: 100%;
+    overscroll-behavior: contain;
+    overflow-y: auto;
+  }
+
+  .overflow-x-auto {
+    max-width: 100%;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  th,
+  td {
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --mobile-page-padding: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

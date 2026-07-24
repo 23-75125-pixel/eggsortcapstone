@@ -294,9 +294,12 @@
               class="bg-[#F8F9FA] border border-surface-variant/50 rounded-lg py-3 px-4 pr-10 text-body-md text-secondary focus:outline-none focus:border-primary appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23565f71%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_12px_center] bg-[length:16px]"
             >
               <option>All Sizes</option>
+              <option>Peewee</option>
               <option>Small</option>
               <option>Medium</option>
               <option>Large</option>
+              <option>Extra Large</option>
+              <option>Jumbo</option>
             </select>
             <select
               class="bg-[#F8F9FA] border border-surface-variant/50 rounded-lg py-3 px-4 pr-10 text-body-md text-secondary focus:outline-none focus:border-primary appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23565f71%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_12px_center] bg-[length:16px]"
@@ -316,6 +319,7 @@
         <div
           class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-surface-variant/50 overflow-hidden mb-6"
         >
+          <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr
@@ -353,9 +357,9 @@
                 </th>
               </tr>
             </thead>
-            <tbody class="text-body-md text-on-surface">
+            <tbody id="egg-records-body" class="text-body-md text-on-surface">
               <!-- Empty State -->
-              <tr>
+              <tr id="egg-records-empty">
                 <td
                   colspan="6"
                   class="py-12 text-center text-tertiary"
@@ -373,6 +377,7 @@
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
         <!-- Informational Banner -->
         <div
@@ -389,8 +394,9 @@
             </h4>
             <p class="text-caption text-blue-700/80 leading-relaxed max-w-4xl">
               EGGSor+ IoT weight measurements adhere strictly to localized
-              commercial standards: Small (&gt;50g), Medium (50g to 56g), Large
-              (57g to 63g), Extra Large (64g to 70g), and Jumbo (&gt;70g).
+              commercial standards: Peewee (&lt;42g), Small (42g to 49g),
+              Medium (50g to 56g), Large (57g to 63g), Extra Large
+              (64g to 70g), and Jumbo (71g and above).
               Handlers can calibrate automatic vision scaling directly from the
               control nodes on site.
             </p>
@@ -405,6 +411,82 @@
       sidebar.classList.toggle('-translate-x-full');
       overlay.classList.toggle('hidden');
     }
+
+    const recordsBody = document.getElementById('egg-records-body');
+    let latestRecordId = 0;
+    const displayedRecordIds = new Set();
+
+    function qualityClasses(quality) {
+      const normalized = quality.toLowerCase();
+      if (normalized === 'good') return 'bg-green-100 text-green-800';
+      if (normalized === 'dirty') return 'bg-amber-100 text-amber-800';
+      if (normalized === 'damaged') return 'bg-red-100 text-red-800';
+      return 'bg-surface-container text-secondary';
+    }
+
+    function createRecordRow(record) {
+      const row = document.createElement('tr');
+      row.className = 'border-b border-surface-variant/30';
+      row.dataset.recordId = record.id;
+
+      const values = [
+        record.egg_id,
+        `${record.weight_grams} g`,
+        record.size,
+        record.quality,
+        new Date(record.sorted_at).toLocaleString(),
+        record.session_ref
+      ];
+
+      values.forEach((value, index) => {
+        const cell = document.createElement('td');
+        cell.className = 'py-4 px-6 whitespace-nowrap';
+        if (index === 3) {
+          const badge = document.createElement('span');
+          badge.className = `px-2.5 py-1 rounded-full text-xs font-bold ${qualityClasses(record.quality)}`;
+          badge.textContent = value;
+          cell.appendChild(badge);
+        } else {
+          cell.textContent = value;
+        }
+        row.appendChild(cell);
+      });
+      return row;
+    }
+
+    async function refreshEggRecords() {
+      try {
+        const response = await fetch(`/api/egg-records?after_id=${latestRecordId}&limit=100`, {
+          credentials: 'same-origin'
+        });
+        if (response.redirected) {
+          window.location.href = response.url;
+          return;
+        }
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Unable to load egg records.');
+
+        const newRecords = payload.records.filter(
+          (record) => !displayedRecordIds.has(record.id)
+        );
+        if (newRecords.length) {
+          document.getElementById('egg-records-empty')?.remove();
+          [...newRecords].reverse().forEach((record) => {
+            recordsBody.prepend(createRecordRow(record));
+            displayedRecordIds.add(record.id);
+          });
+          latestRecordId = Math.max(
+            latestRecordId,
+            ...newRecords.map((record) => record.id)
+          );
+        }
+      } catch (error) {
+        console.error('Egg record refresh failed:', error);
+      }
+    }
+
+    refreshEggRecords();
+    window.setInterval(refreshEggRecords, 1000);
     </script>
   </body>
 </html>

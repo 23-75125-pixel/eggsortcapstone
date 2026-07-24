@@ -286,6 +286,26 @@
       <span class="px-3 py-2 rounded-lg bg-surface-container text-secondary font-body-md text-body-md">Waiting for detections...</span>
     </div>
   </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 pt-4 border-t border-surface-container">
+    <div class="rounded-lg bg-surface-container-low p-3">
+      <p class="font-label-caps text-label-caps text-secondary uppercase">Arduino link</p>
+      <p id="hardware-status" class="font-button text-button text-on-surface mt-2">Connecting...</p>
+    </div>
+    <div class="rounded-lg bg-surface-container-low p-3">
+      <p class="font-label-caps text-label-caps text-secondary uppercase">Latest sensor event</p>
+      <p id="hardware-event" class="font-body-md text-body-md text-on-surface mt-2">Waiting for load cell...</p>
+    </div>
+    <div class="rounded-lg bg-surface-container-low p-3">
+      <p class="font-label-caps text-label-caps text-secondary uppercase">Latest egg record</p>
+      <p id="latest-egg-record" class="font-body-md text-body-md text-on-surface mt-2">No completed egg yet</p>
+    </div>
+  </div>
+
+  <button id="trigger-stopper" type="button" class="mt-3 w-full sm:w-auto h-11 px-5 rounded-lg bg-inverse-surface text-white font-button text-button flex items-center justify-center gap-2 hover:bg-on-surface transition-colors">
+    <span class="material-symbols-outlined text-[18px]">play_circle</span>
+    Advance Stopper
+  </button>
 </div>
 
 <div id="camera-error" class="hidden mt-4 p-4 rounded-lg bg-error-container text-on-error-container font-body-md text-body-md" role="alert"></div>
@@ -343,6 +363,10 @@ const statusText = document.getElementById('detection-status');
 const errorPanel = document.getElementById('camera-error');
 const countsPanel = document.getElementById('detection-counts');
 const totalLabel = document.getElementById('detection-total');
+const hardwareStatus = document.getElementById('hardware-status');
+const hardwareEvent = document.getElementById('hardware-event');
+const latestEggRecord = document.getElementById('latest-egg-record');
+const stopperButton = document.getElementById('trigger-stopper');
 
 let statusTimer = null;
 let feedConnected = false;
@@ -456,11 +480,42 @@ async function refreshSessionState(reconnectFeed = false) {
   }
 }
 
+async function refreshHardwareState() {
+  try {
+    const [hardware, recordsPayload] = await Promise.all([
+      requestJson('/api/hardware/status'),
+      requestJson('/api/egg-records?limit=1')
+    ]);
+    hardwareStatus.textContent = hardware.connected
+      ? `Connected on ${hardware.port} @ ${hardware.baud_rate}`
+      : hardware.running
+        ? `Reconnecting${hardware.port ? ` to ${hardware.port}` : ''}...`
+        : 'Stopped';
+    hardwareStatus.className = hardware.connected
+      ? 'font-button text-button text-green-700 mt-2'
+      : 'font-button text-button text-secondary mt-2';
+    hardwareEvent.textContent = hardware.latest_event?.message
+      || hardware.error
+      || 'Waiting for load cell...';
+
+    const record = recordsPayload.records[0];
+    latestEggRecord.textContent = record
+      ? `${record.egg_id} • ${record.weight_grams} g • ${record.size} • ${record.quality}`
+      : 'No completed egg yet';
+  } catch (error) {
+    hardwareStatus.textContent = 'Hardware status unavailable';
+    hardwareEvent.textContent = error.message;
+  }
+}
+
 function startStatusPolling() {
   if (statusTimer) {
     window.clearInterval(statusTimer);
   }
-  statusTimer = window.setInterval(() => refreshSessionState(false), 750);
+  statusTimer = window.setInterval(() => {
+    refreshSessionState(false);
+    refreshHardwareState();
+  }, 750);
 }
 
 async function startCameraSession() {
@@ -473,7 +528,8 @@ async function startCameraSession() {
 
   try {
     const state = await requestJson('/api/camera/start', { method: 'POST' });
-    showRunningSession(state, true);
+    showRunningSession(state.camera, true);
+    refreshHardwareState();
   } catch (error) {
     showStoppedSession();
     showCameraError(error.message);
@@ -489,7 +545,8 @@ async function stopCameraSession() {
   statusText.textContent = 'Stopping camera session...';
   try {
     const state = await requestJson('/api/camera/stop', { method: 'POST' });
-    showStoppedSession(state);
+    showStoppedSession(state.camera);
+    refreshHardwareState();
   } catch (error) {
     showCameraError(error.message);
   } finally {
@@ -498,9 +555,23 @@ async function stopCameraSession() {
   }
 }
 
+async function triggerStopper() {
+  stopperButton.disabled = true;
+  try {
+    const result = await requestJson('/api/hardware/stopper/start', { method: 'POST' });
+    hardwareEvent.textContent = result.message;
+  } catch (error) {
+    showCameraError(error.message);
+  } finally {
+    stopperButton.disabled = false;
+  }
+}
+
 startButton.addEventListener('click', startCameraSession);
 stopButton.addEventListener('click', stopCameraSession);
+stopperButton.addEventListener('click', triggerStopper);
 refreshSessionState(true);
+refreshHardwareState();
 startStatusPolling();
 </script>
 </body>

@@ -310,13 +310,14 @@
               >
             </div>
             <div class="flex items-end justify-between z-10">
-              <h3 class="font-headline-lg text-headline-lg text-on-background">
-                —
+              <h3 id="dashboard-total-sorted" class="font-headline-lg text-headline-lg text-on-background">
+                0
               </h3>
               <p
+                id="dashboard-total-note"
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                No data yet
+                Waiting for load cell
               </p>
             </div>
           </div>
@@ -338,13 +339,14 @@
               >
             </div>
             <div class="flex items-end justify-between z-10">
-              <h3 class="font-headline-lg text-headline-lg text-on-background">
-                —
+              <h3 id="dashboard-trays" class="font-headline-lg text-headline-lg text-on-background">
+                0
               </h3>
               <p
+                id="dashboard-trays-note"
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                No data yet
+                30 eggs per tray
               </p>
             </div>
           </div>
@@ -366,13 +368,14 @@
               >
             </div>
             <div class="flex items-end justify-between z-10">
-              <h3 class="font-headline-lg text-headline-lg text-on-background">
-                —
+              <h3 id="dashboard-quality-rate" class="font-headline-lg text-headline-lg text-on-background">
+                0%
               </h3>
               <p
+                id="dashboard-quality-note"
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                No data yet
+                Good eggs after sorting
               </p>
             </div>
           </div>
@@ -387,20 +390,21 @@
               <p
                 class="font-label-caps text-label-caps text-secondary uppercase tracking-wider"
               >
-                Active Alerts
+                Camera Eggs Visible
               </p>
               <span class="material-symbols-outlined text-secondary"
-                >warning</span
+                >visibility</span
               >
             </div>
             <div class="flex items-end justify-between z-10">
-              <h3 class="font-headline-lg text-headline-lg text-on-background">
+              <h3 id="dashboard-camera-visible" class="font-headline-lg text-headline-lg text-on-background">
                 0
               </h3>
               <p
+                id="dashboard-camera-note"
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                No active alerts
+                Camera session stopped
               </p>
             </div>
           </div>
@@ -447,7 +451,7 @@
           <div
             class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col items-center justify-center min-h-[300px]"
           >
-            <div class="text-center">
+            <div id="dashboard-size-distribution" class="text-center w-full">
               <span class="material-symbols-outlined text-5xl text-secondary-fixed-dim mb-4">donut_large</span>
               <h4
                 class="font-headline-md text-body-lg font-bold text-on-background mb-2"
@@ -507,6 +511,64 @@
       sidebar.classList.toggle('-translate-x-full');
       overlay.classList.toggle('hidden');
     }
+
+    const sizeOrder = ['Peewee', 'Small', 'Medium', 'Large', 'Extra Large', 'Jumbo'];
+
+    async function refreshDashboard() {
+      try {
+        const response = await fetch('/api/dashboard/stats', {
+          credentials: 'same-origin'
+        });
+        if (response.redirected) {
+          window.location.href = response.url;
+          return;
+        }
+        const stats = await response.json();
+        if (!response.ok) throw new Error(stats.error || 'Dashboard update failed.');
+
+        document.getElementById('dashboard-total-sorted').textContent = stats.total_sorted;
+        document.getElementById('dashboard-total-note').textContent =
+          stats.latest_record
+            ? `Latest: ${stats.latest_record.weight_grams} g • ${stats.latest_record.size}`
+            : 'Waiting for load cell';
+        document.getElementById('dashboard-trays').textContent = stats.trays_completed;
+        document.getElementById('dashboard-trays-note').textContent =
+          `${stats.total_sorted % 30}/30 eggs in current tray`;
+        document.getElementById('dashboard-quality-rate').textContent =
+          `${stats.quality_rate}%`;
+        document.getElementById('dashboard-quality-note').textContent =
+          `${stats.quality_counts.Good || 0} good eggs`;
+        document.getElementById('dashboard-camera-visible').textContent =
+          stats.camera_eggs_visible;
+        document.getElementById('dashboard-camera-note').textContent =
+          stats.camera_running ? 'Live camera detection' : 'Camera session stopped';
+
+        const distribution = document.getElementById('dashboard-size-distribution');
+        const maxCount = Math.max(1, ...Object.values(stats.size_counts));
+        distribution.innerHTML = `
+          <h4 class="font-headline-md text-body-lg font-bold text-on-background mb-4">Size Distribution</h4>
+          <div class="space-y-3 text-left">
+            ${sizeOrder.map((size) => {
+              const count = stats.size_counts[size] || 0;
+              const width = Math.max(count ? 8 : 0, count / maxCount * 100);
+              return `
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span>${size}</span><strong>${count}</strong>
+                  </div>
+                  <div class="h-2 rounded-full bg-surface-container overflow-hidden">
+                    <div class="h-full bg-primary-container rounded-full transition-all" style="width:${width}%"></div>
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>`;
+      } catch (error) {
+        console.error('Dashboard refresh failed:', error);
+      }
+    }
+
+    refreshDashboard();
+    window.setInterval(refreshDashboard, 750);
     </script>
   </body>
 </html>

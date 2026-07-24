@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from collections import deque
 from datetime import datetime, timezone
 from threading import Condition, Event, RLock, Thread
 from time import monotonic
@@ -37,9 +38,13 @@ class CameraDetectionSession:
         self._latest_jpeg: bytes | None = None
         self._frame_sequence = 0
         self._latest_result: dict[str, Any] | None = None
+        self._quality_history: deque[tuple[float, str, float]] = deque(
+            maxlen=200
+        )
 
         self._error: str | None = None
         self._started_at: str | None = None
+        self._session_ref: str | None = None
         self._stream_fps = 0.0
         self._detection_fps = 0.0
         self._inference_ms = 0.0
@@ -74,11 +79,13 @@ class CameraDetectionSession:
             self._latest_jpeg = None
             self._frame_sequence = 0
             self._latest_result = None
+            self._quality_history.clear()
             self._error = None
             self._stream_fps = 0.0
             self._detection_fps = 0.0
             self._inference_ms = 0.0
             self._started_at = datetime.now(timezone.utc).isoformat()
+            self._session_ref = datetime.now().strftime("SES-%Y%m%d-%H%M%S")
             self._capture_thread = Thread(
                 target=self._capture_loop,
                 name="eggsort-camera-capture",
@@ -124,6 +131,7 @@ class CameraDetectionSession:
                 "running": self._running,
                 "error": self._error,
                 "started_at": self._started_at,
+                "session_ref": self._session_ref,
                 "frame_ready": self._latest_jpeg is not None,
                 "total": result.get("total", 0),
                 "counts": result.get("counts", {}),
@@ -134,6 +142,27 @@ class CameraDetectionSession:
                 "detection_fps": round(self._detection_fps, 1),
                 "inference_ms": round(self._inference_ms),
             }
+
+    def quality_snapshot(self, window_seconds: float = 3.0) -> dict[str, Any]:
+        """Return the strongest recent camera quality classification."""
+        cutoff = monotonic() - window_seconds
+        with self._lock:
+            recent = [
+                (label, confidence)
+                for captured_at, label, confidence in self._quality_history
+                if captured_at >= cutoff
+            ]
+
+        if not recent:
+            return {"label": "unknown", "confidence": 0.0}
+
+        scores: dict[str, float] = {}
+        peaks: dict[str, float] = {}
+        for label, confidence in recent:
+            scores[label] = scores.get(label, 0.0) + confidence
+            peaks[label] = max(peaks.get(label, 0.0), confidence)
+        label = max(scores, key=scores.get)
+        return {"label": label, "confidence": round(peaks[label], 4)}
 
     def wait_for_frame(
         self, previous_sequence: int, timeout: float = 2.0
@@ -278,6 +307,15 @@ class CameraDetectionSession:
                 elapsed = monotonic() - started
                 with self._lock:
                     self._latest_result = result
+                    captured_at = monotonic()
+                    for detection in result["detections"]:
+                        self._quality_history.append(
+                            (
+                                captured_at,
+                                detection["label"],
+                                detection["confidence"],
+                            )
+                        )
                     self._inference_ms = elapsed * 1000
                     self._detection_fps = 1 / elapsed if elapsed else 0.0
         except Exception as exc:

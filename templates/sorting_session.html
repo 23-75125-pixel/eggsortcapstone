@@ -237,20 +237,58 @@
 </header>
 <!-- Scrollable Content Area -->
 <div class="flex-1 overflow-y-auto px-4 md:px-margin py-margin max-w-6xl w-full mx-auto space-y-md md:space-y-margin">
-<!-- Empty State Card / Start Session Action -->
-<section class="bg-surface-container-lowest rounded-xl shadow-ambient border border-surface-container-highest p-6 md:p-12 flex flex-col items-center justify-center text-center relative overflow-hidden group">
-<!-- Subtle decorative background glow -->
-<div class="absolute inset-0 bg-gradient-to-b from-primary-container/5 to-transparent opacity-50 pointer-events-none rounded-xl"></div>
-<div class="w-14 md:w-16 h-14 md:h-16 rounded-2xl bg-surface-container-low flex items-center justify-center mb-4 md:mb-6 border border-surface-variant/50 relative z-10">
-<span class="material-symbols-outlined text-[28px] md:text-[32px] text-primary-container" style="font-variation-settings: 'FILL' 0;">add_circle</span>
+<!-- Live Camera / Detection Session -->
+<section class="bg-surface-container-lowest rounded-xl shadow-ambient border border-surface-container-highest p-4 md:p-6 relative overflow-hidden">
+<div id="camera-idle" class="py-4 md:py-6 flex flex-col items-center justify-center text-center relative">
+  <div class="absolute inset-0 bg-gradient-to-b from-primary-container/5 to-transparent opacity-50 pointer-events-none rounded-xl"></div>
+  <div class="w-14 md:w-16 h-14 md:h-16 rounded-2xl bg-surface-container-low flex items-center justify-center mb-4 md:mb-6 border border-surface-variant/50 relative z-10">
+    <span class="material-symbols-outlined text-[28px] md:text-[32px] text-primary-container" style="font-variation-settings: 'FILL' 0;">photo_camera</span>
+  </div>
+  <h3 class="font-headline-md text-headline-md text-on-surface mb-2 relative z-10">No Active Sorting Session</h3>
+  <p class="font-body-md text-body-md text-secondary max-w-md mx-auto mb-6 md:mb-8 relative z-10">Open this device's camera and detect eggs in real time with your YOLO <strong>best.pt</strong> model.</p>
+  <button id="start-camera" type="button" class="h-12 bg-[#E67E00] hover:bg-primary transition-colors text-white font-button text-button px-5 md:px-8 rounded-lg flex items-center gap-2 shadow-sm relative z-10 w-full md:w-auto justify-center">
+    <span class="material-symbols-outlined text-[20px]">videocam</span>
+    Start Session &amp; Open Camera
+  </button>
 </div>
-<h3 class="font-headline-md text-headline-md text-on-surface mb-2 relative z-10">No Active Sorting Sessions</h3>
-<p class="font-body-md text-body-md text-secondary max-w-md mx-auto mb-6 md:mb-8 relative z-10">Start a sorting session to open this device's camera. The session name and reference are generated automatically.</p>
-<button class="h-12 md:h-[48px] bg-[#E67E00] hover:bg-primary transition-colors text-white font-button text-button px-5 md:px-8 rounded-lg flex items-center gap-2 shadow-sm relative z-10 w-full md:w-auto justify-center whitespace-nowrap">
-  <span class="hidden md:inline">Start Session &amp; Open Camera</span>
-  <span class="md:hidden">Start Session</span>
-                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-</button>
+
+<div id="camera-active" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <span id="camera-indicator" class="w-2.5 h-2.5 rounded-full bg-primary-container animate-pulse"></span>
+        <h3 class="font-button text-button text-on-surface">Live YOLO Detection</h3>
+      </div>
+      <p id="detection-status" class="font-caption text-caption text-secondary mt-1" aria-live="polite">Starting camera...</p>
+    </div>
+    <button id="stop-camera" type="button" class="w-full sm:w-auto h-11 px-5 rounded-lg border border-error/30 bg-error-container text-error font-button text-button flex items-center justify-center gap-2 hover:bg-error/10 transition-colors">
+      <span class="material-symbols-outlined text-[18px]">stop_circle</span>
+      Stop Session
+    </button>
+  </div>
+
+  <div class="relative w-full overflow-hidden rounded-xl bg-black aspect-video">
+    <img id="camera-feed" class="w-full h-full object-contain" alt="Live camera feed with YOLO detection boxes" />
+    <div id="camera-loading" class="absolute inset-0 flex items-center justify-center bg-black/60 text-white">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined animate-spin">progress_activity</span>
+        <span class="font-body-md text-body-md">Starting persistent camera session...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <div class="flex items-center justify-between gap-4 mb-2">
+      <p class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Current frame detections</p>
+      <span id="detection-total" class="font-button text-button text-primary">0 objects</span>
+    </div>
+    <div id="detection-counts" class="flex flex-wrap gap-2">
+      <span class="px-3 py-2 rounded-lg bg-surface-container text-secondary font-body-md text-body-md">Waiting for detections...</span>
+    </div>
+  </div>
+</div>
+
+<div id="camera-error" class="hidden mt-4 p-4 rounded-lg bg-error-container text-on-error-container font-body-md text-body-md" role="alert"></div>
 </section>
 <!-- History Table Section -->
 <section class="bg-surface-container-lowest rounded-xl shadow-ambient border border-surface-container-highest overflow-hidden">
@@ -294,6 +332,176 @@ function toggleSidebar() {
   sidebar.classList.toggle('-translate-x-full');
   overlay.classList.toggle('hidden');
 }
+
+const startButton = document.getElementById('start-camera');
+const stopButton = document.getElementById('stop-camera');
+const idlePanel = document.getElementById('camera-idle');
+const activePanel = document.getElementById('camera-active');
+const cameraFeed = document.getElementById('camera-feed');
+const loadingPanel = document.getElementById('camera-loading');
+const statusText = document.getElementById('detection-status');
+const errorPanel = document.getElementById('camera-error');
+const countsPanel = document.getElementById('detection-counts');
+const totalLabel = document.getElementById('detection-total');
+
+let statusTimer = null;
+let feedConnected = false;
+
+function showCameraError(message) {
+  errorPanel.textContent = message;
+  errorPanel.classList.remove('hidden');
+}
+
+function clearCameraError() {
+  errorPanel.textContent = '';
+  errorPanel.classList.add('hidden');
+}
+
+function setCameraState(active) {
+  idlePanel.classList.toggle('hidden', active);
+  activePanel.classList.toggle('hidden', !active);
+}
+
+async function requestJson(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: 'same-origin',
+    ...options
+  });
+
+  if (response.redirected) {
+    window.location.href = response.url;
+    throw new Error('Authentication required.');
+  }
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || 'Camera request failed.');
+  }
+  return payload;
+}
+
+function connectFeed() {
+  if (feedConnected) {
+    return;
+  }
+  feedConnected = true;
+  loadingPanel.classList.remove('hidden');
+  cameraFeed.onload = () => {
+    loadingPanel.classList.add('hidden');
+    statusText.textContent = 'Camera active. YOLO is scanning continuously.';
+  };
+  cameraFeed.onerror = () => {
+    feedConnected = false;
+    loadingPanel.classList.remove('hidden');
+  };
+  cameraFeed.src = `/api/camera/feed?connection=${Date.now()}`;
+}
+
+function updateCounts(state) {
+  totalLabel.textContent = `${state.total} ${state.total === 1 ? 'object' : 'objects'}`;
+  const entries = Object.entries(state.counts || {});
+  if (!entries.length) {
+    countsPanel.innerHTML = '<span class="px-3 py-2 rounded-lg bg-surface-container text-secondary font-body-md text-body-md">No objects detected</span>';
+    return;
+  }
+
+  countsPanel.replaceChildren(...entries.map(([label, count]) => {
+    const chip = document.createElement('span');
+    chip.className = 'px-3 py-2 rounded-lg bg-primary-fixed text-on-primary-fixed-variant font-button text-button';
+    chip.textContent = `${label}: ${count}`;
+    return chip;
+  }));
+}
+
+function showRunningSession(state, reconnectFeed = false) {
+  setCameraState(true);
+  clearCameraError();
+  updateCounts(state);
+  if (!state.frame_ready) {
+    statusText.textContent = 'Camera active. Waiting for the first video frame...';
+  } else if (!state.detection_fps) {
+    statusText.textContent = `Live video ${state.stream_fps || '—'} FPS • YOLO warming up...`;
+  } else {
+    statusText.textContent = `Live video ${state.stream_fps} FPS • YOLO ${state.detection_fps} FPS (${state.inference_ms} ms)`;
+  }
+  // MJPEG responses never finish, so some browsers never fire the image
+  // "load" event. Server frame readiness is the reliable signal.
+  loadingPanel.classList.toggle('hidden', state.frame_ready);
+  if (reconnectFeed || !feedConnected) {
+    connectFeed();
+  }
+}
+
+function showStoppedSession(state = {}) {
+  setCameraState(false);
+  feedConnected = false;
+  cameraFeed.removeAttribute('src');
+  loadingPanel.classList.add('hidden');
+  if (state.error) {
+    showCameraError(state.error);
+  }
+}
+
+async function refreshSessionState(reconnectFeed = false) {
+  try {
+    const state = await requestJson('/api/camera/status');
+    if (state.running) {
+      showRunningSession(state, reconnectFeed);
+    } else {
+      showStoppedSession(state);
+    }
+  } catch (error) {
+    showStoppedSession();
+    showCameraError(error.message);
+  }
+}
+
+function startStatusPolling() {
+  if (statusTimer) {
+    window.clearInterval(statusTimer);
+  }
+  statusTimer = window.setInterval(() => refreshSessionState(false), 750);
+}
+
+async function startCameraSession() {
+  clearCameraError();
+  startButton.disabled = true;
+  startButton.classList.add('opacity-60', 'cursor-wait');
+  setCameraState(true);
+  loadingPanel.classList.remove('hidden');
+  statusText.textContent = 'Opening the server camera and loading YOLO...';
+
+  try {
+    const state = await requestJson('/api/camera/start', { method: 'POST' });
+    showRunningSession(state, true);
+  } catch (error) {
+    showStoppedSession();
+    showCameraError(error.message);
+  } finally {
+    startButton.disabled = false;
+    startButton.classList.remove('opacity-60', 'cursor-wait');
+  }
+}
+
+async function stopCameraSession() {
+  stopButton.disabled = true;
+  stopButton.classList.add('opacity-60', 'cursor-wait');
+  statusText.textContent = 'Stopping camera session...';
+  try {
+    const state = await requestJson('/api/camera/stop', { method: 'POST' });
+    showStoppedSession(state);
+  } catch (error) {
+    showCameraError(error.message);
+  } finally {
+    stopButton.disabled = false;
+    stopButton.classList.remove('opacity-60', 'cursor-wait');
+  }
+}
+
+startButton.addEventListener('click', startCameraSession);
+stopButton.addEventListener('click', stopCameraSession);
+refreshSessionState(true);
+startStatusPolling();
 </script>
 </body>
 </html>

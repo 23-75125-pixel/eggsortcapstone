@@ -1,9 +1,25 @@
 import os
 from functools import wraps
 from typing import Callable, Any
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import (
+    Flask,
+    Response,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    stream_with_context,
+    url_for,
+)
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from camera_session import CAMERA_SESSION, CameraSessionError
+from detection_service import (
+    DetectorUnavailableError,
+    InvalidFrameError,
+    detect_frame,
+)
 
 
 app = Flask(__name__)
@@ -162,6 +178,76 @@ def sorting_sessions() -> Any:
     return render_template(
         "sorting_session.html",
         username=session["username"]
+    )
+
+
+@app.post("/api/detect")
+@login_required
+def detect() -> Any:
+    frame = request.files.get("frame")
+    if frame is None:
+        return jsonify(error="A camera frame is required."), 400
+
+    if frame.mimetype not in {"image/jpeg", "image/png"}:
+        return jsonify(error="Only JPEG and PNG camera frames are supported."), 415
+
+    try:
+        return jsonify(detect_frame(frame.read()))
+    except InvalidFrameError as exc:
+        return jsonify(error=str(exc)), 400
+    except DetectorUnavailableError as exc:
+        return jsonify(error=str(exc)), 503
+
+
+@app.post("/api/camera/start")
+@login_required
+def start_camera() -> Any:
+    try:
+        return jsonify(CAMERA_SESSION.start())
+    except CameraSessionError as exc:
+        return jsonify(error=str(exc)), 503
+
+
+@app.post("/api/camera/stop")
+@login_required
+def stop_camera() -> Any:
+    return jsonify(CAMERA_SESSION.stop())
+
+
+@app.get("/api/camera/status")
+@login_required
+def camera_status() -> Any:
+    return jsonify(CAMERA_SESSION.status())
+
+
+@app.get("/api/camera/feed")
+@login_required
+def camera_feed() -> Any:
+    if not CAMERA_SESSION.status()["running"]:
+        return jsonify(error="No camera session is running."), 409
+
+    def generate_frames() -> Any:
+        sequence = 0
+        while True:
+            next_sequence, jpeg, running = CAMERA_SESSION.wait_for_frame(
+                sequence
+            )
+            if jpeg is not None and next_sequence != sequence:
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n"
+                    b"Cache-Control: no-store\r\n\r\n"
+                    + jpeg
+                    + b"\r\n"
+                )
+            sequence = next_sequence
+            if not running:
+                break
+
+    return Response(
+        stream_with_context(generate_frames()),
+        mimetype="multipart/x-mixed-replace; boundary=frame",
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
     )
 
 

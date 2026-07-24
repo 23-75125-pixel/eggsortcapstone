@@ -49,20 +49,21 @@
         );
       }
     </style>
+    <link rel="stylesheet" href="/static/responsive.css" />
   </head>
   <body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
     <div
-      class="login-container w-full max-w-[1100px] bg-white rounded-[32px] overflow-hidden flex flex-col md:flex-row h-auto md:h-[700px]"
+      class="login-container w-full max-w-[1100px] bg-white rounded-2xl sm:rounded-[32px] overflow-hidden flex flex-col md:flex-row h-auto md:h-[700px]"
     >
       <!-- Left Form Section -->
       <div
-        class="w-full md:w-1/2 p-10 lg:p-16 flex flex-col justify-center relative"
+        class="w-full md:w-1/2 p-6 sm:p-10 lg:p-16 flex flex-col justify-center relative"
       >
         <div class="max-w-[400px] w-full mx-auto flex flex-col h-full">
           <!-- Header -->
-          <div class="mb-10">
+          <div class="mb-8 sm:mb-10">
             <h1
-              class="text-4xl font-extrabold text-[#1a202c] mb-2 tracking-tight"
+              class="text-3xl sm:text-4xl font-extrabold text-[#1a202c] mb-2 tracking-tight"
             >
               Welcome Back
             </h1>
@@ -159,7 +160,7 @@
             </div>
 
             <!-- Options -->
-            <div class="flex items-center justify-between pt-1">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
               <div class="flex items-center">
                 <input
                   checked=""

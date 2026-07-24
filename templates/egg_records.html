@@ -131,6 +131,7 @@
       }
       .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
     </style>
+    <link rel="stylesheet" href="/static/responsive.css" />
   </head>
   <body
     class="font-body-md text-on-background antialiased flex h-screen overflow-hidden"
@@ -250,9 +251,9 @@
               </h2>
             </div>
           </div>
-          <div class="flex gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full md:w-auto">
             <button
-              class="h-[48px] px-6 bg-primary-container text-white font-button text-button rounded hover:bg-surface-tint transition-colors flex items-center gap-2 active:scale-95 shadow-sm"
+              class="h-[48px] px-6 bg-primary-container text-white font-button text-button rounded hover:bg-surface-tint transition-colors flex items-center justify-center gap-2 active:scale-95 shadow-sm"
             >
               Export CSV
               <span class="material-symbols-outlined text-[18px]"
@@ -260,7 +261,7 @@
               >
             </button>
             <button
-              class="h-[48px] px-6 bg-inverse-surface text-white font-button text-button rounded hover:bg-on-surface transition-colors flex items-center gap-2 active:scale-95 shadow-sm"
+              class="h-[48px] px-6 bg-inverse-surface text-white font-button text-button rounded hover:bg-on-surface transition-colors flex items-center justify-center gap-2 active:scale-95 shadow-sm"
             >
               <span class="material-symbols-outlined text-[18px]">print</span>
               Print Report

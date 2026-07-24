@@ -141,6 +141,7 @@
       }
       .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
     </style>
+    <link rel="stylesheet" href="/static/responsive.css" />
   </head>
   <body class="bg-surface text-on-surface font-body-md min-h-screen flex">
     <!-- SideNavBar -->
@@ -266,31 +267,31 @@
         </div>
       </header>
       <!-- Tab Navigation -->
-      <div class="border-b border-surface-variant mb-lg flex gap-6">
+      <div class="border-b border-surface-variant mb-lg flex gap-6 overflow-x-auto">
         <button
-          class="pb-3 border-b-2 border-primary-container text-on-surface font-button text-button"
+          class="pb-3 border-b-2 border-primary-container text-on-surface font-button text-button whitespace-nowrap shrink-0"
         >
           Operators Registry
         </button>
         <button
-          class="pb-3 border-b-2 border-transparent text-secondary hover:text-on-surface transition-colors font-button text-button"
+          class="pb-3 border-b-2 border-transparent text-secondary hover:text-on-surface transition-colors font-button text-button whitespace-nowrap shrink-0"
         >
           Audit History Trail
         </button>
         <button
-          class="pb-3 border-b-2 border-transparent text-secondary hover:text-on-surface transition-colors font-button text-button"
+          class="pb-3 border-b-2 border-transparent text-secondary hover:text-on-surface transition-colors font-button text-button whitespace-nowrap shrink-0"
         >
           Systems Architect Docs
         </button>
       </div>
       <!-- Content Area -->
       <section>
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
           <h2 class="font-headline-md text-headline-md text-on-surface">
             Authorized Farm Handlers
           </h2>
           <button
-            class="bg-primary-container text-white h-12 px-6 rounded-lg font-button text-button flex items-center gap-2 hover:bg-primary transition-colors active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.04)]"
+            class="w-full sm:w-auto bg-primary-container text-white h-12 px-6 rounded-lg font-button text-button flex items-center justify-center gap-2 hover:bg-primary transition-colors active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.04)]"
           >
             <span class="material-symbols-outlined text-sm">add</span>
             Register Operator
@@ -300,7 +301,7 @@
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <!-- User Card -->
           <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow"
+            class="bg-surface-container-lowest border border-surface-variant rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow"
           >
             <div class="flex items-center gap-4">
               <img
@@ -327,7 +328,7 @@
                 </div>
               </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center justify-end gap-2">
               <button
                 class="p-2 rounded-lg text-secondary hover:bg-surface-container hover:text-primary-container transition-colors"
                 title="Edit"

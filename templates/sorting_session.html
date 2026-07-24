@@ -146,7 +146,7 @@
     </div>
   </div>
   <!-- Links -->
-  <div class="flex flex-col h-full py-gutter px-2 flex-grow">
+  <div class="flex flex-col py-gutter px-2 flex-1 min-h-0 overflow-y-auto">
     <a
       class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
       href="/dashboard"
@@ -197,25 +197,7 @@
       <span class="font-button text-button">User Management</span>
     </a>
   </div>
-  <!-- Footer / User Info -->
-  <div class="p-4 mb-4">
-    <div class="bg-black/20 rounded-xl p-4 flex items-center gap-3 mb-4">
-      <div class="w-10 h-10 rounded-full bg-primary-container/30 flex items-center justify-center shrink-0">
-        <span class="material-symbols-outlined text-white">account_circle</span>
-      </div>
-      <div class="overflow-hidden">
-        <p class="text-white font-bold text-sm truncate">eggsorplus</p>
-        <p class="text-surface-variant/70 text-xs flex items-center gap-1">
-          <span class="w-2 h-2 rounded-full bg-primary-container"></span>
-          Admin
-        </p>
-      </div>
-    </div>
-    <a class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg justify-center border border-white/10" href="/logout">
-      <span class="material-symbols-outlined">logout</span>
-      <span class="font-button text-button">Log Out</span>
-    </a>
-  </div>
+  {% include "_sidebar_footer.html" %}
 </nav>
 <!-- Overlay -->
 <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden hidden"></div>
@@ -309,39 +291,6 @@
 </div>
 
 <div id="camera-error" class="hidden mt-4 p-4 rounded-lg bg-error-container text-on-error-container font-body-md text-body-md" role="alert"></div>
-</section>
-<!-- History Table Section -->
-<section class="bg-surface-container-lowest rounded-xl shadow-ambient border border-surface-container-highest overflow-hidden">
-<div class="px-4 md:px-6 py-4 md:py-5 border-b border-surface-container">
-<h3 class="font-button text-button text-on-surface">Sorting Session History</h3>
-</div>
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="bg-surface text-secondary font-label-caps text-label-caps border-b border-surface-container-highest">
-<th class="px-3 md:px-6 py-3 md:py-4 font-bold tracking-wider whitespace-nowrap">SESSION ID</th>
-<th class="px-3 md:px-6 py-3 md:py-4 font-bold tracking-wider whitespace-nowrap">NAME</th>
-<th class="px-3 md:px-6 py-3 md:py-4 font-bold tracking-wider whitespace-nowrap">DATE</th>
-<th class="px-3 md:px-6 py-3 md:py-4 font-bold tracking-wider text-center whitespace-nowrap">STATUS</th>
-<th class="px-3 md:px-6 py-3 md:py-4 font-bold tracking-wider whitespace-nowrap">OPERATOR</th>
-<th class="px-3 md:px-6 py-3 md:py-4 font-bold tracking-wider text-right whitespace-nowrap">ITEMS SORTED</th>
-<th class="px-3 md:px-6 py-3 md:py-4 font-bold tracking-wider text-right whitespace-nowrap">GOOD</th>
-<th class="px-3 md:px-6 py-3 md:py-4 font-bold tracking-wider text-right whitespace-nowrap">CRACKED</th>
-</tr>
-</thead>
-<tbody class="font-body-md text-body-md text-on-background divide-y divide-surface-container-highest">
-<!-- Empty State -->
-<tr>
-<td colspan="8" class="py-8 md:py-12 text-center text-tertiary">
-<div class="flex flex-col items-center justify-center opacity-60">
-<span class="material-symbols-outlined text-4xl mb-3 text-outline">history</span>
-<p>No sorting sessions recorded yet.</p>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
 </section>
 </div>
 </main>

@@ -167,7 +167,7 @@
         </div>
       </div>
       <!-- Links -->
-      <div class="flex flex-col h-full py-gutter px-2 flex-grow">
+      <div class="flex flex-col py-gutter px-2 flex-1 min-h-0 overflow-y-auto">
         <a
           class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
           href="/dashboard"
@@ -218,16 +218,7 @@
           <span class="font-button text-button">User Management</span>
         </a>
       </div>
-      <!-- Footer -->
-      <div class="p-4 mb-4">
-        <a
-          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg justify-center border border-white/10"
-          href="/logout"
-        >
-          <span class="material-symbols-outlined">logout</span>
-          <span class="font-button text-button">Log Out</span>
-        </a>
-      </div>
+      {% include "_sidebar_footer.html" %}
     </nav>
     <!-- Overlay -->
     <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden hidden"></div>

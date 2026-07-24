@@ -36,6 +36,11 @@ div {
   min-width: 0;
 }
 
+#sidebar {
+  height: 100dvh;
+  overflow: hidden;
+}
+
 img,
 svg,
 video,
@@ -119,7 +124,6 @@ table {
     width: min(16rem, 88vw);
     max-width: 100%;
     overscroll-behavior: contain;
-    overflow-y: auto;
   }
 
   .overflow-x-auto {

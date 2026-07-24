@@ -89,6 +89,37 @@ class EggRecord(db.Model):
         }
 
 
+class TrayAlert(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    tray_number = db.Column(db.Integer, unique=True, nullable=False)
+    egg_count = db.Column(db.Integer, nullable=False)
+    session_ref = db.Column(db.String(40), nullable=False)
+    is_read = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    def to_dict(self) -> dict[str, Any]:
+        created_at = self.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        return {
+            "id": self.id,
+            "tray_number": self.tray_number,
+            "egg_count": self.egg_count,
+            "session_ref": self.session_ref,
+            "is_read": self.is_read,
+            "created_at": created_at.isoformat(),
+            "title": f"Tray {self.tray_number} completed",
+            "message": (
+                f"Tray {self.tray_number} reached 30 sorted eggs "
+                f"({self.egg_count} total eggs)."
+            ),
+        }
+
+
 # Create database
 with app.app_context():
     db.create_all()
@@ -101,6 +132,50 @@ QUALITY_NAMES = {
     "dirty": "Dirty",
     "good": "Good",
 }
+
+
+def create_tray_alert_if_needed(
+    total_sorted: int,
+    session_ref: str,
+) -> TrayAlert | None:
+    if total_sorted <= 0 or total_sorted % 30 != 0:
+        return None
+    tray_number = total_sorted // 30
+    existing = TrayAlert.query.filter_by(tray_number=tray_number).first()
+    if existing is not None:
+        return None
+    alert = TrayAlert(
+        tray_number=tray_number,
+        egg_count=total_sorted,
+        session_ref=session_ref,
+    )
+    db.session.add(alert)
+    return alert
+
+
+def backfill_completed_tray_alerts() -> None:
+    total_sorted = EggRecord.query.count()
+    created = False
+    for tray_number in range(1, (total_sorted // 30) + 1):
+        boundary_record = (
+            EggRecord.query
+            .order_by(EggRecord.id.asc())
+            .offset((tray_number * 30) - 1)
+            .first()
+        )
+        session_ref = (
+            boundary_record.session_ref
+            if boundary_record is not None
+            else "HISTORICAL"
+        )
+        alert = create_tray_alert_if_needed(tray_number * 30, session_ref)
+        created = created or alert is not None
+    if created:
+        db.session.commit()
+
+
+with app.app_context():
+    backfill_completed_tray_alerts()
 
 
 def persist_arduino_event(event: dict[str, Any]) -> None:
@@ -128,6 +203,9 @@ def persist_arduino_event(event: dict[str, Any]) -> None:
             session_ref=session_ref,
         )
         db.session.add(record)
+        db.session.flush()
+        total_sorted = EggRecord.query.count()
+        create_tray_alert_if_needed(total_sorted, session_ref)
         db.session.commit()
     try:
         ARDUINO_BRIDGE.sort_egg(size)
@@ -401,7 +479,33 @@ def dashboard_stats() -> Any:
         quality_counts=quality_counts,
         latest_record=latest_record.to_dict() if latest_record else None,
         hardware=ARDUINO_BRIDGE.status(),
+        unread_alerts=TrayAlert.query.filter_by(is_read=False).count(),
     )
+
+
+@app.get("/api/alerts")
+@login_required
+def alerts_data() -> Any:
+    unread_only = request.args.get("filter") == "unread"
+    query = TrayAlert.query
+    if unread_only:
+        query = query.filter_by(is_read=False)
+    alerts_list = query.order_by(TrayAlert.id.desc()).limit(200).all()
+    return jsonify(
+        alerts=[alert.to_dict() for alert in alerts_list],
+        unread_count=TrayAlert.query.filter_by(is_read=False).count(),
+    )
+
+
+@app.post("/api/alerts/read-all")
+@login_required
+def mark_all_alerts_read() -> Any:
+    TrayAlert.query.filter_by(is_read=False).update(
+        {"is_read": True},
+        synchronize_session=False,
+    )
+    db.session.commit()
+    return jsonify(ok=True, unread_count=0)
 
 
 

@@ -5,6 +5,7 @@ from typing import Callable, Any
 from flask import (
     Flask,
     Response,
+    has_request_context,
     jsonify,
     redirect,
     render_template,
@@ -152,6 +153,31 @@ class Sale(db.Model):
         }
 
 
+class AuditLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_type = db.Column(db.String(40), nullable=False)
+    actor = db.Column(db.String(80), nullable=False, default="System")
+    description = db.Column(db.String(300), nullable=False)
+    event_key = db.Column(db.String(100), unique=True, nullable=True)
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    def to_dict(self) -> dict[str, Any]:
+        created_at = self.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        return {
+            "id": self.id,
+            "event_type": self.event_type,
+            "actor": self.actor,
+            "description": self.description,
+            "created_at": created_at.isoformat(),
+        }
+
+
 # Create database
 with app.app_context():
     db.create_all()
@@ -217,6 +243,33 @@ def create_tray_alert_if_needed(
     return alert
 
 
+def write_audit_log(
+    event_type: str,
+    description: str,
+    *,
+    actor: str | None = None,
+    event_key: str | None = None,
+    created_at: datetime | None = None,
+    commit: bool = True,
+) -> AuditLog | None:
+    if event_key and AuditLog.query.filter_by(event_key=event_key).first():
+        return None
+    resolved_actor = actor
+    if resolved_actor is None and has_request_context():
+        resolved_actor = session.get("username")
+    log = AuditLog(
+        event_type=event_type,
+        actor=resolved_actor or "System",
+        description=description,
+        event_key=event_key,
+        created_at=created_at or datetime.now(timezone.utc),
+    )
+    db.session.add(log)
+    if commit:
+        db.session.commit()
+    return log
+
+
 def backfill_completed_tray_alerts() -> None:
     total_sorted = EggRecord.query.count()
     created = False
@@ -238,8 +291,27 @@ def backfill_completed_tray_alerts() -> None:
         db.session.commit()
 
 
+def backfill_sorting_audit_logs() -> None:
+    created = False
+    for record in EggRecord.query.order_by(EggRecord.id.asc()).all():
+        log = write_audit_log(
+            "egg_sorted",
+            (
+                f"{record.to_dict()['egg_id']} sorted at {record.weight_grams} g "
+                f"as {record.size}, quality {record.quality}."
+            ),
+            event_key=f"egg-sorted:{record.id}",
+            created_at=record.sorted_at,
+            commit=False,
+        )
+        created = created or log is not None
+    if created:
+        db.session.commit()
+
+
 with app.app_context():
     backfill_completed_tray_alerts()
+    backfill_sorting_audit_logs()
 
 
 def persist_arduino_event(event: dict[str, Any]) -> None:
@@ -270,6 +342,15 @@ def persist_arduino_event(event: dict[str, Any]) -> None:
         db.session.flush()
         total_sorted = EggRecord.query.count()
         create_tray_alert_if_needed(total_sorted, session_ref)
+        write_audit_log(
+            "egg_sorted",
+            (
+                f"EGG-{record.id:06d} sorted at {record.weight_grams} g "
+                f"as {record.size}, quality {record.quality}."
+            ),
+            event_key=f"egg-sorted:{record.id}",
+            commit=False,
+        )
         db.session.commit()
     try:
         ARDUINO_BRIDGE.sort_egg(size)
@@ -357,6 +438,11 @@ def login() -> Any:
                 session["user_id"] = user.id
                 session["username"] = user.username
                 session.permanent = request.form.get("remember-me") == "on"
+                write_audit_log(
+                    "login",
+                    "Operator signed in successfully.",
+                    actor=user.username,
+                )
 
                 return redirect(
                     url_for("dashboard")
@@ -364,6 +450,11 @@ def login() -> Any:
 
             else:
                 error = "Invalid username or password"
+                write_audit_log(
+                    "login_failed",
+                    f"Failed sign-in attempt for username '{username}'.",
+                    actor=username or "Unknown",
+                )
 
     return render_template(
         "login.html",
@@ -426,6 +517,10 @@ def start_camera() -> Any:
     try:
         camera_state = CAMERA_SESSION.start()
         hardware_state = ARDUINO_BRIDGE.start()
+        write_audit_log(
+            "camera_started",
+            f"Sorting camera session {camera_state.get('session_ref')} started.",
+        )
         return jsonify(camera=camera_state, hardware=hardware_state)
     except CameraSessionError as exc:
         return jsonify(error=str(exc)), 503
@@ -436,6 +531,10 @@ def start_camera() -> Any:
 def stop_camera() -> Any:
     hardware_state = ARDUINO_BRIDGE.stop()
     camera_state = CAMERA_SESSION.stop()
+    write_audit_log(
+        "camera_stopped",
+        "Sorting camera and hardware session stopped manually.",
+    )
     return jsonify(camera=camera_state, hardware=hardware_state)
 
 
@@ -487,6 +586,10 @@ def hardware_status() -> Any:
 def trigger_stopper() -> Any:
     try:
         ARDUINO_BRIDGE.trigger_stopper()
+        write_audit_log(
+            "stopper_advanced",
+            "Operator manually advanced the egg stopper.",
+        )
         return jsonify(ok=True, message="Stopper command sent.")
     except RuntimeError as exc:
         return jsonify(error=str(exc)), 503
@@ -552,6 +655,24 @@ def dashboard_stats() -> Any:
     good_count = quality_counts.get("Good", 0)
     camera_state = CAMERA_SESSION.status()
     latest_record = EggRecord.query.order_by(EggRecord.id.desc()).first()
+    today = datetime.now(timezone.utc).date()
+    trend_days = [today - timedelta(days=offset) for offset in range(6, -1, -1)]
+    trend_counts = {day.isoformat(): 0 for day in trend_days}
+    trend_start = datetime.combine(trend_days[0], time.min, tzinfo=timezone.utc)
+    recent_records = EggRecord.query.filter(EggRecord.sorted_at >= trend_start).all()
+    for record in recent_records:
+        sorted_at = record.sorted_at
+        if sorted_at.tzinfo is None:
+            sorted_at = sorted_at.replace(tzinfo=timezone.utc)
+        day_key = sorted_at.date().isoformat()
+        if day_key in trend_counts:
+            trend_counts[day_key] += 1
+    recent_audits = (
+        AuditLog.query
+        .order_by(AuditLog.id.desc())
+        .limit(12)
+        .all()
+    )
 
     return jsonify(
         total_sorted=total_sorted,
@@ -567,6 +688,15 @@ def dashboard_stats() -> Any:
         latest_record=latest_record.to_dict() if latest_record else None,
         hardware=ARDUINO_BRIDGE.status(),
         unread_alerts=TrayAlert.query.filter_by(is_read=False).count(),
+        daily_trend=[
+            {
+                "date": day.isoformat(),
+                "label": day.strftime("%a"),
+                "count": trend_counts[day.isoformat()],
+            }
+            for day in trend_days
+        ],
+        audit_logs=[log.to_dict() for log in recent_audits],
         total_revenue=round(
             float(
                 db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))
@@ -672,6 +802,16 @@ def create_sale() -> Any:
         status="Completed",
     )
     db.session.add(sale)
+    db.session.flush()
+    write_audit_log(
+        "sale_created",
+        (
+            f"{sale.to_dict()['invoice_id']} recorded for {quantity} "
+            f"{size} eggs sold to {buyer_name}."
+        ),
+        event_key=f"sale-created:{sale.id}",
+        commit=False,
+    )
     db.session.commit()
     return jsonify(sale=sale.to_dict()), 201
 
@@ -770,6 +910,13 @@ def create_user() -> Any:
         return jsonify(error="That username is already registered."), 409
     user = User(username=username, password=generate_password_hash(password))
     db.session.add(user)
+    db.session.flush()
+    write_audit_log(
+        "user_created",
+        f"Operator account '{username}' was registered.",
+        event_key=f"user-created:{user.id}",
+        commit=False,
+    )
     db.session.commit()
     return jsonify(id=user.id, username=user.username), 201
 
@@ -793,6 +940,11 @@ def update_user(user_id: int) -> Any:
         user.password = generate_password_hash(password)
     if user.id == session["user_id"]:
         session["username"] = username
+    write_audit_log(
+        "user_updated",
+        f"Operator account '{username}' was updated.",
+        commit=False,
+    )
     db.session.commit()
     return jsonify(id=user.id, username=user.username)
 
@@ -805,7 +957,13 @@ def delete_user(user_id: int) -> Any:
     user = db.get_or_404(User, user_id)
     if User.query.count() <= 1:
         return jsonify(error="At least one operator account must remain."), 409
+    deleted_username = user.username
     db.session.delete(user)
+    write_audit_log(
+        "user_deleted",
+        f"Operator account '{deleted_username}' was deleted.",
+        commit=False,
+    )
     db.session.commit()
     return jsonify(ok=True)
 
@@ -869,7 +1027,11 @@ def user_management() -> Any:
 # Logout
 @app.route("/logout")
 def logout() -> Any:
-
+    if "user_id" in session:
+        write_audit_log(
+            "logout",
+            "Operator signed out.",
+        )
     session.clear()
 
     return redirect(

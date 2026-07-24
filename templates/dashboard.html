@@ -445,11 +445,11 @@
               </p>
             </div>
           </div>
-          <!-- Daily Sorting Trend (Empty State) -->
+          <!-- Daily Sorting Trend -->
           <div
             class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col items-center justify-center min-h-[300px]"
           >
-            <div class="text-center">
+            <div id="dashboard-daily-trend" class="w-full">
               <span class="material-symbols-outlined text-5xl text-secondary-fixed-dim mb-4">bar_chart</span>
               <h4
                 class="font-headline-md text-body-lg font-bold text-on-background mb-2"
@@ -462,7 +462,7 @@
             </div>
           </div>
         </div>
-        <!-- Audit Logs (Empty State) -->
+        <!-- Audit Logs -->
         <div
           class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 mb-8"
         >
@@ -479,7 +479,7 @@
               </p>
             </div>
           </div>
-          <div class="flex flex-col items-center justify-center py-12 text-center">
+          <div id="dashboard-audit-logs" class="flex flex-col items-center justify-center py-12 text-center">
             <span class="material-symbols-outlined text-4xl text-secondary-fixed-dim mb-4">history</span>
             <p class="font-body-md text-body-md text-secondary">No audit log entries yet.</p>
           </div>
@@ -495,6 +495,102 @@
     }
 
     const sizeOrder = ['Peewee', 'Small', 'Medium', 'Large', 'Extra Large', 'Jumbo'];
+
+    function renderDailyTrend(trend) {
+      const container = document.getElementById('dashboard-daily-trend');
+      container.replaceChildren();
+
+      const title = document.createElement('h4');
+      title.className = 'font-headline-md text-body-lg font-bold text-on-background mb-6';
+      title.textContent = 'Daily Sorting Trend';
+      container.appendChild(title);
+
+      const chart = document.createElement('div');
+      chart.className = 'h-48 flex items-end justify-between gap-2 sm:gap-3';
+      const maxCount = Math.max(1, ...trend.map((entry) => entry.count));
+
+      trend.forEach((entry) => {
+        const column = document.createElement('div');
+        column.className = 'h-full flex-1 min-w-0 flex flex-col items-center justify-end';
+        column.title = `${entry.date}: ${entry.count} eggs`;
+
+        const count = document.createElement('span');
+        count.className = 'text-xs font-bold text-on-surface mb-2';
+        count.textContent = entry.count;
+
+        const track = document.createElement('div');
+        track.className = 'w-full max-w-10 h-32 rounded-t-lg bg-surface-container flex items-end overflow-hidden';
+        const bar = document.createElement('div');
+        bar.className = 'w-full bg-primary-container rounded-t-lg transition-all duration-500';
+        bar.style.height = entry.count
+          ? `${Math.max(8, entry.count / maxCount * 100)}%`
+          : '0%';
+        track.appendChild(bar);
+
+        const label = document.createElement('span');
+        label.className = 'text-xs text-secondary mt-2';
+        label.textContent = entry.label;
+        column.append(count, track, label);
+        chart.appendChild(column);
+      });
+      container.appendChild(chart);
+    }
+
+    function auditIcon(eventType) {
+      if (eventType === 'login' || eventType === 'logout') return 'login';
+      if (eventType === 'login_failed') return 'warning';
+      if (eventType === 'egg_sorted') return 'egg_alt';
+      if (eventType.startsWith('camera')) return 'videocam';
+      if (eventType.startsWith('user')) return 'manage_accounts';
+      if (eventType.startsWith('sale')) return 'payments';
+      return 'settings';
+    }
+
+    function renderAuditLogs(logs) {
+      const container = document.getElementById('dashboard-audit-logs');
+      container.replaceChildren();
+      container.className = logs.length
+        ? 'divide-y divide-surface-variant/50'
+        : 'flex flex-col items-center justify-center py-12 text-center';
+
+      if (!logs.length) {
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined text-4xl text-secondary-fixed-dim mb-4';
+        icon.textContent = 'history';
+        const message = document.createElement('p');
+        message.className = 'font-body-md text-body-md text-secondary';
+        message.textContent = 'No audit log entries yet.';
+        container.append(icon, message);
+        return;
+      }
+
+      logs.forEach((log) => {
+        const row = document.createElement('article');
+        row.className = 'py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center gap-3';
+        const iconBox = document.createElement('div');
+        iconBox.className = 'w-10 h-10 rounded-full bg-surface-container text-primary flex items-center justify-center shrink-0';
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined text-xl';
+        icon.textContent = auditIcon(log.event_type);
+        iconBox.appendChild(icon);
+
+        const details = document.createElement('div');
+        details.className = 'flex-1 min-w-0';
+        const description = document.createElement('p');
+        description.className = 'font-body-md text-body-md text-on-surface';
+        description.textContent = log.description;
+        const meta = document.createElement('p');
+        meta.className = 'font-caption text-caption text-secondary mt-1';
+        meta.textContent = `${log.actor} • ${new Date(log.created_at).toLocaleString()}`;
+        details.append(description, meta);
+
+        const badge = document.createElement('span');
+        badge.className = 'self-start sm:self-center px-2.5 py-1 rounded-full bg-surface-container text-secondary text-xs uppercase';
+        badge.textContent = log.event_type.replaceAll('_', ' ');
+        row.append(iconBox, details, badge);
+        container.appendChild(row);
+      });
+    }
 
     async function refreshDashboard() {
       try {
@@ -531,6 +627,8 @@
           })}`;
         document.getElementById('dashboard-revenue-note').textContent =
           stats.total_revenue > 0 ? 'Completed sales revenue' : 'No completed sales yet';
+        renderDailyTrend(stats.daily_trend || []);
+        renderAuditLogs(stats.audit_logs || []);
 
         const distribution = document.getElementById('dashboard-size-distribution');
         const maxCount = Math.max(1, ...Object.values(stats.size_counts));

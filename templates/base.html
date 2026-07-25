@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>{% block title %}EggSort{% endblock %}</title>
+    <link rel="stylesheet" href="/static/responsive.css" />
 
     <style>
       body {
@@ -21,11 +22,11 @@
       }
 
       .container {
-        width: 90%;
+        width: calc(100% - 2rem);
         max-width: 500px;
-        margin: 40px auto;
+        margin: 1.5rem auto;
         background: white;
-        padding: 25px;
+        padding: 1.25rem;
         border-radius: 10px;
         box-shadow: 0 0 10px #aaa;
       }
@@ -67,6 +68,13 @@
       footer {
         text-align: center;
         margin-top: 30px;
+      }
+
+      @media (min-width: 640px) {
+        .container {
+          margin: 2.5rem auto;
+          padding: 1.5rem;
+        }
       }
     </style>
   </head>

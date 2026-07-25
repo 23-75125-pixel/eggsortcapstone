@@ -138,6 +138,7 @@
       }
       .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
     </style>
+    <link rel="stylesheet" href="/static/responsive.css" />
   </head>
   <body class="bg-background text-on-background font-body-md flex min-h-screen">
     <!-- SideNavBar -->
@@ -166,7 +167,7 @@
         </div>
       </div>
       <!-- Links -->
-      <div class="flex flex-col h-full py-gutter px-2 flex-grow">
+      <div class="flex flex-col py-gutter px-2 flex-1 min-h-0 overflow-y-auto">
         <a
           class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
           href="/dashboard"
@@ -217,16 +218,7 @@
           <span class="font-button text-button">User Management</span>
         </a>
       </div>
-      <!-- Footer -->
-      <div class="p-4 mb-4">
-        <a
-          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg justify-center border border-white/10"
-          href="/logout"
-        >
-          <span class="material-symbols-outlined">logout</span>
-          <span class="font-button text-button">Log Out</span>
-        </a>
-      </div>
+      {% include "_sidebar_footer.html" %}
     </nav>
     <!-- Overlay -->
     <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden hidden"></div>
@@ -236,7 +228,7 @@
     >
       <!-- Header -->
       <header
-        class="w-full h-20 sticky top-0 z-30 bg-surface dark:bg-surface-dim flex justify-between items-center px-margin border-b border-surface-variant/50"
+        class="w-full min-h-20 sticky top-0 z-30 bg-surface dark:bg-surface-dim flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 px-margin py-3 border-b border-surface-variant/50"
       >
         <div class="flex items-center gap-3">
           <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors shrink-0">
@@ -251,9 +243,12 @@
           <h2 class="text-headline-md font-headline-md text-on-surface">
             Reports Management
           </h2>
+          </div>
         </div>
         <button
-          class="bg-inverse-surface text-white h-12 px-6 rounded flex items-center gap-2 hover:bg-surface-tint transition-colors active:scale-95 font-button text-button"
+          id="print-report"
+          type="button"
+          class="w-full sm:w-auto bg-inverse-surface text-white h-12 px-6 rounded flex items-center justify-center gap-2 hover:bg-surface-tint transition-colors active:scale-95 font-button text-button"
         >
           <span class="material-symbols-outlined text-sm">print</span>
           Print current report
@@ -265,7 +260,7 @@
       >
         <!-- Filters & Controls -->
         <div
-          class="bg-surface-container-lowest rounded-xl border border-surface-variant p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]"
+          class="bg-surface-container-lowest rounded-xl border border-surface-variant p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]"
         >
           <div class="flex flex-col md:flex-row gap-6 items-end">
             <div class="flex-1">
@@ -279,6 +274,7 @@
                   >tune</span
                 >
                 <select
+                  id="report-sampling"
                   class="w-full bg-[#F8F9FA] border border-surface-variant rounded h-12 pl-10 pr-4 appearance-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-on-surface"
                 >
                   <option>Daily</option>
@@ -302,9 +298,9 @@
                   >calendar_today</span
                 >
                 <input
+                  id="report-start-date"
                   class="w-full bg-[#F8F9FA] border border-surface-variant rounded h-12 pl-10 pr-4 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-on-surface"
-                  type="text"
-                  value="07/15/2026"
+                  type="date"
                 />
               </div>
             </div>
@@ -319,13 +315,15 @@
                   >calendar_today</span
                 >
                 <input
+                  id="report-end-date"
                   class="w-full bg-[#F8F9FA] border border-surface-variant rounded h-12 pl-10 pr-4 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-on-surface"
-                  type="text"
-                  value="07/15/2026"
+                  type="date"
                 />
               </div>
             </div>
             <button
+              id="refresh-report"
+              type="button"
               class="bg-[#E67E00] text-white h-12 px-8 rounded flex items-center justify-center gap-2 hover:bg-primary-container/90 transition-colors active:scale-95 font-button text-button w-full md:w-auto shrink-0"
             >
               Refresh live data
@@ -336,69 +334,69 @@
           </div>
         </div>
         <!-- KPI Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
           <!-- Card 1 -->
           <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
           >
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
             >
               Total Sorted
             </h3>
-            <div class="text-headline-md font-headline-md text-on-surface">
+            <div id="report-total" class="text-headline-md font-headline-md text-on-surface">
               —
             </div>
           </div>
           <!-- Card 2 -->
           <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
           >
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
             >
               Good Quality
             </h3>
-            <div class="text-headline-md font-headline-md text-on-surface">
+            <div id="report-good" class="text-headline-md font-headline-md text-on-surface">
               —
             </div>
           </div>
           <!-- Card 3 -->
           <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
           >
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
             >
-              Cracked
+              Damaged
             </h3>
-            <div class="text-headline-md font-headline-md text-on-surface">
+            <div id="report-damaged" class="text-headline-md font-headline-md text-on-surface">
               0
             </div>
           </div>
           <!-- Card 4 -->
           <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
           >
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
             >
               Quality Rate
             </h3>
-            <div class="text-headline-md font-headline-md text-on-surface">
+            <div id="report-quality-rate" class="text-headline-md font-headline-md text-on-surface">
               —
             </div>
           </div>
           <!-- Card 5 -->
           <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
+            class="bg-surface-container-lowest border border-surface-variant rounded-lg p-4 sm:p-5 shadow-[0_2px_10px_rgba(0,0,0,0.01)] flex flex-col justify-between h-[104px]"
           >
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
             >
               Proj Revenue
             </h3>
-            <div
+            <div id="report-revenue"
               class="text-headline-md font-headline-md text-on-surface flex items-center gap-1"
             >
               <span class="text-body-md font-body-md text-secondary">PHP</span>
@@ -411,20 +409,30 @@
           class="bg-surface-container-lowest border border-surface-variant rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] overflow-hidden"
         >
           <div
-            class="p-6 border-b border-surface-variant flex justify-between items-start"
+            class="p-4 sm:p-6 border-b border-surface-variant flex justify-between items-start"
           >
             <div>
               <h3 class="text-body-lg font-body-lg font-bold text-on-surface">
                 Daily Report
               </h3>
-              <p class="text-caption font-caption text-secondary mt-1">
+              <p id="report-description" class="text-caption font-caption text-secondary mt-1">
                 No data available. Start sorting sessions to generate reports.
               </p>
             </div>
           </div>
-          <div class="flex flex-col items-center justify-center py-12 text-center">
-            <span class="material-symbols-outlined text-4xl text-secondary-fixed-dim mb-4">bar_chart</span>
-            <p class="font-body-md text-body-md text-secondary">No report data yet. Data will appear after the first sorting session and sale are completed.</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low border-b border-surface-variant">
+                  <th class="py-3 px-5">PERIOD</th>
+                  <th class="py-3 px-5">TOTAL</th>
+                  <th class="py-3 px-5">GOOD</th>
+                  <th class="py-3 px-5">DIRTY</th>
+                  <th class="py-3 px-5">DAMAGED</th>
+                </tr>
+              </thead>
+              <tbody id="report-rows"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -436,6 +444,83 @@ function toggleSidebar() {
   sidebar.classList.toggle('-translate-x-full');
   overlay.classList.toggle('hidden');
 }
+
+const reportStart = document.getElementById('report-start-date');
+const reportEnd = document.getElementById('report-end-date');
+const reportSampling = document.getElementById('report-sampling');
+const reportRows = document.getElementById('report-rows');
+
+function setDefaultReportDates() {
+  const now = new Date();
+  const end = now.toISOString().slice(0, 10);
+  const startDate = new Date(now);
+  startDate.setDate(startDate.getDate() - 29);
+  reportStart.value = startDate.toISOString().slice(0, 10);
+  reportEnd.value = end;
+}
+
+function renderReportRows(rows) {
+  reportRows.replaceChildren();
+  if (!rows.length) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 5;
+    cell.className = 'py-12 px-5 text-center text-secondary';
+    cell.textContent = 'No sorting records match this date range.';
+    row.appendChild(cell);
+    reportRows.appendChild(row);
+    return;
+  }
+  rows.forEach((entry) => {
+    const row = document.createElement('tr');
+    row.className = 'border-b border-surface-variant/50';
+    [entry.period, entry.total, entry.good, entry.dirty, entry.damaged].forEach((value) => {
+      const cell = document.createElement('td');
+      cell.className = 'py-3 px-5';
+      cell.textContent = value;
+      row.appendChild(cell);
+    });
+    reportRows.appendChild(row);
+  });
+}
+
+async function refreshReport() {
+  const params = new URLSearchParams({
+    sampling: reportSampling.value.toLowerCase(),
+    start_date: reportStart.value,
+    end_date: reportEnd.value
+  });
+  const response = await fetch(`/api/reports?${params}`);
+  if (response.redirected) {
+    window.location.href = response.url;
+    return;
+  }
+  const payload = await response.json();
+  if (!response.ok) {
+    window.alert(payload.error || 'Unable to generate report.');
+    return;
+  }
+  document.getElementById('report-total').textContent = payload.summary.total;
+  document.getElementById('report-good').textContent = payload.summary.good;
+  document.getElementById('report-damaged').textContent = payload.summary.damaged;
+  document.getElementById('report-quality-rate').textContent = `${payload.summary.quality_rate}%`;
+  document.getElementById('report-revenue').textContent =
+    `PHP ${Number(payload.summary.revenue).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
+  document.getElementById('report-description').textContent =
+    `${reportSampling.value} totals from ${reportStart.value} through ${reportEnd.value}.`;
+  renderReportRows(payload.rows);
+}
+
+setDefaultReportDates();
+document.getElementById('refresh-report').addEventListener('click', refreshReport);
+document.getElementById('print-report').addEventListener('click', () => window.print());
+reportSampling.addEventListener('change', refreshReport);
+reportStart.addEventListener('change', refreshReport);
+reportEnd.addEventListener('change', refreshReport);
+refreshReport();
 </script>
 </body>
 </html>

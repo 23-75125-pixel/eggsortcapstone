@@ -143,6 +143,7 @@
         box-shadow: -4px 0 0 0 theme("colors.primary-container") inset;
       }
     </style>
+    <link rel="stylesheet" href="/static/responsive.css" />
   </head>
   <body
     class="bg-background text-on-background font-body-md antialiased overflow-x-hidden min-h-screen flex"
@@ -173,7 +174,7 @@
         </div>
       </div>
       <!-- Links -->
-      <div class="flex flex-col h-full py-gutter px-2 flex-grow">
+      <div class="flex flex-col py-gutter px-2 flex-1 min-h-0 overflow-y-auto">
         <!-- Active Tab: Dashboard -->
         <a
           class="bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 flex items-center gap-3 active:scale-95 duration-150 ease-in-out nav-active-glow"
@@ -225,28 +226,7 @@
           <span class="font-button text-button">User Management</span>
         </a>
       </div>
-      <!-- Footer -->
-      <div class="p-4 mb-4">
-        <div class="bg-black/20 rounded-xl p-4 flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-full bg-primary-container/30 flex items-center justify-center">
-            <span class="material-symbols-outlined text-white">account_circle</span>
-          </div>
-          <div>
-            <p class="text-white font-bold text-sm">eggsorplus</p>
-            <p class="text-surface-variant/70 text-xs flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-primary-container"></span>
-              Admin
-            </p>
-          </div>
-        </div>
-        <a
-          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg justify-center border border-white/10"
-          href="/logout"
-        >
-          <span class="material-symbols-outlined">logout</span>
-          <span class="font-button text-button">Log Out</span>
-        </a>
-      </div>
+      {% include "_sidebar_footer.html" %}
     </nav>
     <!-- Overlay -->
     <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden hidden"></div>
@@ -269,10 +249,11 @@
           <h2 class="font-headline-lg text-headline-lg text-on-background">
             Operational Dashboard
           </h2>
+          </div>
         </div>
-<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 sm:gap-4">
           <div
-            class="bg-surface-container-low px-4 py-2 rounded-full flex items-center gap-2 text-primary text-sm font-bold glow-effect"
+            class="bg-surface-container-low px-3 sm:px-4 py-2 rounded-full hidden sm:flex items-center gap-2 text-primary text-sm font-bold glow-effect"
           >
             <span
               class="w-2 h-2 rounded-full bg-primary-container animate-pulse"
@@ -280,6 +261,9 @@
             Dashboard ready
           </div>
           <button
+            id="refresh-dashboard"
+            type="button"
+            title="Refresh dashboard"
             class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors glow-effect"
           >
             <span class="material-symbols-outlined">refresh</span>
@@ -308,13 +292,14 @@
               >
             </div>
             <div class="flex items-end justify-between z-10">
-              <h3 class="font-headline-lg text-headline-lg text-on-background">
-                —
+              <h3 id="dashboard-total-sorted" class="font-headline-lg text-headline-lg text-on-background">
+                0
               </h3>
               <p
+                id="dashboard-total-note"
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                No data yet
+                Waiting for load cell
               </p>
             </div>
           </div>
@@ -336,13 +321,14 @@
               >
             </div>
             <div class="flex items-end justify-between z-10">
-              <h3 class="font-headline-lg text-headline-lg text-on-background">
-                —
+              <h3 id="dashboard-trays" class="font-headline-lg text-headline-lg text-on-background">
+                0
               </h3>
               <p
+                id="dashboard-trays-note"
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                No data yet
+                30 eggs per tray
               </p>
             </div>
           </div>
@@ -364,13 +350,14 @@
               >
             </div>
             <div class="flex items-end justify-between z-10">
-              <h3 class="font-headline-lg text-headline-lg text-on-background">
-                —
+              <h3 id="dashboard-quality-rate" class="font-headline-lg text-headline-lg text-on-background">
+                0%
               </h3>
               <p
+                id="dashboard-quality-note"
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                No data yet
+                Good eggs after sorting
               </p>
             </div>
           </div>
@@ -385,20 +372,21 @@
               <p
                 class="font-label-caps text-label-caps text-secondary uppercase tracking-wider"
               >
-                Active Alerts
+                Camera Eggs Visible
               </p>
               <span class="material-symbols-outlined text-secondary"
-                >warning</span
+                >visibility</span
               >
             </div>
             <div class="flex items-end justify-between z-10">
-              <h3 class="font-headline-lg text-headline-lg text-on-background">
+              <h3 id="dashboard-camera-visible" class="font-headline-lg text-headline-lg text-on-background">
                 0
               </h3>
               <p
+                id="dashboard-camera-note"
                 class="font-caption text-caption text-secondary flex items-center gap-1"
               >
-                No active alerts
+                Camera session stopped
               </p>
             </div>
           </div>
@@ -423,10 +411,10 @@
               >
                 Consolidated Customer Revenue
               </p>
-              <h3 class="font-headline-lg text-headline-lg text-white">
+              <h3 id="dashboard-revenue" class="font-headline-lg text-headline-lg text-white">
                 PHP 0.00
               </h3>
-              <p class="font-caption text-caption text-surface-variant/70 mt-1">
+              <p id="dashboard-revenue-note" class="font-caption text-caption text-surface-variant/70 mt-1">
                 No completed sales yet
               </p>
             </div>
@@ -445,7 +433,7 @@
           <div
             class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col items-center justify-center min-h-[300px]"
           >
-            <div class="text-center">
+            <div id="dashboard-size-distribution" class="text-center w-full">
               <span class="material-symbols-outlined text-5xl text-secondary-fixed-dim mb-4">donut_large</span>
               <h4
                 class="font-headline-md text-body-lg font-bold text-on-background mb-2"
@@ -457,11 +445,11 @@
               </p>
             </div>
           </div>
-          <!-- Daily Sorting Trend (Empty State) -->
+          <!-- Daily Sorting Trend -->
           <div
             class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col items-center justify-center min-h-[300px]"
           >
-            <div class="text-center">
+            <div id="dashboard-daily-trend" class="w-full">
               <span class="material-symbols-outlined text-5xl text-secondary-fixed-dim mb-4">bar_chart</span>
               <h4
                 class="font-headline-md text-body-lg font-bold text-on-background mb-2"
@@ -474,7 +462,7 @@
             </div>
           </div>
         </div>
-        <!-- Audit Logs (Empty State) -->
+        <!-- Audit Logs -->
         <div
           class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 mb-8"
         >
@@ -491,7 +479,7 @@
               </p>
             </div>
           </div>
-          <div class="flex flex-col items-center justify-center py-12 text-center">
+          <div id="dashboard-audit-logs" class="flex flex-col items-center justify-center py-12 text-center">
             <span class="material-symbols-outlined text-4xl text-secondary-fixed-dim mb-4">history</span>
             <p class="font-body-md text-body-md text-secondary">No audit log entries yet.</p>
           </div>
@@ -505,6 +493,170 @@
       sidebar.classList.toggle('-translate-x-full');
       overlay.classList.toggle('hidden');
     }
+
+    const sizeOrder = ['Peewee', 'Small', 'Medium', 'Large', 'Extra Large', 'Jumbo'];
+
+    function renderDailyTrend(trend) {
+      const container = document.getElementById('dashboard-daily-trend');
+      container.replaceChildren();
+
+      const title = document.createElement('h4');
+      title.className = 'font-headline-md text-body-lg font-bold text-on-background mb-6';
+      title.textContent = 'Daily Sorting Trend';
+      container.appendChild(title);
+
+      const chart = document.createElement('div');
+      chart.className = 'h-48 flex items-end justify-between gap-2 sm:gap-3';
+      const maxCount = Math.max(1, ...trend.map((entry) => entry.count));
+
+      trend.forEach((entry) => {
+        const column = document.createElement('div');
+        column.className = 'h-full flex-1 min-w-0 flex flex-col items-center justify-end';
+        column.title = `${entry.date}: ${entry.count} eggs`;
+
+        const count = document.createElement('span');
+        count.className = 'text-xs font-bold text-on-surface mb-2';
+        count.textContent = entry.count;
+
+        const track = document.createElement('div');
+        track.className = 'w-full max-w-10 h-32 rounded-t-lg bg-surface-container flex items-end overflow-hidden';
+        const bar = document.createElement('div');
+        bar.className = 'w-full bg-primary-container rounded-t-lg transition-all duration-500';
+        bar.style.height = entry.count
+          ? `${Math.max(8, entry.count / maxCount * 100)}%`
+          : '0%';
+        track.appendChild(bar);
+
+        const label = document.createElement('span');
+        label.className = 'text-xs text-secondary mt-2';
+        label.textContent = entry.label;
+        column.append(count, track, label);
+        chart.appendChild(column);
+      });
+      container.appendChild(chart);
+    }
+
+    function auditIcon(eventType) {
+      if (eventType === 'login' || eventType === 'logout') return 'login';
+      if (eventType === 'login_failed') return 'warning';
+      if (eventType === 'egg_sorted') return 'egg_alt';
+      if (eventType.startsWith('camera')) return 'videocam';
+      if (eventType.startsWith('user')) return 'manage_accounts';
+      if (eventType.startsWith('sale')) return 'payments';
+      return 'settings';
+    }
+
+    function renderAuditLogs(logs) {
+      const container = document.getElementById('dashboard-audit-logs');
+      container.replaceChildren();
+      container.className = logs.length
+        ? 'divide-y divide-surface-variant/50'
+        : 'flex flex-col items-center justify-center py-12 text-center';
+
+      if (!logs.length) {
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined text-4xl text-secondary-fixed-dim mb-4';
+        icon.textContent = 'history';
+        const message = document.createElement('p');
+        message.className = 'font-body-md text-body-md text-secondary';
+        message.textContent = 'No audit log entries yet.';
+        container.append(icon, message);
+        return;
+      }
+
+      logs.forEach((log) => {
+        const row = document.createElement('article');
+        row.className = 'py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center gap-3';
+        const iconBox = document.createElement('div');
+        iconBox.className = 'w-10 h-10 rounded-full bg-surface-container text-primary flex items-center justify-center shrink-0';
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined text-xl';
+        icon.textContent = auditIcon(log.event_type);
+        iconBox.appendChild(icon);
+
+        const details = document.createElement('div');
+        details.className = 'flex-1 min-w-0';
+        const description = document.createElement('p');
+        description.className = 'font-body-md text-body-md text-on-surface';
+        description.textContent = log.description;
+        const meta = document.createElement('p');
+        meta.className = 'font-caption text-caption text-secondary mt-1';
+        meta.textContent = `${log.actor} • ${new Date(log.created_at).toLocaleString()}`;
+        details.append(description, meta);
+
+        const badge = document.createElement('span');
+        badge.className = 'self-start sm:self-center px-2.5 py-1 rounded-full bg-surface-container text-secondary text-xs uppercase';
+        badge.textContent = log.event_type.replaceAll('_', ' ');
+        row.append(iconBox, details, badge);
+        container.appendChild(row);
+      });
+    }
+
+    async function refreshDashboard() {
+      try {
+        const response = await fetch('/api/dashboard/stats', {
+          credentials: 'same-origin'
+        });
+        if (response.redirected) {
+          window.location.href = response.url;
+          return;
+        }
+        const stats = await response.json();
+        if (!response.ok) throw new Error(stats.error || 'Dashboard update failed.');
+
+        document.getElementById('dashboard-total-sorted').textContent = stats.total_sorted;
+        document.getElementById('dashboard-total-note').textContent =
+          stats.latest_record
+            ? `Latest: ${stats.latest_record.weight_grams} g • ${stats.latest_record.size}`
+            : 'Waiting for load cell';
+        document.getElementById('dashboard-trays').textContent = stats.trays_completed;
+        document.getElementById('dashboard-trays-note').textContent =
+          `${stats.total_sorted % 30}/30 eggs in current tray`;
+        document.getElementById('dashboard-quality-rate').textContent =
+          `${stats.quality_rate}%`;
+        document.getElementById('dashboard-quality-note').textContent =
+          `${stats.quality_counts.Good || 0} good eggs`;
+        document.getElementById('dashboard-camera-visible').textContent =
+          stats.camera_eggs_visible;
+        document.getElementById('dashboard-camera-note').textContent =
+          stats.camera_running ? 'Live camera detection' : 'Camera session stopped';
+        document.getElementById('dashboard-revenue').textContent =
+          `PHP ${Number(stats.total_revenue || 0).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })}`;
+        document.getElementById('dashboard-revenue-note').textContent =
+          stats.total_revenue > 0 ? 'Completed sales revenue' : 'No completed sales yet';
+        renderDailyTrend(stats.daily_trend || []);
+        renderAuditLogs(stats.audit_logs || []);
+
+        const distribution = document.getElementById('dashboard-size-distribution');
+        const maxCount = Math.max(1, ...Object.values(stats.size_counts));
+        distribution.innerHTML = `
+          <h4 class="font-headline-md text-body-lg font-bold text-on-background mb-4">Size Distribution</h4>
+          <div class="space-y-3 text-left">
+            ${sizeOrder.map((size) => {
+              const count = stats.size_counts[size] || 0;
+              const width = Math.max(count ? 8 : 0, count / maxCount * 100);
+              return `
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span>${size}</span><strong>${count}</strong>
+                  </div>
+                  <div class="h-2 rounded-full bg-surface-container overflow-hidden">
+                    <div class="h-full bg-primary-container rounded-full transition-all" style="width:${width}%"></div>
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>`;
+      } catch (error) {
+        console.error('Dashboard refresh failed:', error);
+      }
+    }
+
+    document.getElementById('refresh-dashboard').addEventListener('click', refreshDashboard);
+    refreshDashboard();
+    window.setInterval(refreshDashboard, 750);
     </script>
   </body>
 </html>

@@ -131,6 +131,7 @@
       }
       .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
     </style>
+    <link rel="stylesheet" href="/static/responsive.css" />
   </head>
   <body
     class="font-body-md text-on-background antialiased flex h-screen overflow-hidden"
@@ -161,7 +162,7 @@
         </div>
       </div>
       <!-- Links -->
-      <div class="flex flex-col h-full py-gutter px-2 flex-grow">
+      <div class="flex flex-col py-gutter px-2 flex-1 min-h-0 overflow-y-auto">
         <a
           class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
           href="/dashboard"
@@ -212,15 +213,7 @@
           <span class="font-button text-button">User Management</span>
         </a>
       </div>
-      <div class="mt-auto pt-6 px-6 border-t border-outline-variant/10">
-        <a
-          class="flex items-center gap-3 text-surface-variant/70 hover:text-white transition-colors py-2 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out font-button text-button rounded px-2 -mx-2"
-          href="/logout"
-        >
-          <span class="material-symbols-outlined">logout</span>
-          Log Out
-        </a>
-      </div>
+      {% include "_sidebar_footer.html" %}
     </nav>
     <!-- Overlay -->
     <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden hidden"></div>
@@ -250,9 +243,11 @@
               </h2>
             </div>
           </div>
-          <div class="flex gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full md:w-auto">
             <button
-              class="h-[48px] px-6 bg-primary-container text-white font-button text-button rounded hover:bg-surface-tint transition-colors flex items-center gap-2 active:scale-95 shadow-sm"
+              id="export-records"
+              type="button"
+              class="h-[48px] px-6 bg-primary-container text-white font-button text-button rounded hover:bg-surface-tint transition-colors flex items-center justify-center gap-2 active:scale-95 shadow-sm"
             >
               Export CSV
               <span class="material-symbols-outlined text-[18px]"
@@ -260,7 +255,9 @@
               >
             </button>
             <button
-              class="h-[48px] px-6 bg-inverse-surface text-white font-button text-button rounded hover:bg-on-surface transition-colors flex items-center gap-2 active:scale-95 shadow-sm"
+              id="print-records"
+              type="button"
+              class="h-[48px] px-6 bg-inverse-surface text-white font-button text-button rounded hover:bg-on-surface transition-colors flex items-center justify-center gap-2 active:scale-95 shadow-sm"
             >
               <span class="material-symbols-outlined text-[18px]">print</span>
               Print Report
@@ -277,12 +274,15 @@
               >search</span
             >
             <input
+              id="record-search"
               class="w-full bg-[#F8F9FA] border border-surface-variant/50 rounded-lg py-3 pl-12 pr-4 text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-              placeholder="Search by ID, weight, or date..."
+              placeholder="Search by egg ID, weight, or session..."
               type="text"
             />
           </div>
           <button
+            id="search-records"
+            type="button"
             class="px-6 py-3 bg-[#F8F9FA] border border-surface-variant/50 rounded-lg font-button text-button text-secondary hover:bg-surface-container transition-colors"
           >
             Search
@@ -290,21 +290,30 @@
           <div class="h-8 w-px bg-surface-variant mx-2"></div>
           <div class="flex gap-3">
             <select
+              id="size-filter"
               class="bg-[#F8F9FA] border border-surface-variant/50 rounded-lg py-3 px-4 pr-10 text-body-md text-secondary focus:outline-none focus:border-primary appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23565f71%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_12px_center] bg-[length:16px]"
             >
               <option>All Sizes</option>
+              <option>Peewee</option>
               <option>Small</option>
               <option>Medium</option>
               <option>Large</option>
+              <option>Extra Large</option>
+              <option>Jumbo</option>
             </select>
             <select
+              id="quality-filter"
               class="bg-[#F8F9FA] border border-surface-variant/50 rounded-lg py-3 px-4 pr-10 text-body-md text-secondary focus:outline-none focus:border-primary appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23565f71%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_12px_center] bg-[length:16px]"
             >
               <option>All Qualities</option>
               <option>Good</option>
-              <option>Cracked</option>
+              <option>Dirty</option>
+              <option>Damaged</option>
             </select>
             <button
+              id="reset-record-filters"
+              type="button"
+              title="Reset filters"
               class="p-3 bg-[#F8F9FA] border border-surface-variant/50 rounded-lg text-secondary hover:bg-surface-container transition-colors flex items-center justify-center"
             >
               <span class="material-symbols-outlined text-[20px]">refresh</span>
@@ -315,6 +324,7 @@
         <div
           class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-surface-variant/50 overflow-hidden mb-6"
         >
+          <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr
@@ -352,9 +362,9 @@
                 </th>
               </tr>
             </thead>
-            <tbody class="text-body-md text-on-surface">
+            <tbody id="egg-records-body" class="text-body-md text-on-surface">
               <!-- Empty State -->
-              <tr>
+              <tr id="egg-records-empty">
                 <td
                   colspan="6"
                   class="py-12 text-center text-tertiary"
@@ -372,6 +382,7 @@
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
         <!-- Informational Banner -->
         <div
@@ -388,8 +399,9 @@
             </h4>
             <p class="text-caption text-blue-700/80 leading-relaxed max-w-4xl">
               EGGSor+ IoT weight measurements adhere strictly to localized
-              commercial standards: Small (&gt;50g), Medium (50g to 56g), Large
-              (57g to 63g), Extra Large (64g to 70g), and Jumbo (&gt;70g).
+              commercial standards: Peewee (&lt;42g), Small (42g to 49g),
+              Medium (50g to 56g), Large (57g to 63g), Extra Large
+              (64g to 70g), and Jumbo (71g and above).
               Handlers can calibrate automatic vision scaling directly from the
               control nodes on site.
             </p>
@@ -404,6 +416,136 @@
       sidebar.classList.toggle('-translate-x-full');
       overlay.classList.toggle('hidden');
     }
+
+    const recordsBody = document.getElementById('egg-records-body');
+    const recordSearch = document.getElementById('record-search');
+    const sizeFilter = document.getElementById('size-filter');
+    const qualityFilter = document.getElementById('quality-filter');
+    let currentRecords = [];
+    let recordSearchTimer = null;
+
+    function qualityClasses(quality) {
+      const normalized = quality.toLowerCase();
+      if (normalized === 'good') return 'bg-green-100 text-green-800';
+      if (normalized === 'dirty') return 'bg-amber-100 text-amber-800';
+      if (normalized === 'damaged') return 'bg-red-100 text-red-800';
+      return 'bg-surface-container text-secondary';
+    }
+
+    function createRecordRow(record) {
+      const row = document.createElement('tr');
+      row.className = 'border-b border-surface-variant/30';
+      row.dataset.recordId = record.id;
+
+      const values = [
+        record.egg_id,
+        `${record.weight_grams} g`,
+        record.size,
+        record.quality,
+        new Date(record.sorted_at).toLocaleString(),
+        record.session_ref
+      ];
+
+      values.forEach((value, index) => {
+        const cell = document.createElement('td');
+        cell.className = 'py-4 px-6 whitespace-nowrap';
+        if (index === 3) {
+          const badge = document.createElement('span');
+          badge.className = `px-2.5 py-1 rounded-full text-xs font-bold ${qualityClasses(record.quality)}`;
+          badge.textContent = value;
+          cell.appendChild(badge);
+        } else {
+          cell.textContent = value;
+        }
+        row.appendChild(cell);
+      });
+      return row;
+    }
+
+    function renderRecords(records) {
+      recordsBody.replaceChildren();
+      if (!records.length) {
+        const row = document.createElement('tr');
+        row.id = 'egg-records-empty';
+        const cell = document.createElement('td');
+        cell.colSpan = 6;
+        cell.className = 'py-12 text-center text-tertiary';
+        cell.textContent = 'No egg records match the current search and filters.';
+        row.appendChild(cell);
+        recordsBody.appendChild(row);
+        return;
+      }
+      records.forEach((record) => recordsBody.appendChild(createRecordRow(record)));
+    }
+
+    async function refreshEggRecords() {
+      try {
+        const params = new URLSearchParams({
+          q: recordSearch.value.trim(),
+          size: sizeFilter.value,
+          quality: qualityFilter.value,
+          limit: '500'
+        });
+        const response = await fetch(`/api/egg-records?${params}`, {
+          credentials: 'same-origin'
+        });
+        if (response.redirected) {
+          window.location.href = response.url;
+          return;
+        }
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Unable to load egg records.');
+
+        currentRecords = payload.records || [];
+        renderRecords(currentRecords);
+      } catch (error) {
+        console.error('Egg record refresh failed:', error);
+      }
+    }
+
+    function csvCell(value) {
+      return `"${String(value).replaceAll('"', '""')}"`;
+    }
+
+    document.getElementById('search-records').addEventListener('click', refreshEggRecords);
+    recordSearch.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') refreshEggRecords();
+    });
+    recordSearch.addEventListener('input', () => {
+      clearTimeout(recordSearchTimer);
+      recordSearchTimer = setTimeout(refreshEggRecords, 250);
+    });
+    sizeFilter.addEventListener('change', refreshEggRecords);
+    qualityFilter.addEventListener('change', refreshEggRecords);
+    document.getElementById('reset-record-filters').addEventListener('click', () => {
+      recordSearch.value = '';
+      sizeFilter.value = 'All Sizes';
+      qualityFilter.value = 'All Qualities';
+      refreshEggRecords();
+    });
+    document.getElementById('print-records').addEventListener('click', () => window.print());
+    document.getElementById('export-records').addEventListener('click', () => {
+      const headings = ['Egg ID', 'Weight (g)', 'Size', 'Quality', 'Date Sorted', 'Session'];
+      const rows = currentRecords.map((record) => [
+        record.egg_id,
+        record.weight_grams,
+        record.size,
+        record.quality,
+        new Date(record.sorted_at).toLocaleString(),
+        record.session_ref
+      ]);
+      const csv = [headings, ...rows].map(
+        (row) => row.map(csvCell).join(',')
+      ).join('\r\n');
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+      link.download = `egg-records-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    refreshEggRecords();
+    window.setInterval(refreshEggRecords, 1000);
     </script>
   </body>
 </html>

@@ -8,12 +8,9 @@
       <p class="text-white font-bold text-sm truncate" title="{{ username }}">
         {{ username | default("User", true) }}
       </p>
-      <p class="text-surface-variant/70 text-xs truncate" title="Roxas Farm">
-        Roxas Farm
-      </p>
       <p class="text-primary-fixed/80 text-[11px] flex items-center gap-1 mt-0.5">
         <span class="w-1.5 h-1.5 rounded-full bg-primary-container shrink-0"></span>
-        Admin
+        {{ current_user_role | default("staff", true) | title }}
       </p>
     </div>
   </div>

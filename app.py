@@ -2,11 +2,14 @@ import os
 import hashlib
 import re
 import secrets
+import smtplib
 from datetime import datetime, time, timedelta, timezone
+from email.message import EmailMessage
 from functools import wraps
 from typing import Callable, Any
 from authlib.integrations.base_client.errors import OAuthError
 from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
 from flask import (
     abort,
     Flask,
@@ -23,6 +26,9 @@ from flask import (
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, cast, func, inspect, or_, text
 from werkzeug.security import check_password_hash, generate_password_hash
+
+load_dotenv()
+
 from camera_session import CAMERA_SESSION, CameraSessionError
 from egg_standards import SIZE_ORDER, classify_egg_size
 from hardware_bridge import ARDUINO_BRIDGE
@@ -32,15 +38,54 @@ from detection_service import (
     detect_frame,
 )
 
-
 app = Flask(__name__)
 
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 app.permanent_session_lifetime = timedelta(days=30)
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-app.config["GOOGLE_CLIENT_ID"] = os.environ.get("GOOGLE_CLIENT_ID", "")
-app.config["GOOGLE_CLIENT_SECRET"] = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+app.config["GOOGLE_CLIENT_ID"] = os.environ.get(
+    "GOOGLE_CLIENT_ID",
+    "",
+).strip()
+app.config["GOOGLE_CLIENT_SECRET"] = os.environ.get(
+    "GOOGLE_CLIENT_SECRET",
+    "",
+).strip()
+app.config["ADMIN_EMAIL"] = os.environ.get(
+    "ADMIN_EMAIL",
+    "capstonecutie1@gmail.com",
+).strip().lower()
+app.config["ADMIN_GOOGLE_SUB"] = os.environ.get(
+    "ADMIN_GOOGLE_SUB",
+    "",
+).strip()
+app.config["PUBLIC_BASE_URL"] = os.environ.get(
+    "PUBLIC_BASE_URL",
+    "",
+).strip().rstrip("/")
+app.config["SESSION_COOKIE_SECURE"] = app.config["PUBLIC_BASE_URL"].startswith(
+    "https://"
+)
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "")
+app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", "587"))
+app.config["MAIL_USE_TLS"] = os.environ.get(
+    "MAIL_USE_TLS",
+    "1",
+).lower() in {"1", "true", "yes", "on"}
+app.config["MAIL_USE_SSL"] = os.environ.get(
+    "MAIL_USE_SSL",
+    "0",
+).lower() in {"1", "true", "yes", "on"}
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME", "")
+app.config["MAIL_PASSWORD"] = os.environ.get(
+    "MAIL_PASSWORD",
+    "",
+).replace(" ", "")
+app.config["MAIL_FROM"] = os.environ.get(
+    "MAIL_FROM",
+    app.config["MAIL_USERNAME"],
+)
 
 
 # SQLite database configuration
@@ -59,7 +104,8 @@ oauth.register(
 )
 
 
-INITIAL_ADMIN_EMAIL = "capstonecutie1@gmail.com"
+INITIAL_ADMIN_EMAIL = app.config["ADMIN_EMAIL"]
+INITIAL_ADMIN_GOOGLE_SUB = app.config["ADMIN_GOOGLE_SUB"]
 VALID_ROLES = {"admin", "staff"}
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9._-]{3,30}$")
@@ -97,12 +143,80 @@ def create_staff_invitation(user: "User") -> str:
     return token
 
 
+class InvitationDeliveryError(RuntimeError):
+    pass
+
+
+def external_url(endpoint: str, **values: Any) -> str:
+    path = url_for(endpoint, **values)
+    if app.config["PUBLIC_BASE_URL"]:
+        return f"{app.config['PUBLIC_BASE_URL']}{path}"
+    return url_for(endpoint, _external=True, **values)
+
+
+def send_staff_invitation(user: "User", invite_url: str) -> None:
+    required_settings = {
+        "MAIL_SERVER": app.config["MAIL_SERVER"],
+        "MAIL_FROM": app.config["MAIL_FROM"],
+    }
+    missing = [name for name, value in required_settings.items() if not value]
+    if missing:
+        raise InvitationDeliveryError(
+            f"Email is not configured ({', '.join(missing)} is missing)."
+        )
+
+    message = EmailMessage()
+    message["Subject"] = "You are invited to EggSort+"
+    message["From"] = app.config["MAIL_FROM"]
+    message["To"] = user.email
+    message.set_content(
+        f"""Hello {user_display_label(user)},
+
+An administrator invited you to EggSort+.
+
+Create your password using this single-use link:
+{invite_url}
+
+The link expires in 24 hours. If you were not expecting this invitation, you
+can ignore this email.
+"""
+    )
+
+    try:
+        if app.config["MAIL_USE_SSL"]:
+            smtp = smtplib.SMTP_SSL(
+                app.config["MAIL_SERVER"],
+                app.config["MAIL_PORT"],
+                timeout=15,
+            )
+        else:
+            smtp = smtplib.SMTP(
+                app.config["MAIL_SERVER"],
+                app.config["MAIL_PORT"],
+                timeout=15,
+            )
+        with smtp:
+            if app.config["MAIL_USE_TLS"] and not app.config["MAIL_USE_SSL"]:
+                smtp.starttls()
+            if app.config["MAIL_USERNAME"]:
+                smtp.login(
+                    app.config["MAIL_USERNAME"],
+                    app.config["MAIL_PASSWORD"],
+                )
+            smtp.send_message(message)
+    except (OSError, smtplib.SMTPException) as exc:
+        raise InvitationDeliveryError(
+            "The invitation was created, but the email could not be sent."
+        ) from exc
+
+
 def sign_in_user(user: "User", remember: bool = False) -> None:
     session.clear()
     session["user_id"] = user.id
     session["username"] = user_display_label(user)
     session["email"] = user.email or ""
     session["role"] = user.role
+    session["avatar_url"] = user.avatar_url or ""
     session.permanent = remember
 
 
@@ -140,6 +254,11 @@ class User(db.Model):
 
     display_name = db.Column(
         db.String(120),
+        nullable=True,
+    )
+
+    avatar_url = db.Column(
+        db.String(1024),
         nullable=True,
     )
 
@@ -299,6 +418,7 @@ with app.app_context():
         "email": "ALTER TABLE user ADD COLUMN email VARCHAR(254)",
         "google_sub": "ALTER TABLE user ADD COLUMN google_sub VARCHAR(255)",
         "display_name": "ALTER TABLE user ADD COLUMN display_name VARCHAR(120)",
+        "avatar_url": "ALTER TABLE user ADD COLUMN avatar_url VARCHAR(1024)",
         "role": (
             "ALTER TABLE user ADD COLUMN role VARCHAR(20) "
             "NOT NULL DEFAULT 'staff'"
@@ -353,12 +473,15 @@ with app.app_context():
             username=INITIAL_ADMIN_EMAIL,
             password=generate_password_hash(secrets.token_urlsafe(32)),
             email=INITIAL_ADMIN_EMAIL,
+            google_sub=INITIAL_ADMIN_GOOGLE_SUB or None,
             role="admin",
             is_active=True,
         )
         db.session.add(initial_admin)
     else:
         initial_admin.email = INITIAL_ADMIN_EMAIL
+        if INITIAL_ADMIN_GOOGLE_SUB:
+            initial_admin.google_sub = INITIAL_ADMIN_GOOGLE_SUB
         initial_admin.role = "admin"
         initial_admin.is_active = True
     db.session.commit()
@@ -562,7 +685,7 @@ def register() -> Any:
     return redirect(url_for("login"))
 
 
-# Staff use invite-only passwords; administrators use Google.
+# Invited staff can use a password or bind their verified Google account.
 @app.route("/login", methods=["GET", "POST"])
 def login() -> Any:
     if "user_id" in session:
@@ -651,7 +774,8 @@ def accept_invite(token: str) -> Any:
                 )
                 db.session.commit()
                 session["login_notice"] = (
-                    "Account activated. You can now sign in as staff."
+                    "Account activated. You can now sign in with Google or "
+                    "your staff password."
                 )
                 return redirect(url_for("login"))
 
@@ -674,7 +798,7 @@ def google_login() -> Any:
             "client ID and secret, then restart EggSort+."
         )
         return redirect(url_for("login"))
-    redirect_uri = url_for("google_callback", _external=True)
+    redirect_uri = external_url("google_callback")
     return oauth.google.authorize_redirect(redirect_uri)
 
 
@@ -715,12 +839,6 @@ def google_callback() -> Any:
         )
         return redirect(url_for("login"))
 
-    if user.role != "admin":
-        session["login_error"] = (
-            "Staff members sign in with their username/email and password."
-        )
-        return redirect(url_for("login"))
-
     if not user.is_active:
         write_audit_log(
             "login_denied",
@@ -730,23 +848,56 @@ def google_callback() -> Any:
         session["login_error"] = "This account has been disabled."
         return redirect(url_for("login"))
 
+    if user.google_sub and user.google_sub != google_sub:
+        write_audit_log(
+            "login_denied",
+            f"Google account '{email}' does not match the bound account ID.",
+            actor=email,
+        )
+        session["login_error"] = (
+            "A different Google account is already connected to this user."
+        )
+        return redirect(url_for("login"))
+
+    if (
+        user.role == "admin"
+        and INITIAL_ADMIN_GOOGLE_SUB
+        and google_sub != INITIAL_ADMIN_GOOGLE_SUB
+    ):
+        write_audit_log(
+            "login_denied",
+            f"Google account '{email}' has the wrong administrator account ID.",
+            actor=email,
+        )
+        session["login_error"] = "This Google account is not authorized."
+        return redirect(url_for("login"))
+
+    if user.role == "staff" and not user.password_set:
+        session["login_error"] = (
+            "Accept your staff invitation and create a password before "
+            "using Google sign-in."
+        )
+        return redirect(url_for("login"))
+
     user.google_sub = google_sub
-    user.email = email
     user.display_name = (
         str(userinfo.get("name", "")).strip()[:120]
         or email.split("@", 1)[0]
     )
+    avatar_url = str(userinfo.get("picture", "")).strip()[:1024]
+    user.avatar_url = avatar_url if avatar_url.startswith("https://") else None
     db.session.commit()
 
     sign_in_user(user, remember=True)
-    session["google_verified_for_password_setup"] = True
     write_audit_log(
         "login",
-        "Operator signed in successfully with Google.",
+        f"{user.role.title()} signed in successfully with Google.",
         actor=user.email or user.username,
     )
-    if not user.password_set:
-        return redirect(url_for("setup_admin_password"))
+    if user.role == "admin":
+        session["google_verified_for_password_setup"] = True
+        if not user.password_set:
+            return redirect(url_for("setup_admin_password"))
     session.pop("google_verified_for_password_setup", None)
     return redirect(url_for("dashboard"))
 
@@ -764,6 +915,7 @@ def login_required(f: Callable[..., Any]) -> Callable[..., Any]:
         session["username"] = user_display_label(user)
         session["email"] = user.email or ""
         session["role"] = user.role
+        session["avatar_url"] = user.avatar_url or ""
         if (
             user.role == "admin"
             and not user.password_set
@@ -797,6 +949,7 @@ def inject_current_user() -> dict[str, str | None]:
     return {
         "current_user_role": session.get("role"),
         "current_user_email": session.get("email"),
+        "current_user_avatar_url": session.get("avatar_url"),
     }
 
 
@@ -938,7 +1091,8 @@ def camera_feed() -> Any:
                 yield (
                     b"--frame\r\n"
                     b"Content-Type: image/jpeg\r\n"
-                    b"Cache-Control: no-store\r\n\r\n"
+                    b"Cache-Control: no-store\r\n"
+                    + f"Content-Length: {len(jpeg)}\r\n\r\n".encode("ascii")
                     + jpeg
                     + b"\r\n"
                 )
@@ -949,7 +1103,11 @@ def camera_feed() -> Any:
     return Response(
         stream_with_context(generate_frames()),
         mimetype="multipart/x-mixed-replace; boundary=frame",
-        headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 
@@ -1269,6 +1427,7 @@ def users_data() -> Any:
                 "username": user.username,
                 "email": user.email,
                 "display_name": user.display_name,
+                "avatar_url": user.avatar_url,
                 "role": user.role,
                 "is_active": user.is_active,
                 "password_set": user.password_set,
@@ -1326,12 +1485,22 @@ def create_user() -> Any:
         commit=False,
     )
     db.session.commit()
+    invite_url = external_url("accept_invite", token=token)
+    email_sent = True
+    warning = None
+    try:
+        send_staff_invitation(user, invite_url)
+    except InvitationDeliveryError as exc:
+        email_sent = False
+        warning = str(exc)
     return jsonify(
         id=user.id,
         email=user.email,
         username=user.username,
         role=user.role,
-        invite_url=url_for("accept_invite", token=token, _external=True),
+        invite_url=invite_url,
+        email_sent=email_sent,
+        warning=warning,
         expires_in_hours=24,
     ), 201
 
@@ -1399,8 +1568,18 @@ def regenerate_user_invite(user_id: int) -> Any:
         commit=False,
     )
     db.session.commit()
+    invite_url = external_url("accept_invite", token=token)
+    email_sent = True
+    warning = None
+    try:
+        send_staff_invitation(user, invite_url)
+    except InvitationDeliveryError as exc:
+        email_sent = False
+        warning = str(exc)
     return jsonify(
-        invite_url=url_for("accept_invite", token=token, _external=True),
+        invite_url=invite_url,
+        email_sent=email_sent,
+        warning=warning,
         expires_in_hours=24,
     )
 
@@ -1495,9 +1674,28 @@ def logout() -> Any:
     )
 
 
+@app.cli.command("show-admin-google-id")
+def show_admin_google_id() -> None:
+    """Print the Google subject ID captured for the administrator."""
+    admin = User.query.filter(
+        func.lower(User.email) == INITIAL_ADMIN_EMAIL
+    ).first()
+    if admin is None or not admin.google_sub:
+        print(
+            "No Google account ID has been captured. Sign in once with the "
+            "configured ADMIN_EMAIL, then run this command again."
+        )
+        return
+    print(f"ADMIN_GOOGLE_SUB={admin.google_sub}")
+
+
 
 if __name__ == "__main__":
     app.run(
         debug=os.environ.get("FLASK_DEBUG", "0") == "1",
         threaded=True,
+        # Keep the server in the process owned by the current terminal.
+        # Werkzeug's reloader starts a second process which can survive after
+        # its original VS Code terminal is closed and keep port 5000 occupied.
+        use_reloader=False,
     )

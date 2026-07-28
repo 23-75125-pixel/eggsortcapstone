@@ -170,22 +170,12 @@
         </div>
       </main>
 
-      <aside
-        class="hidden md:flex w-1/2 bg-illustration relative items-center justify-center border-l border-gray-100 p-12"
-      >
-        <div class="max-w-sm text-center relative z-10">
-          <div class="mx-auto mb-8 w-32 h-32 rounded-full bg-orange-100 flex items-center justify-center">
-            <svg class="w-20 h-20 text-brand" viewBox="0 0 120 120" fill="none" aria-hidden="true">
-              <path d="M60 13C43 36 28 58 28 79a32 32 0 0 0 64 0c0-21-15-43-32-66Z" fill="currentColor" opacity=".2"/>
-              <path d="M60 13C43 36 28 58 28 79a32 32 0 0 0 64 0c0-21-15-43-32-66Z" stroke="currentColor" stroke-width="7"/>
-              <path d="M43 82c3 10 10 16 20 18" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <h2 class="text-2xl font-extrabold text-gray-800">Secure farm operations</h2>
-          <p class="mt-3 text-gray-500 font-medium">
-            Administrators control access while staff focus on sorting and records.
-          </p>
-        </div>
+      <aside class="hidden md:block w-1/2 relative border-l border-gray-100">
+        <img
+          src="{{ url_for('static', filename='images/eggbackground.png') }}"
+          alt="Egg with a golden yolk"
+          class="absolute inset-0 h-full w-full object-cover object-center"
+        />
       </aside>
     </div>
     <script src="{{ url_for('static', filename='password-toggle.js') }}"></script>

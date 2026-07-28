@@ -331,15 +331,13 @@
     <div id="invite-modal" class="hidden fixed inset-0 z-[90] bg-black/50 p-4 items-center justify-center">
       <div class="w-full max-w-lg bg-white rounded-xl p-6 shadow-2xl">
         <div class="flex items-center justify-between">
-          <h3 class="font-headline-md text-headline-md">Staff Invitation Ready</h3>
+          <h3 id="invite-modal-title" class="font-headline-md text-headline-md">Staff Invitation</h3>
           <button id="close-invite-modal" type="button" class="p-2 rounded-lg hover:bg-surface-container" aria-label="Close">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
-        <p class="mt-3 text-secondary">
-          Copy and send this private link to the staff member. It works once and expires in 24 hours.
-        </p>
-        <div class="mt-5 flex gap-2">
+        <p id="invite-delivery-status" class="mt-3 text-secondary" role="status"></p>
+        <div id="invite-copy-controls" class="mt-5 flex gap-2">
           <input id="invite-url" readonly class="min-w-0 flex-1 border border-surface-variant rounded-lg px-3 py-3 bg-surface-container-low" />
           <button id="copy-invite" type="button" class="px-4 rounded-lg bg-primary-container text-white font-button">
             Copy
@@ -361,7 +359,10 @@
     const userForm = document.getElementById('user-form');
     const userError = document.getElementById('user-error');
     const inviteModal = document.getElementById('invite-modal');
+    const inviteModalTitle = document.getElementById('invite-modal-title');
+    const inviteCopyControls = document.getElementById('invite-copy-controls');
     const inviteUrl = document.getElementById('invite-url');
+    const inviteDeliveryStatus = document.getElementById('invite-delivery-status');
     const copyStatus = document.getElementById('copy-status');
     let usersCache = [];
 
@@ -401,9 +402,17 @@
       userModal.classList.remove('flex');
     }
 
-    function showInviteModal(url) {
+    function showInviteModal(url, emailSent = false, warning = null) {
       inviteUrl.value = url;
       copyStatus.textContent = '';
+      inviteModalTitle.textContent = emailSent
+        ? 'Invitation Email Sent'
+        : 'Invitation Email Not Sent';
+      inviteDeliveryStatus.textContent = emailSent
+        ? 'The staff member received the activation link by email.'
+        : (warning || 'Email was not sent. Copy this private link and send it to the staff member.');
+      inviteCopyControls.classList.toggle('hidden', emailSent);
+      inviteCopyControls.classList.toggle('flex', !emailSent);
       inviteModal.classList.remove('hidden');
       inviteModal.classList.add('flex');
     }
@@ -420,7 +429,7 @@
         window.alert(payload.error || 'Unable to create an invitation.');
         return;
       }
-      showInviteModal(payload.invite_url);
+      showInviteModal(payload.invite_url, payload.email_sent, payload.warning);
       refreshUsers();
     }
 
@@ -429,7 +438,26 @@
       users.forEach((user) => {
         const card = document.createElement('article');
         card.className = 'bg-white border border-surface-variant rounded-xl p-5 flex items-center justify-between gap-4 shadow-sm';
+        const identity = document.createElement('div');
+        identity.className = 'min-w-0 flex items-center gap-3';
+        const avatar = document.createElement('div');
+        avatar.className = 'w-11 h-11 rounded-full bg-primary-container/15 text-primary-container flex items-center justify-center shrink-0 font-bold overflow-hidden';
+        const fallbackInitial = (user.display_name || user.username || '?').charAt(0).toUpperCase();
+        avatar.textContent = fallbackInitial;
+        if (user.avatar_url) {
+          const image = document.createElement('img');
+          image.src = user.avatar_url;
+          image.alt = `${user.display_name || user.username} profile photo`;
+          image.className = 'w-full h-full object-cover';
+          image.referrerPolicy = 'no-referrer';
+          image.loading = 'lazy';
+          image.addEventListener('error', () => {
+            avatar.textContent = fallbackInitial;
+          });
+          avatar.replaceChildren(image);
+        }
         const details = document.createElement('div');
+        details.className = 'min-w-0';
         const title = document.createElement('h3');
         title.className = 'font-button text-button text-on-surface';
         title.textContent = user.display_name || user.username;
@@ -445,6 +473,7 @@
         const current = user.is_current ? ' • CURRENT SESSION' : '';
         meta.textContent = `${user.role.toUpperCase()} • ${connection}${current}`;
         details.append(title, meta);
+        identity.append(avatar, details);
 
         const actions = document.createElement('div');
         actions.className = 'flex gap-2';
@@ -482,16 +511,10 @@
           refreshUsers();
         });
         actions.append(edit, remove);
-        card.append(details, actions);
+        card.append(identity, actions);
         usersGrid.appendChild(card);
       });
 
-      const add = document.createElement('button');
-      add.type = 'button';
-      add.className = 'bg-surface-container-low border border-dashed border-outline-variant/50 rounded-xl p-6 min-h-[120px] text-secondary hover:bg-surface-container';
-      add.textContent = '+ Invite Staff';
-      add.addEventListener('click', () => openUserModal());
-      usersGrid.appendChild(add);
     }
 
     async function refreshUsers() {
@@ -550,7 +573,7 @@
       }
       closeUserModal();
       if (result.invite_url) {
-        showInviteModal(result.invite_url);
+        showInviteModal(result.invite_url, result.email_sent, result.warning);
       }
       refreshUsers();
     });

@@ -11,6 +11,7 @@ from typing import Any
 
 from detection_service import (
     CONFIDENCE,
+    MODEL_NAME,
     annotate_image,
     detect_image,
 )
@@ -29,15 +30,18 @@ class CameraDetectionSession:
         self._raw_frame_ready = Condition(self._lock)
         self._stop_event = Event()
         self._capture_thread: Thread | None = None
+        self._stream_thread: Thread | None = None
         self._inference_thread: Thread | None = None
         self._capture: Any | None = None
         self._running = False
 
         self._latest_raw_frame: Any | None = None
+        self._latest_raw_captured_at = 0.0
         self._raw_sequence = 0
         self._latest_jpeg: bytes | None = None
         self._frame_sequence = 0
         self._latest_result: dict[str, Any] | None = None
+        self._latest_result_captured_at = 0.0
         self._quality_history: deque[tuple[float, str, float]] = deque(
             maxlen=200
         )
@@ -57,6 +61,20 @@ class CameraDetectionSession:
         self.camera_height = int(os.environ.get("CAMERA_HEIGHT", "720"))
         self.camera_fps = int(os.environ.get("CAMERA_FPS", "30"))
         self.jpeg_quality = int(os.environ.get("CAMERA_JPEG_QUALITY", "72"))
+        self.stream_width = int(
+            os.environ.get("CAMERA_STREAM_WIDTH", str(self.camera_width))
+        )
+        self.stream_height = int(
+            os.environ.get("CAMERA_STREAM_HEIGHT", str(self.camera_height))
+        )
+        self.result_max_age_seconds = max(
+            0.1,
+            float(os.environ.get("YOLO_RESULT_MAX_AGE_MS", "1000")) / 1000,
+        )
+        self.inference_max_fps = max(
+            0.1,
+            float(os.environ.get("YOLO_MAX_FPS", "5")),
+        )
 
     def start(self) -> dict[str, Any]:
         with self._lock:
@@ -75,10 +93,12 @@ class CameraDetectionSession:
             self._stop_event.clear()
             self._running = True
             self._latest_raw_frame = None
+            self._latest_raw_captured_at = 0.0
             self._raw_sequence = 0
             self._latest_jpeg = None
             self._frame_sequence = 0
             self._latest_result = None
+            self._latest_result_captured_at = 0.0
             self._quality_history.clear()
             self._error = None
             self._stream_fps = 0.0
@@ -91,18 +111,25 @@ class CameraDetectionSession:
                 name="eggsort-camera-capture",
                 daemon=True,
             )
+            self._stream_thread = Thread(
+                target=self._stream_loop,
+                name="eggsort-camera-stream",
+                daemon=True,
+            )
             self._inference_thread = Thread(
                 target=self._inference_loop,
                 name="eggsort-yolo-inference",
                 daemon=True,
             )
             self._capture_thread.start()
+            self._stream_thread.start()
             self._inference_thread.start()
             return self.status()
 
     def stop(self) -> dict[str, Any]:
         with self._lock:
             capture_thread = self._capture_thread
+            stream_thread = self._stream_thread
             inference_thread = self._inference_thread
             self._stop_event.set()
             self._frame_ready.notify_all()
@@ -110,17 +137,24 @@ class CameraDetectionSession:
 
         if capture_thread and capture_thread.is_alive():
             capture_thread.join(timeout=5)
+        if stream_thread and stream_thread.is_alive():
+            stream_thread.join(timeout=5)
         if inference_thread and inference_thread.is_alive():
             inference_thread.join(timeout=15)
 
         with self._lock:
             threads_alive = any(
                 thread and thread.is_alive()
-                for thread in (capture_thread, inference_thread)
+                for thread in (
+                    capture_thread,
+                    stream_thread,
+                    inference_thread,
+                )
             )
             if not threads_alive:
                 self._running = False
                 self._capture_thread = None
+                self._stream_thread = None
                 self._inference_thread = None
             return self.status()
 
@@ -132,6 +166,9 @@ class CameraDetectionSession:
                 "error": self._error,
                 "started_at": self._started_at,
                 "session_ref": self._session_ref,
+                "model": MODEL_NAME,
+                "stream_width": self.stream_width,
+                "stream_height": self.stream_height,
                 "frame_ready": self._latest_jpeg is not None,
                 "total": result.get("total", 0),
                 "counts": result.get("counts", {}),
@@ -141,6 +178,7 @@ class CameraDetectionSession:
                 "stream_fps": round(self._stream_fps, 1),
                 "detection_fps": round(self._detection_fps, 1),
                 "inference_ms": round(self._inference_ms),
+                "detection_fps_limit": self.inference_max_fps,
             }
 
     def quality_snapshot(self, window_seconds: float = 3.0) -> dict[str, Any]:
@@ -184,9 +222,8 @@ class CameraDetectionSession:
     def _capture_loop(self) -> None:
         import cv2
 
-        fps_started = monotonic()
-        fps_frames = 0
         try:
+            cv2.setNumThreads(1)
             backend_codes = {
                 "auto": cv2.CAP_ANY,
                 "dshow": cv2.CAP_DSHOW,
@@ -234,13 +271,75 @@ class CameraDetectionSession:
                         "The camera stopped returning frames."
                     )
 
+                # Use the configured live resolution for both display and
+                # inference. Avoiding 4K JPEG encoding keeps the feed smooth.
+                frame_height, frame_width = frame.shape[:2]
+                if (
+                    frame_width != self.stream_width
+                    or frame_height != self.stream_height
+                ):
+                    frame = cv2.resize(
+                        frame,
+                        (self.stream_width, self.stream_height),
+                        interpolation=cv2.INTER_AREA,
+                    )
+
                 # Give inference only the newest frame. No queue means no
                 # increasing detection delay when the model is slower than video.
                 with self._raw_frame_ready:
                     self._latest_raw_frame = frame
+                    self._latest_raw_captured_at = monotonic()
                     self._raw_sequence += 1
-                    result = self._latest_result
-                    self._raw_frame_ready.notify()
+                    self._raw_frame_ready.notify_all()
+        except Exception as exc:
+            self._fail(str(exc))
+        finally:
+            with self._frame_ready:
+                if self._capture is not None:
+                    self._capture.release()
+                self._capture = None
+                self._running = False
+                self._capture_thread = None
+                self._stop_event.set()
+                self._raw_frame_ready.notify_all()
+                self._frame_ready.notify_all()
+
+    def _stream_loop(self) -> None:
+        """Encode only the newest frame so the browser never builds a delay."""
+        import cv2
+
+        processed_sequence = 0
+        fps_started = monotonic()
+        fps_frames = 0
+        try:
+            while not self._stop_event.is_set():
+                with self._raw_frame_ready:
+                    self._raw_frame_ready.wait_for(
+                        lambda: (
+                            self._raw_sequence != processed_sequence
+                            or self._stop_event.is_set()
+                        ),
+                        timeout=1.0,
+                    )
+                    if self._stop_event.is_set():
+                        break
+                    if (
+                        self._raw_sequence == processed_sequence
+                        or self._latest_raw_frame is None
+                    ):
+                        continue
+                    frame = self._latest_raw_frame.copy()
+                    captured_at = self._latest_raw_captured_at
+                    result = (
+                        self._latest_result
+                        if (
+                            self._latest_result is not None
+                            and captured_at - self._latest_result_captured_at
+                            <= self.result_max_age_seconds
+                        )
+                        else None
+                    )
+                    processed_sequence = self._raw_sequence
 
                 display_frame = (
                     annotate_image(frame, result)
@@ -270,15 +369,8 @@ class CameraDetectionSession:
         except Exception as exc:
             self._fail(str(exc))
         finally:
-            with self._frame_ready:
-                if self._capture is not None:
-                    self._capture.release()
-                self._capture = None
-                self._running = False
-                self._capture_thread = None
-                self._stop_event.set()
-                self._raw_frame_ready.notify_all()
-                self._frame_ready.notify_all()
+            with self._lock:
+                self._stream_thread = None
 
     def _inference_loop(self) -> None:
         processed_sequence = 0
@@ -300,6 +392,7 @@ class CameraDetectionSession:
                     ):
                         continue
                     frame = self._latest_raw_frame.copy()
+                    frame_captured_at = self._latest_raw_captured_at
                     processed_sequence = self._raw_sequence
 
                 started = monotonic()
@@ -307,6 +400,7 @@ class CameraDetectionSession:
                 elapsed = monotonic() - started
                 with self._lock:
                     self._latest_result = result
+                    self._latest_result_captured_at = frame_captured_at
                     captured_at = monotonic()
                     for detection in result["detections"]:
                         self._quality_history.append(
@@ -317,7 +411,17 @@ class CameraDetectionSession:
                             )
                         )
                     self._inference_ms = elapsed * 1000
-                    self._detection_fps = 1 / elapsed if elapsed else 0.0
+                    self._detection_fps = min(
+                        1 / elapsed if elapsed else 0.0,
+                        self.inference_max_fps,
+                    )
+
+                # Continuous CPU inference can starve capture, JPEG encoding,
+                # and Flask's response writer. A short interruptible pause
+                # leaves enough CPU time for a consistently current live feed.
+                remaining = (1 / self.inference_max_fps) - elapsed
+                if remaining > 0:
+                    self._stop_event.wait(remaining)
         except Exception as exc:
             self._fail(str(exc))
         finally:

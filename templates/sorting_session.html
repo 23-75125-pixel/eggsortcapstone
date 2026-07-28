@@ -251,8 +251,8 @@
     </button>
   </div>
 
-  <div class="relative w-full overflow-hidden rounded-xl bg-black aspect-video">
-    <img id="camera-feed" class="w-full h-full object-contain" alt="Live camera feed with YOLO detection boxes" />
+  <div class="relative w-full overflow-hidden rounded-xl aspect-video">
+    <img id="camera-feed" class="absolute inset-0 block w-full h-full object-cover" alt="Live camera feed with YOLO detection boxes" />
     <div id="camera-loading" class="absolute inset-0 flex items-center justify-center bg-black/60 text-white">
       <div class="flex items-center gap-3">
         <span class="material-symbols-outlined animate-spin">progress_activity</span>
@@ -395,9 +395,9 @@ function showRunningSession(state, reconnectFeed = false) {
   if (!state.frame_ready) {
     statusText.textContent = 'Camera active. Waiting for the first video frame...';
   } else if (!state.detection_fps) {
-    statusText.textContent = `Live video ${state.stream_fps || '—'} FPS • YOLO warming up...`;
+    statusText.textContent = `Live ${state.stream_width}×${state.stream_height} @ ${state.stream_fps || '—'} FPS • ${state.model || 'best.pt'} warming up...`;
   } else {
-    statusText.textContent = `Live video ${state.stream_fps} FPS • YOLO ${state.detection_fps} FPS (${state.inference_ms} ms)`;
+    statusText.textContent = `Live ${state.stream_width}×${state.stream_height} @ ${state.stream_fps} FPS • ${state.model || 'best.pt'} ${state.detection_fps} FPS (${state.inference_ms} ms)`;
   }
   // MJPEG responses never finish, so some browsers never fire the image
   // "load" event. Server frame readiness is the reliable signal.
@@ -466,7 +466,7 @@ function startStatusPolling() {
   statusTimer = window.setInterval(() => {
     refreshSessionState(false);
     refreshHardwareState();
-  }, 750);
+  }, 2000);
 }
 
 async function startCameraSession() {

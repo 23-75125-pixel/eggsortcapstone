@@ -12,8 +12,12 @@ BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = Path(
     os.environ.get("YOLO_MODEL_PATH", str(BASE_DIR / "best.pt"))
 ).expanduser()
+if not MODEL_PATH.is_absolute():
+    MODEL_PATH = BASE_DIR / MODEL_PATH
 CONFIDENCE = float(os.environ.get("YOLO_CONFIDENCE", "0.25"))
 IMAGE_SIZE = int(os.environ.get("YOLO_IMAGE_SIZE", "512"))
+MODEL_NAME = MODEL_PATH.name
+CPU_THREADS = max(1, int(os.environ.get("YOLO_CPU_THREADS", "2")))
 MAX_FRAME_BYTES = 5 * 1024 * 1024
 
 _model: Any | None = None
@@ -47,12 +51,16 @@ def _load_model() -> Any:
 
         try:
             from ultralytics import YOLO
+            import torch
         except ImportError as exc:
             raise DetectorUnavailableError(
                 "Ultralytics is not installed. Run: pip install -r requirements.txt"
             ) from exc
 
         try:
+            # Leave CPU capacity available for camera capture and JPEG
+            # streaming instead of allowing inference to occupy every core.
+            torch.set_num_threads(CPU_THREADS)
             _model = YOLO(str(MODEL_PATH))
         except Exception as exc:
             raise DetectorUnavailableError(

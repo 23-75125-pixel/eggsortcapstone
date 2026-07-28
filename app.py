@@ -1103,6 +1103,7 @@ def camera_feed() -> Any:
     return Response(
         stream_with_context(generate_frames()),
         mimetype="multipart/x-mixed-replace; boundary=frame",
+        direct_passthrough=True,
         headers={
             "Cache-Control": "no-store, no-cache, must-revalidate",
             "Pragma": "no-cache",

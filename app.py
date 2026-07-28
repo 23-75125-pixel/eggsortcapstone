@@ -1,8 +1,17 @@
 import os
+import hashlib
+import re
+import secrets
+import smtplib
 from datetime import datetime, time, timedelta, timezone
+from email.message import EmailMessage
 from functools import wraps
 from typing import Callable, Any
+from authlib.integrations.base_client.errors import OAuthError
+from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
 from flask import (
+    abort,
     Flask,
     Response,
     has_request_context,
@@ -15,8 +24,11 @@ from flask import (
     url_for,
 )
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, cast, func, or_
-from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import String, cast, func, inspect, or_, text
+from werkzeug.security import check_password_hash, generate_password_hash
+
+load_dotenv()
+
 from camera_session import CAMERA_SESSION, CameraSessionError
 from egg_standards import SIZE_ORDER, classify_egg_size
 from hardware_bridge import ARDUINO_BRIDGE
@@ -26,11 +38,54 @@ from detection_service import (
     detect_frame,
 )
 
-
 app = Flask(__name__)
 
-app.secret_key = os.environ.get("SECRET_KEY", "change_this_secret_key")
+app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 app.permanent_session_lifetime = timedelta(days=30)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["GOOGLE_CLIENT_ID"] = os.environ.get(
+    "GOOGLE_CLIENT_ID",
+    "",
+).strip()
+app.config["GOOGLE_CLIENT_SECRET"] = os.environ.get(
+    "GOOGLE_CLIENT_SECRET",
+    "",
+).strip()
+app.config["ADMIN_EMAIL"] = os.environ.get(
+    "ADMIN_EMAIL",
+    "capstonecutie1@gmail.com",
+).strip().lower()
+app.config["ADMIN_GOOGLE_SUB"] = os.environ.get(
+    "ADMIN_GOOGLE_SUB",
+    "",
+).strip()
+app.config["PUBLIC_BASE_URL"] = os.environ.get(
+    "PUBLIC_BASE_URL",
+    "",
+).strip().rstrip("/")
+app.config["SESSION_COOKIE_SECURE"] = app.config["PUBLIC_BASE_URL"].startswith(
+    "https://"
+)
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "")
+app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", "587"))
+app.config["MAIL_USE_TLS"] = os.environ.get(
+    "MAIL_USE_TLS",
+    "1",
+).lower() in {"1", "true", "yes", "on"}
+app.config["MAIL_USE_SSL"] = os.environ.get(
+    "MAIL_USE_SSL",
+    "0",
+).lower() in {"1", "true", "yes", "on"}
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME", "")
+app.config["MAIL_PASSWORD"] = os.environ.get(
+    "MAIL_PASSWORD",
+    "",
+).replace(" ", "")
+app.config["MAIL_FROM"] = os.environ.get(
+    "MAIL_FROM",
+    app.config["MAIL_USERNAME"],
+)
 
 
 # SQLite database configuration
@@ -39,6 +94,130 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 
 db = SQLAlchemy(app)
+oauth = OAuth(app)
+oauth.register(
+    name="google",
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_id=app.config["GOOGLE_CLIENT_ID"],
+    client_secret=app.config["GOOGLE_CLIENT_SECRET"],
+    client_kwargs={"scope": "openid email profile"},
+)
+
+
+INITIAL_ADMIN_EMAIL = app.config["ADMIN_EMAIL"]
+INITIAL_ADMIN_GOOGLE_SUB = app.config["ADMIN_GOOGLE_SUB"]
+VALID_ROLES = {"admin", "staff"}
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9._-]{3,30}$")
+INVITE_LIFETIME = timedelta(hours=24)
+
+
+def user_display_label(user: "User") -> str:
+    if (
+        user.display_name
+        and user.display_name.casefold() != (user.email or "").casefold()
+    ):
+        return user.display_name
+    if user.email:
+        return user.email.split("@", 1)[0]
+    return user.username
+
+
+def invite_token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def invitation_is_valid(user: "User") -> bool:
+    expires_at = user.invite_expires_at
+    if not user.invite_token_hash or expires_at is None:
+        return False
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    return expires_at > datetime.now(timezone.utc)
+
+
+def create_staff_invitation(user: "User") -> str:
+    token = secrets.token_urlsafe(32)
+    user.invite_token_hash = invite_token_hash(token)
+    user.invite_expires_at = datetime.now(timezone.utc) + INVITE_LIFETIME
+    return token
+
+
+class InvitationDeliveryError(RuntimeError):
+    pass
+
+
+def external_url(endpoint: str, **values: Any) -> str:
+    path = url_for(endpoint, **values)
+    if app.config["PUBLIC_BASE_URL"]:
+        return f"{app.config['PUBLIC_BASE_URL']}{path}"
+    return url_for(endpoint, _external=True, **values)
+
+
+def send_staff_invitation(user: "User", invite_url: str) -> None:
+    required_settings = {
+        "MAIL_SERVER": app.config["MAIL_SERVER"],
+        "MAIL_FROM": app.config["MAIL_FROM"],
+    }
+    missing = [name for name, value in required_settings.items() if not value]
+    if missing:
+        raise InvitationDeliveryError(
+            f"Email is not configured ({', '.join(missing)} is missing)."
+        )
+
+    message = EmailMessage()
+    message["Subject"] = "You are invited to EggSort+"
+    message["From"] = app.config["MAIL_FROM"]
+    message["To"] = user.email
+    message.set_content(
+        f"""Hello {user_display_label(user)},
+
+An administrator invited you to EggSort+.
+
+Create your password using this single-use link:
+{invite_url}
+
+The link expires in 24 hours. If you were not expecting this invitation, you
+can ignore this email.
+"""
+    )
+
+    try:
+        if app.config["MAIL_USE_SSL"]:
+            smtp = smtplib.SMTP_SSL(
+                app.config["MAIL_SERVER"],
+                app.config["MAIL_PORT"],
+                timeout=15,
+            )
+        else:
+            smtp = smtplib.SMTP(
+                app.config["MAIL_SERVER"],
+                app.config["MAIL_PORT"],
+                timeout=15,
+            )
+        with smtp:
+            if app.config["MAIL_USE_TLS"] and not app.config["MAIL_USE_SSL"]:
+                smtp.starttls()
+            if app.config["MAIL_USERNAME"]:
+                smtp.login(
+                    app.config["MAIL_USERNAME"],
+                    app.config["MAIL_PASSWORD"],
+                )
+            smtp.send_message(message)
+    except (OSError, smtplib.SMTPException) as exc:
+        raise InvitationDeliveryError(
+            "The invitation was created, but the email could not be sent."
+        ) from exc
+
+
+def sign_in_user(user: "User", remember: bool = False) -> None:
+    session.clear()
+    session["user_id"] = user.id
+    session["username"] = user_display_label(user)
+    session["email"] = user.email or ""
+    session["role"] = user.role
+    session["avatar_url"] = user.avatar_url or ""
+    session.permanent = remember
 
 
 
@@ -59,6 +238,56 @@ class User(db.Model):
     password = db.Column(
         db.String(200),
         nullable=False
+    )
+
+    email = db.Column(
+        db.String(254),
+        unique=True,
+        nullable=True,
+    )
+
+    google_sub = db.Column(
+        db.String(255),
+        unique=True,
+        nullable=True,
+    )
+
+    display_name = db.Column(
+        db.String(120),
+        nullable=True,
+    )
+
+    avatar_url = db.Column(
+        db.String(1024),
+        nullable=True,
+    )
+
+    role = db.Column(
+        db.String(20),
+        nullable=False,
+        default="staff",
+    )
+
+    is_active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+    )
+
+    password_set = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    invite_token_hash = db.Column(
+        db.String(64),
+        nullable=True,
+    )
+
+    invite_expires_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=True,
     )
 
 
@@ -178,9 +407,84 @@ class AuditLog(db.Model):
         }
 
 
-# Create database
+# Create and safely extend the database without deleting existing records.
 with app.app_context():
     db.create_all()
+    user_columns = {
+        column["name"]
+        for column in inspect(db.engine).get_columns("user")
+    }
+    migration_statements = {
+        "email": "ALTER TABLE user ADD COLUMN email VARCHAR(254)",
+        "google_sub": "ALTER TABLE user ADD COLUMN google_sub VARCHAR(255)",
+        "display_name": "ALTER TABLE user ADD COLUMN display_name VARCHAR(120)",
+        "avatar_url": "ALTER TABLE user ADD COLUMN avatar_url VARCHAR(1024)",
+        "role": (
+            "ALTER TABLE user ADD COLUMN role VARCHAR(20) "
+            "NOT NULL DEFAULT 'staff'"
+        ),
+        "is_active": (
+            "ALTER TABLE user ADD COLUMN is_active BOOLEAN "
+            "NOT NULL DEFAULT 1"
+        ),
+        "password_set": (
+            "ALTER TABLE user ADD COLUMN password_set BOOLEAN "
+            "NOT NULL DEFAULT 0"
+        ),
+        "invite_token_hash": (
+            "ALTER TABLE user ADD COLUMN invite_token_hash VARCHAR(64)"
+        ),
+        "invite_expires_at": (
+            "ALTER TABLE user ADD COLUMN invite_expires_at DATETIME"
+        ),
+    }
+    for column_name, statement in migration_statements.items():
+        if column_name not in user_columns:
+            db.session.execute(text(statement))
+    db.session.execute(
+        text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_user_email "
+            "ON user (email)"
+        )
+    )
+    db.session.execute(
+        text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_user_google_sub "
+            "ON user (google_sub)"
+        )
+    )
+    db.session.commit()
+
+    initial_admin = User.query.filter(
+        func.lower(User.email) == INITIAL_ADMIN_EMAIL
+    ).first()
+    if initial_admin is None:
+        initial_admin = User.query.filter(
+            func.lower(User.username) == "admin"
+        ).first()
+    if initial_admin is None:
+        initial_admin = User.query.filter(
+            func.lower(User.username) == INITIAL_ADMIN_EMAIL
+        ).first()
+    if initial_admin is None and User.query.count() == 1:
+        initial_admin = User.query.first()
+    if initial_admin is None:
+        initial_admin = User(
+            username=INITIAL_ADMIN_EMAIL,
+            password=generate_password_hash(secrets.token_urlsafe(32)),
+            email=INITIAL_ADMIN_EMAIL,
+            google_sub=INITIAL_ADMIN_GOOGLE_SUB or None,
+            role="admin",
+            is_active=True,
+        )
+        db.session.add(initial_admin)
+    else:
+        initial_admin.email = INITIAL_ADMIN_EMAIL
+        if INITIAL_ADMIN_GOOGLE_SUB:
+            initial_admin.google_sub = INITIAL_ADMIN_GOOGLE_SUB
+        initial_admin.role = "admin"
+        initial_admin.is_active = True
+    db.session.commit()
 
 
 QUALITY_NAMES = {
@@ -370,96 +674,232 @@ def home() -> Any:
 
 
 
-# Register user
+# Public self-registration is intentionally disabled. Admins allowlist staff
+# Google accounts from User Management.
 @app.route("/register", methods=["GET", "POST"])
 def register() -> Any:
-
-    error = None
-
-    if request.method == "POST":
-
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
-
-        if not username or not password:
-            error = "Username and password are required"
-        else:
-            existing_user = User.query.filter_by(
-                username=username
-            ).first()
-
-            if existing_user:
-                error = "Username already exists"
-            else:
-                hashed_password = generate_password_hash(
-                    password
-                )
-
-                user = User(
-                    username=username,
-                    password=hashed_password
-                )
-
-                db.session.add(user)
-                db.session.commit()
-
-                return redirect(url_for("login"))
-
-    return render_template(
-        "register.html",
-        error=error
+    session["login_error"] = (
+        "Public registration is disabled. Staff accounts require an "
+        "invitation from the administrator."
     )
+    return redirect(url_for("login"))
 
 
-
-# Login
+# Invited staff can use a password or bind their verified Google account.
 @app.route("/login", methods=["GET", "POST"])
 def login() -> Any:
+    if "user_id" in session:
+        return redirect(url_for("dashboard"))
 
-    error = None
-
+    error = session.pop("login_error", None)
     if request.method == "POST":
-
-        username = request.form.get("username", "").strip()
+        identifier = request.form.get("identifier", "").strip().lower()
         password = request.form.get("password", "")
-
-        if not username or not password:
-            error = "Username and password are required"
+        user = User.query.filter(
+            or_(
+                func.lower(User.username) == identifier,
+                func.lower(User.email) == identifier,
+            )
+        ).first()
+        if (
+            user is None
+            or not user.is_active
+            or not user.password_set
+            or not check_password_hash(user.password, password)
+        ):
+            error = "Invalid username/email or password."
+            write_audit_log(
+                "login_failed",
+                "Failed staff sign-in attempt.",
+                actor=identifier or "Unknown",
+            )
         else:
-            user = User.query.filter_by(
-                username=username
-            ).first()
-
-            if user and check_password_hash(
-                user.password,
-                password
-            ):
-
-                session["user_id"] = user.id
-                session["username"] = user.username
-                session.permanent = request.form.get("remember-me") == "on"
-                write_audit_log(
-                    "login",
-                    "Operator signed in successfully.",
-                    actor=user.username,
-                )
-
-                return redirect(
-                    url_for("dashboard")
-                )
-
-            else:
-                error = "Invalid username or password"
-                write_audit_log(
-                    "login_failed",
-                    f"Failed sign-in attempt for username '{username}'.",
-                    actor=username or "Unknown",
-                )
+            sign_in_user(
+                user,
+                remember=request.form.get("remember-me") == "on",
+            )
+            write_audit_log(
+                "login",
+                f"{user.role.title()} signed in successfully with a password.",
+                actor=user.email or user.username,
+            )
+            return redirect(url_for("dashboard"))
 
     return render_template(
         "login.html",
-        error=error
+        error=error,
+        notice=session.pop("login_notice", None),
+        google_ready=bool(
+            app.config["GOOGLE_CLIENT_ID"]
+            and app.config["GOOGLE_CLIENT_SECRET"]
+        ),
     )
+
+
+@app.route("/accept-invite/<token>", methods=["GET", "POST"])
+def accept_invite(token: str) -> Any:
+    user = User.query.filter_by(
+        invite_token_hash=invite_token_hash(token),
+        role="staff",
+        is_active=True,
+    ).first()
+    valid_invite = user is not None and invitation_is_valid(user)
+    error = None
+
+    if request.method == "POST":
+        if not valid_invite or user is None:
+            error = "This invitation is invalid, expired, or already used."
+        else:
+            password = request.form.get("password", "")
+            password_confirmation = request.form.get(
+                "password_confirmation",
+                "",
+            )
+            if len(password) < 8:
+                error = "Password must contain at least 8 characters."
+            elif len(password) > 128:
+                error = "Password must not exceed 128 characters."
+            elif password != password_confirmation:
+                error = "Passwords do not match."
+            else:
+                user.password = generate_password_hash(password)
+                user.password_set = True
+                user.invite_token_hash = None
+                user.invite_expires_at = None
+                write_audit_log(
+                    "staff_activated",
+                    f"Staff account '{user.username}' accepted its invitation.",
+                    actor=user.email or user.username,
+                    commit=False,
+                )
+                db.session.commit()
+                session["login_notice"] = (
+                    "Account activated. You can now sign in with Google or "
+                    "your staff password."
+                )
+                return redirect(url_for("login"))
+
+    return render_template(
+        "accept_invite.html",
+        error=error,
+        valid_invite=valid_invite,
+        invited_user=user,
+    )
+
+
+@app.get("/auth/google")
+def google_login() -> Any:
+    if not (
+        app.config["GOOGLE_CLIENT_ID"]
+        and app.config["GOOGLE_CLIENT_SECRET"]
+    ):
+        session["login_error"] = (
+            "Google sign-in is not configured yet. Add the Google OAuth "
+            "client ID and secret, then restart EggSort+."
+        )
+        return redirect(url_for("login"))
+    redirect_uri = external_url("google_callback")
+    return oauth.google.authorize_redirect(redirect_uri)
+
+
+@app.get("/auth/google/callback")
+def google_callback() -> Any:
+    try:
+        token = oauth.google.authorize_access_token()
+        userinfo = token.get("userinfo")
+        if not userinfo:
+            userinfo = oauth.google.userinfo(token=token).json()
+    except OAuthError:
+        session["login_error"] = (
+            "Google sign-in was cancelled or could not be verified."
+        )
+        return redirect(url_for("login"))
+
+    email = str(userinfo.get("email", "")).strip().lower()
+    google_sub = str(userinfo.get("sub", "")).strip()
+    if not email or not google_sub or userinfo.get("email_verified") is not True:
+        session["login_error"] = (
+            "Google did not provide a verified email address."
+        )
+        return redirect(url_for("login"))
+
+    user = User.query.filter_by(google_sub=google_sub).first()
+    if user is None:
+        user = User.query.filter(func.lower(User.email) == email).first()
+
+    if user is None:
+        write_audit_log(
+            "login_denied",
+            f"Google account '{email}' is not authorized.",
+            actor=email,
+        )
+        session["login_error"] = (
+            "This Google account is not authorized. Ask the administrator "
+            "to add your email in User Management."
+        )
+        return redirect(url_for("login"))
+
+    if not user.is_active:
+        write_audit_log(
+            "login_denied",
+            f"Disabled Google account '{email}' attempted to sign in.",
+            actor=email,
+        )
+        session["login_error"] = "This account has been disabled."
+        return redirect(url_for("login"))
+
+    if user.google_sub and user.google_sub != google_sub:
+        write_audit_log(
+            "login_denied",
+            f"Google account '{email}' does not match the bound account ID.",
+            actor=email,
+        )
+        session["login_error"] = (
+            "A different Google account is already connected to this user."
+        )
+        return redirect(url_for("login"))
+
+    if (
+        user.role == "admin"
+        and INITIAL_ADMIN_GOOGLE_SUB
+        and google_sub != INITIAL_ADMIN_GOOGLE_SUB
+    ):
+        write_audit_log(
+            "login_denied",
+            f"Google account '{email}' has the wrong administrator account ID.",
+            actor=email,
+        )
+        session["login_error"] = "This Google account is not authorized."
+        return redirect(url_for("login"))
+
+    if user.role == "staff" and not user.password_set:
+        session["login_error"] = (
+            "Accept your staff invitation and create a password before "
+            "using Google sign-in."
+        )
+        return redirect(url_for("login"))
+
+    user.google_sub = google_sub
+    user.display_name = (
+        str(userinfo.get("name", "")).strip()[:120]
+        or email.split("@", 1)[0]
+    )
+    avatar_url = str(userinfo.get("picture", "")).strip()[:1024]
+    user.avatar_url = avatar_url if avatar_url.startswith("https://") else None
+    db.session.commit()
+
+    sign_in_user(user, remember=True)
+    write_audit_log(
+        "login",
+        f"{user.role.title()} signed in successfully with Google.",
+        actor=user.email or user.username,
+    )
+    if user.role == "admin":
+        session["google_verified_for_password_setup"] = True
+        if not user.password_set:
+            return redirect(url_for("setup_admin_password"))
+    session.pop("google_verified_for_password_setup", None)
+    return redirect(url_for("dashboard"))
 
 
 
@@ -468,8 +908,99 @@ def login_required(f: Callable[..., Any]) -> Callable[..., Any]:
     def decorated_function(*args: Any, **kwargs: Any) -> Any:
         if "user_id" not in session:
             return redirect(url_for("login"))
+        user = db.session.get(User, session["user_id"])
+        if user is None or not user.is_active:
+            session.clear()
+            return redirect(url_for("login"))
+        session["username"] = user_display_label(user)
+        session["email"] = user.email or ""
+        session["role"] = user.role
+        session["avatar_url"] = user.avatar_url or ""
+        if (
+            user.role == "admin"
+            and not user.password_set
+            and request.endpoint != "setup_admin_password"
+        ):
+            if session.get("google_verified_for_password_setup"):
+                return redirect(url_for("setup_admin_password"))
+            session.clear()
+            session["login_error"] = (
+                "Continue with Google to finish the one-time admin setup."
+            )
+            return redirect(url_for("login"))
         return f(*args, **kwargs)
     return decorated_function
+
+
+def admin_required(f: Callable[..., Any]) -> Callable[..., Any]:
+    @wraps(f)
+    @login_required
+    def decorated_function(*args: Any, **kwargs: Any) -> Any:
+        if session.get("role") != "admin":
+            if request.path.startswith("/api/"):
+                return jsonify(error="Administrator access is required."), 403
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@app.context_processor
+def inject_current_user() -> dict[str, str | None]:
+    return {
+        "current_user_role": session.get("role"),
+        "current_user_email": session.get("email"),
+        "current_user_avatar_url": session.get("avatar_url"),
+    }
+
+
+@app.route("/setup-admin-password", methods=["GET", "POST"])
+@admin_required
+def setup_admin_password() -> Any:
+    user = db.session.get(User, session["user_id"])
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+    if user.password_set:
+        session.pop("google_verified_for_password_setup", None)
+        return redirect(url_for("dashboard"))
+    if not session.get("google_verified_for_password_setup"):
+        session.clear()
+        session["login_error"] = (
+            "Sign in with Google first to create the administrator password."
+        )
+        return redirect(url_for("login"))
+
+    error = None
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        password_confirmation = request.form.get(
+            "password_confirmation",
+            "",
+        )
+        if len(password) < 8:
+            error = "Password must contain at least 8 characters."
+        elif len(password) > 128:
+            error = "Password must not exceed 128 characters."
+        elif password != password_confirmation:
+            error = "Passwords do not match."
+        else:
+            user.password = generate_password_hash(password)
+            user.password_set = True
+            session.pop("google_verified_for_password_setup", None)
+            write_audit_log(
+                "admin_password_created",
+                "Administrator created a password after Google verification.",
+                actor=user.email or user.username,
+                commit=False,
+            )
+            db.session.commit()
+            return redirect(url_for("dashboard"))
+
+    return render_template(
+        "setup_admin_password.html",
+        error=error,
+        email=user.email,
+    )
 
 
 # Dashboard
@@ -560,7 +1091,8 @@ def camera_feed() -> Any:
                 yield (
                     b"--frame\r\n"
                     b"Content-Type: image/jpeg\r\n"
-                    b"Cache-Control: no-store\r\n\r\n"
+                    b"Cache-Control: no-store\r\n"
+                    + f"Content-Length: {len(jpeg)}\r\n\r\n".encode("ascii")
                     + jpeg
                     + b"\r\n"
                 )
@@ -571,7 +1103,11 @@ def camera_feed() -> Any:
     return Response(
         stream_with_context(generate_frames()),
         mimetype="multipart/x-mixed-replace; boundary=frame",
-        headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 
@@ -881,14 +1417,22 @@ def reports_data() -> Any:
 
 
 @app.get("/api/users")
-@login_required
+@admin_required
 def users_data() -> Any:
-    users_list = User.query.order_by(User.username.asc()).all()
+    users_list = User.query.order_by(User.role.asc(), User.email.asc()).all()
     return jsonify(
         users=[
             {
                 "id": user.id,
                 "username": user.username,
+                "email": user.email,
+                "display_name": user.display_name,
+                "avatar_url": user.avatar_url,
+                "role": user.role,
+                "is_active": user.is_active,
+                "password_set": user.password_set,
+                "invite_pending": invitation_is_valid(user),
+                "google_connected": bool(user.google_sub),
                 "is_current": user.id == session["user_id"],
             }
             for user in users_list
@@ -897,71 +1441,162 @@ def users_data() -> Any:
 
 
 @app.post("/api/users")
-@login_required
+@admin_required
 def create_user() -> Any:
     payload = request.get_json(silent=True) or {}
-    username = str(payload.get("username", "")).strip()
-    password = str(payload.get("password", ""))
-    if not username or not password:
-        return jsonify(error="Username and password are required."), 400
-    if len(password) < 6:
-        return jsonify(error="Password must contain at least 6 characters."), 400
-    if User.query.filter_by(username=username).first():
-        return jsonify(error="That username is already registered."), 409
-    user = User(username=username, password=generate_password_hash(password))
+    email = str(payload.get("email", "")).strip().lower()
+    username = str(payload.get("username", "")).strip().lower()
+    display_name = str(payload.get("display_name", "")).strip()
+    if not EMAIL_PATTERN.fullmatch(email):
+        return jsonify(error="Enter a valid email address."), 400
+    if not USERNAME_PATTERN.fullmatch(username):
+        return jsonify(
+            error=(
+                "Username must be 3-30 characters using letters, numbers, "
+                "dots, underscores, or hyphens."
+            )
+        ), 400
+    if not 2 <= len(display_name) <= 120:
+        return jsonify(error="Name must contain 2-120 characters."), 400
+    existing_user = User.query.filter(
+        or_(
+            func.lower(User.email) == email,
+            func.lower(User.username) == username,
+        )
+    ).first()
+    if existing_user:
+        return jsonify(error="That email or username is already registered."), 409
+    user = User(
+        username=username,
+        password=generate_password_hash(secrets.token_urlsafe(32)),
+        email=email,
+        display_name=display_name,
+        role="staff",
+        is_active=True,
+        password_set=False,
+    )
+    token = create_staff_invitation(user)
     db.session.add(user)
     db.session.flush()
     write_audit_log(
-        "user_created",
-        f"Operator account '{username}' was registered.",
+        "staff_invited",
+        f"Staff account '{username}' was invited.",
         event_key=f"user-created:{user.id}",
         commit=False,
     )
     db.session.commit()
-    return jsonify(id=user.id, username=user.username), 201
+    invite_url = external_url("accept_invite", token=token)
+    email_sent = True
+    warning = None
+    try:
+        send_staff_invitation(user, invite_url)
+    except InvitationDeliveryError as exc:
+        email_sent = False
+        warning = str(exc)
+    return jsonify(
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        role=user.role,
+        invite_url=invite_url,
+        email_sent=email_sent,
+        warning=warning,
+        expires_in_hours=24,
+    ), 201
 
 
 @app.patch("/api/users/<int:user_id>")
-@login_required
+@admin_required
 def update_user(user_id: int) -> Any:
     user = db.get_or_404(User, user_id)
+    if user.role == "admin":
+        return jsonify(
+            error="The Google administrator profile is managed by sign-in."
+        ), 409
     payload = request.get_json(silent=True) or {}
-    username = str(payload.get("username", "")).strip()
-    password = str(payload.get("password", ""))
-    if not username:
-        return jsonify(error="Username is required."), 400
-    duplicate = User.query.filter(User.username == username, User.id != user_id).first()
+    email = str(payload.get("email", "")).strip().lower()
+    username = str(payload.get("username", "")).strip().lower()
+    display_name = str(payload.get("display_name", "")).strip()
+    if not EMAIL_PATTERN.fullmatch(email):
+        return jsonify(error="Enter a valid email address."), 400
+    if not USERNAME_PATTERN.fullmatch(username):
+        return jsonify(
+            error=(
+                "Username must be 3-30 characters using letters, numbers, "
+                "dots, underscores, or hyphens."
+            )
+        ), 400
+    if not 2 <= len(display_name) <= 120:
+        return jsonify(error="Name must contain 2-120 characters."), 400
+    duplicate = User.query.filter(
+        or_(
+            func.lower(User.email) == email,
+            func.lower(User.username) == username,
+        ),
+        User.id != user_id,
+    ).first()
     if duplicate:
-        return jsonify(error="That username is already registered."), 409
-    if password and len(password) < 6:
-        return jsonify(error="Password must contain at least 6 characters."), 400
+        return jsonify(error="That email or username is already registered."), 409
+    user.email = email
     user.username = username
-    if password:
-        user.password = generate_password_hash(password)
-    if user.id == session["user_id"]:
-        session["username"] = username
+    user.display_name = display_name
     write_audit_log(
         "user_updated",
-        f"Operator account '{username}' was updated.",
+        f"Staff account '{username}' was updated.",
         commit=False,
     )
     db.session.commit()
-    return jsonify(id=user.id, username=user.username)
+    return jsonify(
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        display_name=user.display_name,
+        role=user.role,
+    )
+
+
+@app.post("/api/users/<int:user_id>/invite")
+@admin_required
+def regenerate_user_invite(user_id: int) -> Any:
+    user = db.get_or_404(User, user_id)
+    if user.role != "staff":
+        return jsonify(error="Only staff accounts use invitations."), 409
+    token = create_staff_invitation(user)
+    write_audit_log(
+        "staff_reinvited",
+        f"A new invitation was created for staff account '{user.username}'.",
+        commit=False,
+    )
+    db.session.commit()
+    invite_url = external_url("accept_invite", token=token)
+    email_sent = True
+    warning = None
+    try:
+        send_staff_invitation(user, invite_url)
+    except InvitationDeliveryError as exc:
+        email_sent = False
+        warning = str(exc)
+    return jsonify(
+        invite_url=invite_url,
+        email_sent=email_sent,
+        warning=warning,
+        expires_in_hours=24,
+    )
 
 
 @app.delete("/api/users/<int:user_id>")
-@login_required
+@admin_required
 def delete_user(user_id: int) -> Any:
     if user_id == session["user_id"]:
         return jsonify(error="You cannot delete the account currently signed in."), 409
     user = db.get_or_404(User, user_id)
-    if User.query.count() <= 1:
-        return jsonify(error="At least one operator account must remain."), 409
-    deleted_username = user.username
+    if user.role == "admin" and User.query.filter_by(role="admin").count() <= 1:
+        return jsonify(error="At least one administrator must remain."), 409
+    deleted_identity = user.email or user.username
     db.session.delete(user)
     write_audit_log(
         "user_deleted",
-        f"Operator account '{deleted_username}' was deleted.",
+        f"Account '{deleted_identity}' was removed.",
         commit=False,
     )
     db.session.commit()
@@ -1015,7 +1650,7 @@ def reports() -> Any:
 
 # User Management
 @app.route("/user-management")
-@login_required
+@admin_required
 def user_management() -> Any:
     return render_template(
         "user_management.html",
@@ -1039,9 +1674,28 @@ def logout() -> Any:
     )
 
 
+@app.cli.command("show-admin-google-id")
+def show_admin_google_id() -> None:
+    """Print the Google subject ID captured for the administrator."""
+    admin = User.query.filter(
+        func.lower(User.email) == INITIAL_ADMIN_EMAIL
+    ).first()
+    if admin is None or not admin.google_sub:
+        print(
+            "No Google account ID has been captured. Sign in once with the "
+            "configured ADMIN_EMAIL, then run this command again."
+        )
+        return
+    print(f"ADMIN_GOOGLE_SUB={admin.google_sub}")
+
+
 
 if __name__ == "__main__":
     app.run(
         debug=os.environ.get("FLASK_DEBUG", "0") == "1",
         threaded=True,
+        # Keep the server in the process owned by the current terminal.
+        # Werkzeug's reloader starts a second process which can survive after
+        # its original VS Code terminal is closed and keep port 5000 occupied.
+        use_reloader=False,
     )

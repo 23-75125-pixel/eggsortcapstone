@@ -281,76 +281,11 @@
             class="w-full sm:w-auto bg-primary-container text-white h-12 px-6 rounded-lg font-button text-button flex items-center justify-center gap-2 hover:bg-primary transition-colors active:scale-95 shadow-[0_4px_20px_rgba(0,0,0,0.04)]"
           >
             <span class="material-symbols-outlined text-sm">add</span>
-            Register Operator
+            Invite Staff
           </button>
         </div>
         <!-- Bento Grid / Cards Area -->
-        <div id="users-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <!-- User Card -->
-          <div
-            class="bg-surface-container-lowest border border-surface-variant rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow"
-          >
-            <div class="flex items-center gap-4">
-              <img
-                class="w-14 h-14 rounded-full object-cover bg-surface-container"
-                data-alt="A clean, high-contrast portrait avatar of an enterprise systems operator, stylized with a modern, flat vector aesthetic, utilizing subtle cool tones against a pure white background for an industrial software interface."
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCI9FSGlMuWCllWRim8JOWSI589fO8U9d_8TTUb_GenA_01LamjNf1N27WHNUIFXM3W7M-yiystBn_Ln1oEPjmQ3DmFzX7jhB1FwsRI0P_Iiys050nRNmrzYOPCMQASpOPFRI9gAE9VUChyZuHFkA190WhM19NYatfAmR5EjHG2OTVpC0IP3jCI-uxa1dASdP6wzc3sFb21rEUebFsBWMkimOSSWIzc9V_A87TpjNM8YCQVR_F-F3zKxTu-lwvY4QBgkDdqaxs87w"
-              />
-              <div>
-                <h3 class="font-button text-button text-on-surface mb-1">
-                  eggsortplus
-                </h3>
-                <p class="font-caption text-caption text-secondary mb-2">
-                  Username: <span class="text-on-surface">eggsortplus</span>
-                </p>
-                <div class="flex gap-2">
-                  <span
-                    class="bg-[#FEF0C7] text-[#B54708] px-2 py-0.5 rounded-md font-label-caps text-[10px]"
-                    >ADMIN</span
-                  >
-                  <span
-                    class="bg-[#FEF0C7] text-[#B54708] px-2 py-0.5 rounded-md font-label-caps text-[10px]"
-                    >ACTIVE</span
-                  >
-                </div>
-              </div>
-            </div>
-            <div class="flex items-center justify-end gap-2">
-              <button
-                class="p-2 rounded-lg text-secondary hover:bg-surface-container hover:text-primary-container transition-colors"
-                title="Edit"
-              >
-                <span class="material-symbols-outlined text-[20px]">edit</span>
-              </button>
-              <button
-                class="p-2 rounded-lg text-secondary hover:bg-error-container hover:text-error transition-colors"
-                title="Delete"
-              >
-                <span class="material-symbols-outlined text-[20px]"
-                  >delete</span
-                >
-              </button>
-            </div>
-          </div>
-          <!-- Empty State / Add New Prompt (demonstrating asymmetric layout) -->
-          <div
-            class="bg-surface-container-low border border-dashed border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-surface-container-highest transition-colors cursor-pointer group min-h-[140px]"
-          >
-            <div
-              class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center mb-3 group-hover:bg-primary-container group-hover:text-white transition-colors text-secondary"
-            >
-              <span class="material-symbols-outlined">person_add</span>
-            </div>
-            <p
-              class="font-button text-button text-secondary group-hover:text-on-surface transition-colors"
-            >
-              Add New Handler
-            </p>
-            <p class="font-caption text-caption text-tertiary mt-1">
-              Configure roles and permissions for farm staff.
-            </p>
-          </div>
-        </div>
+        <div id="users-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-6"></div>
       </section>
       <section id="audit-panel" class="hidden bg-white border border-surface-variant rounded-xl p-6">
         <h2 class="font-headline-md text-headline-md">Audit History Trail</h2>
@@ -367,26 +302,49 @@
     <div id="user-modal" class="hidden fixed inset-0 z-[80] bg-black/50 p-4 items-center justify-center">
       <form id="user-form" class="w-full max-w-md bg-white rounded-xl p-6 shadow-2xl space-y-4">
         <div class="flex items-center justify-between">
-          <h3 id="user-modal-title" class="font-headline-md text-headline-md">Register Operator</h3>
+          <h3 id="user-modal-title" class="font-headline-md text-headline-md">Invite Staff</h3>
           <button id="close-user-modal" type="button" class="p-2 rounded-lg hover:bg-surface-container" aria-label="Close">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
         <p id="user-error" class="hidden rounded-lg bg-error-container text-error p-3" role="alert"></p>
         <input name="user_id" type="hidden" />
-        <label class="block">Username
-          <input name="username" required autocomplete="off"
+        <label class="block">Staff name
+          <input name="display_name" required maxlength="120" autocomplete="name"
             class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
         </label>
-        <label class="block">Password
-          <input name="password" type="password" minlength="6"
+        <label class="block">Username
+          <input name="username" required minlength="3" maxlength="30"
+            pattern="[A-Za-z0-9._-]+" autocomplete="off"
             class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
-          <span id="password-help" class="text-xs text-secondary">Minimum 6 characters.</span>
+          <span class="text-xs text-secondary">Letters, numbers, dots, underscores, or hyphens.</span>
+        </label>
+        <label class="block">Email
+          <input name="email" type="email" required autocomplete="off"
+            class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
         </label>
         <button type="submit" class="w-full h-12 rounded-lg bg-primary-container text-white font-button">
-          Save Operator
+          Save Staff
         </button>
       </form>
+    </div>
+    <div id="invite-modal" class="hidden fixed inset-0 z-[90] bg-black/50 p-4 items-center justify-center">
+      <div class="w-full max-w-lg bg-white rounded-xl p-6 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <h3 id="invite-modal-title" class="font-headline-md text-headline-md">Staff Invitation</h3>
+          <button id="close-invite-modal" type="button" class="p-2 rounded-lg hover:bg-surface-container" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <p id="invite-delivery-status" class="mt-3 text-secondary" role="status"></p>
+        <div id="invite-copy-controls" class="mt-5 flex gap-2">
+          <input id="invite-url" readonly class="min-w-0 flex-1 border border-surface-variant rounded-lg px-3 py-3 bg-surface-container-low" />
+          <button id="copy-invite" type="button" class="px-4 rounded-lg bg-primary-container text-white font-button">
+            Copy
+          </button>
+        </div>
+        <p id="copy-status" class="mt-2 text-sm text-secondary" role="status"></p>
+      </div>
     </div>
     <script>
     function toggleSidebar() {
@@ -400,6 +358,12 @@
     const userModal = document.getElementById('user-modal');
     const userForm = document.getElementById('user-form');
     const userError = document.getElementById('user-error');
+    const inviteModal = document.getElementById('invite-modal');
+    const inviteModalTitle = document.getElementById('invite-modal-title');
+    const inviteCopyControls = document.getElementById('invite-copy-controls');
+    const inviteUrl = document.getElementById('invite-url');
+    const inviteDeliveryStatus = document.getElementById('invite-delivery-status');
+    const copyStatus = document.getElementById('copy-status');
     let usersCache = [];
 
     function showPanel(name) {
@@ -423,15 +387,14 @@
       userForm.reset();
       userError.classList.add('hidden');
       userForm.elements.user_id.value = user?.id || '';
+      userForm.elements.display_name.value = user?.display_name || '';
       userForm.elements.username.value = user?.username || '';
-      userForm.elements.password.required = !user;
+      userForm.elements.email.value = user?.email || '';
       document.getElementById('user-modal-title').textContent =
-        user ? 'Edit Operator' : 'Register Operator';
-      document.getElementById('password-help').textContent =
-        user ? 'Leave blank to keep the current password.' : 'Minimum 6 characters.';
+        user ? 'Edit Staff' : 'Invite Staff';
       userModal.classList.remove('hidden');
       userModal.classList.add('flex');
-      userForm.elements.username.focus();
+      userForm.elements.email.focus();
     }
 
     function closeUserModal() {
@@ -439,26 +402,96 @@
       userModal.classList.remove('flex');
     }
 
+    function showInviteModal(url, emailSent = false, warning = null) {
+      inviteUrl.value = url;
+      copyStatus.textContent = '';
+      inviteModalTitle.textContent = emailSent
+        ? 'Invitation Email Sent'
+        : 'Invitation Email Not Sent';
+      inviteDeliveryStatus.textContent = emailSent
+        ? 'The staff member received the activation link by email.'
+        : (warning || 'Email was not sent. Copy this private link and send it to the staff member.');
+      inviteCopyControls.classList.toggle('hidden', emailSent);
+      inviteCopyControls.classList.toggle('flex', !emailSent);
+      inviteModal.classList.remove('hidden');
+      inviteModal.classList.add('flex');
+    }
+
+    function closeInviteModal() {
+      inviteModal.classList.add('hidden');
+      inviteModal.classList.remove('flex');
+    }
+
+    async function createNewInvite(user) {
+      const response = await fetch(`/api/users/${user.id}/invite`, { method: 'POST' });
+      const payload = await response.json();
+      if (!response.ok) {
+        window.alert(payload.error || 'Unable to create an invitation.');
+        return;
+      }
+      showInviteModal(payload.invite_url, payload.email_sent, payload.warning);
+      refreshUsers();
+    }
+
     function renderUsers(users) {
       usersGrid.replaceChildren();
       users.forEach((user) => {
         const card = document.createElement('article');
         card.className = 'bg-white border border-surface-variant rounded-xl p-5 flex items-center justify-between gap-4 shadow-sm';
+        const identity = document.createElement('div');
+        identity.className = 'min-w-0 flex items-center gap-3';
+        const avatar = document.createElement('div');
+        avatar.className = 'w-11 h-11 rounded-full bg-primary-container/15 text-primary-container flex items-center justify-center shrink-0 font-bold overflow-hidden';
+        const fallbackInitial = (user.display_name || user.username || '?').charAt(0).toUpperCase();
+        avatar.textContent = fallbackInitial;
+        if (user.avatar_url) {
+          const image = document.createElement('img');
+          image.src = user.avatar_url;
+          image.alt = `${user.display_name || user.username} profile photo`;
+          image.className = 'w-full h-full object-cover';
+          image.referrerPolicy = 'no-referrer';
+          image.loading = 'lazy';
+          image.addEventListener('error', () => {
+            avatar.textContent = fallbackInitial;
+          });
+          avatar.replaceChildren(image);
+        }
         const details = document.createElement('div');
+        details.className = 'min-w-0';
         const title = document.createElement('h3');
         title.className = 'font-button text-button text-on-surface';
-        title.textContent = user.username;
+        title.textContent = user.display_name || user.username;
         const meta = document.createElement('p');
         meta.className = 'font-caption text-caption text-secondary mt-2';
-        meta.textContent = user.is_current ? 'ADMIN • CURRENT SESSION' : 'OPERATOR • ACTIVE';
+        const connection = user.role === 'admin'
+          ? 'GOOGLE ADMIN'
+          : user.password_set
+            ? 'ACTIVE'
+            : user.invite_pending
+              ? 'INVITATION PENDING'
+              : 'SETUP REQUIRED';
+        const current = user.is_current ? ' • CURRENT SESSION' : '';
+        meta.textContent = `${user.role.toUpperCase()} • ${connection}${current}`;
         details.append(title, meta);
+        identity.append(avatar, details);
 
         const actions = document.createElement('div');
         actions.className = 'flex gap-2';
+        if (user.role === 'staff') {
+          const invite = document.createElement('button');
+          invite.type = 'button';
+          invite.className = 'p-2 rounded-lg text-secondary hover:bg-surface-container';
+          invite.title = user.password_set ? 'Create password reset invitation' : 'Create new invitation';
+          invite.innerHTML = '<span class="material-symbols-outlined">link</span>';
+          invite.addEventListener('click', () => createNewInvite(user));
+          actions.append(invite);
+        }
         const edit = document.createElement('button');
         edit.type = 'button';
         edit.className = 'p-2 rounded-lg text-secondary hover:bg-surface-container';
-        edit.title = 'Edit operator';
+        edit.title = user.role === 'admin' ? 'Google admin profile' : 'Edit staff';
+        edit.disabled = user.role === 'admin';
+        edit.classList.toggle('opacity-40', user.role === 'admin');
         edit.innerHTML = '<span class="material-symbols-outlined">edit</span>';
         edit.addEventListener('click', () => openUserModal(user));
         const remove = document.createElement('button');
@@ -468,7 +501,7 @@
         remove.disabled = user.is_current;
         remove.innerHTML = '<span class="material-symbols-outlined">delete</span>';
         remove.addEventListener('click', async () => {
-          if (!window.confirm(`Delete operator "${user.username}"?`)) return;
+          if (!window.confirm(`Remove access for "${user.email || user.username}"?`)) return;
           const response = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
           const payload = await response.json();
           if (!response.ok) {
@@ -478,16 +511,10 @@
           refreshUsers();
         });
         actions.append(edit, remove);
-        card.append(details, actions);
+        card.append(identity, actions);
         usersGrid.appendChild(card);
       });
 
-      const add = document.createElement('button');
-      add.type = 'button';
-      add.className = 'bg-surface-container-low border border-dashed border-outline-variant/50 rounded-xl p-6 min-h-[120px] text-secondary hover:bg-surface-container';
-      add.textContent = '+ Add New Handler';
-      add.addEventListener('click', () => openUserModal());
-      usersGrid.appendChild(add);
     }
 
     async function refreshUsers() {
@@ -508,16 +535,30 @@
     document.getElementById('tab-docs').addEventListener('click', () => showPanel('docs'));
     document.getElementById('register-operator').addEventListener('click', () => openUserModal());
     document.getElementById('close-user-modal').addEventListener('click', closeUserModal);
+    document.getElementById('close-invite-modal').addEventListener('click', closeInviteModal);
+    document.getElementById('copy-invite').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(inviteUrl.value);
+        copyStatus.textContent = 'Invitation link copied.';
+      } catch {
+        inviteUrl.select();
+        copyStatus.textContent = 'Press Ctrl+C to copy the selected link.';
+      }
+    });
     userModal.addEventListener('click', (event) => {
       if (event.target === userModal) closeUserModal();
+    });
+    inviteModal.addEventListener('click', (event) => {
+      if (event.target === inviteModal) closeInviteModal();
     });
     userForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       const formData = new FormData(userForm);
       const userId = formData.get('user_id');
       const payload = {
+        display_name: formData.get('display_name'),
         username: formData.get('username'),
-        password: formData.get('password')
+        email: formData.get('email'),
       };
       const response = await fetch(userId ? `/api/users/${userId}` : '/api/users', {
         method: userId ? 'PATCH' : 'POST',
@@ -531,6 +572,9 @@
         return;
       }
       closeUserModal();
+      if (result.invite_url) {
+        showInviteModal(result.invite_url, result.email_sent, result.warning);
+      }
       refreshUsers();
     });
 

@@ -1,3 +1,5 @@
 best.pt
 __pycache__/
 instance/
+.env
+client_secret*.json

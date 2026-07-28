@@ -15,9 +15,7 @@
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: {
-              sans: ["Manrope", "sans-serif"],
-            },
+            fontFamily: { sans: ["Manrope", "sans-serif"] },
             colors: {
               brand: {
                 DEFAULT: "#E67E00",
@@ -32,238 +30,154 @@
         },
       };
     </script>
-    <style data-purpose="custom-styles">
-      body {
-        background-color: #e2e8f0;
-      }
+    <style>
+      body { background-color: #e2e8f0; }
       .login-container {
         box-shadow:
           0 20px 25px -5px rgba(0, 0, 0, 0.1),
           0 10px 10px -5px rgba(0, 0, 0, 0.04);
       }
       .bg-illustration {
-        background: radial-gradient(
-          circle at 70% 30%,
-          rgba(255, 245, 230, 0.8) 0%,
-          rgba(255, 255, 255, 1) 60%
-        );
+        background:
+          radial-gradient(circle at 70% 30%, rgba(255, 245, 230, 0.9), #fff 62%);
       }
     </style>
     <link rel="stylesheet" href="/static/responsive.css" />
   </head>
   <body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
     <div
-      class="login-container w-full max-w-[1100px] bg-white rounded-2xl sm:rounded-[32px] overflow-hidden flex flex-col md:flex-row h-auto md:h-[700px]"
+      class="login-container w-full max-w-[1100px] bg-white rounded-2xl sm:rounded-[32px] overflow-hidden flex flex-col md:flex-row min-h-[620px]"
     >
-      <!-- Left Form Section -->
-      <div
-        class="w-full md:w-1/2 p-6 sm:p-10 lg:p-16 flex flex-col justify-center relative"
-      >
-        <div class="max-w-[400px] w-full mx-auto flex flex-col h-full">
-          <!-- Header -->
-          <div class="mb-8 sm:mb-10">
-            <h1
-              class="text-3xl sm:text-4xl font-extrabold text-[#1a202c] mb-2 tracking-tight"
-            >
+      <main class="w-full md:w-1/2 p-6 sm:p-10 lg:p-16 flex items-center">
+        <div class="max-w-[400px] w-full mx-auto">
+          <div class="mb-10">
+            <p class="text-sm font-extrabold uppercase tracking-[0.2em] text-brand mb-4">
+              EggSort+
+            </p>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-[#1a202c] mb-3 tracking-tight">
               Welcome Back
             </h1>
             <p class="text-gray-500 font-medium">
-              Sign in to continue to your account
+              Sign in with your EggSort+ account or continue with Google.
             </p>
           </div>
 
-          <!-- Flash Error Message -->
+          {% if notice %}
+          <div
+            class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-lg text-sm font-medium"
+            role="status"
+          >
+            {{ notice }}
+          </div>
+          {% endif %}
+
           {% if error %}
           <div
             class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-sm font-medium"
+            role="alert"
           >
             {{ error }}
           </div>
           {% endif %}
 
-          <!-- Form: Added method="POST" -->
-          <form
-            class="space-y-6 flex-grow"
-            method="POST"
-            action="{{ url_for('login') }}"
-          >
-            <!-- Username Input: Added name="username" -->
+          <form method="post" action="{{ url_for('login') }}" class="space-y-4">
             <div>
-              <label
-                class="block text-sm font-bold text-gray-700 tracking-wider mb-2"
-                for="username"
-                >USERNAME</label
-              >
-              <div class="relative">
-                <div
-                  class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
-                >
-                  <svg
-                    class="h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewbox="0 0 24 24"
-                  >
-                    <path
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                    ></path>
-                  </svg>
-                </div>
-                <input
-                  name="username"
-                  class="block w-full pl-11 pr-3 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50 text-gray-900 placeholder-gray-400 transition-colors"
-                  id="username"
-                  placeholder="Enter your username"
-                  type="text"
-                  required
-                />
-              </div>
+              <label for="identifier" class="block text-sm font-bold text-gray-700 mb-2">
+                USERNAME OR EMAIL
+              </label>
+              <input
+                id="identifier"
+                name="identifier"
+                type="text"
+                autocomplete="username"
+                required
+                value="{{ request.form.get('identifier', '') }}"
+                class="block w-full px-4 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50"
+                placeholder="Enter username or email"
+              />
             </div>
-
-            <!-- Password Input: Added name="password" -->
             <div>
-              <label
-                class="block text-sm font-bold text-gray-700 tracking-wider mb-2"
-                for="password"
-                >PASSWORD</label
-              >
+              <label for="password" class="block text-sm font-bold text-gray-700 mb-2">
+                PASSWORD
+              </label>
               <div class="relative">
-                <div
-                  class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
-                >
-                  <svg
-                    class="h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewbox="0 0 24 24"
-                  >
-                    <path
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                    ></path>
-                  </svg>
-                </div>
                 <input
-                  name="password"
-                  class="block w-full pl-11 pr-11 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50 text-gray-900 placeholder-gray-400 transition-colors"
                   id="password"
-                  placeholder="••••••••"
+                  name="password"
                   type="password"
+                  autocomplete="current-password"
                   required
+                  class="block w-full px-4 pr-12 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50"
+                  placeholder="Enter password"
                 />
+                <button
+                  type="button"
+                  data-password-toggle="password"
+                  class="absolute inset-y-0 right-0 w-12 flex items-center justify-center text-gray-500 hover:text-gray-800"
+                  aria-label="Show password"
+                  aria-pressed="false"
+                ></button>
               </div>
             </div>
-
-            <!-- Options -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
-              <div class="flex items-center">
-                <input
-                  checked=""
-                  class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                />
-                <label
-                  class="ml-2 block text-sm text-gray-600 font-medium cursor-pointer"
-                  for="remember-me"
-                  >Remember me</label
-                >
-              </div>
-              <div class="text-sm">
-                <a
-                  id="forgot-password"
-                  class="font-bold text-brand hover:text-brand-hover transition-colors"
-                  href="#"
-                  >Forgot password?</a
-                >
-              </div>
-            </div>
-
-            <!-- Submit Button -->
+            <label class="flex items-center gap-2 text-sm text-gray-600 font-medium">
+              <input
+                name="remember-me"
+                type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand"
+              />
+              Keep me signed in
+            </label>
             <button
-              class="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-lg font-bold text-white bg-brand hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-colors mt-8"
               type="submit"
+              class="w-full py-3.5 px-4 rounded-xl text-base font-bold text-white bg-brand hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-colors"
             >
               Sign In
-              <svg
-                class="ml-2 h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewbox="0 0 24 24"
-              >
-                <path
-                  d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                ></path>
-              </svg>
             </button>
           </form>
 
-          <!-- Divider -->
-          <div class="mt-8 relative">
+          <div class="relative my-6">
             <div class="absolute inset-0 flex items-center">
               <div class="w-full border-t border-gray-200"></div>
             </div>
-            <div class="relative flex justify-center text-sm">
-              <span
-                class="px-3 bg-white text-gray-400 font-bold uppercase tracking-wider"
-                >OR</span
-              >
+            <div class="relative flex justify-center text-xs font-bold uppercase tracking-wider">
+              <span class="bg-white px-3 text-gray-400">OR</span>
             </div>
           </div>
 
-          <p class="mt-6 text-center text-sm text-gray-500 font-medium">
-            Don't have an account?
-            <a href="{{ url_for('register') }}" class="text-brand font-bold"
-              >Register</a
-            >
-          </p>
-
-          <!-- Footer -->
-          <div class="mt-auto pt-10 text-center">
-            <p class="text-xs font-mono text-gray-400">
-              © 2026 EGGSort+ Systems. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Illustration Section -->
-      <div
-        class="hidden md:flex w-1/2 bg-illustration relative items-center justify-center border-l border-gray-100"
-      >
-        <div
-          class="relative w-full h-full flex flex-col items-center justify-center p-12"
-        >
-          <div
-            class="absolute top-1/4 right-1/4 w-64 h-64 bg-yellow-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70"
-          ></div>
-          <div
-            class="relative z-10 w-full h-full flex items-center justify-center"
+          <a
+            href="{{ url_for('google_login') }}"
+            class="w-full flex justify-center items-center gap-3 py-4 px-4 border border-gray-300 rounded-xl shadow-sm text-base font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-colors"
           >
-            <div
-              class="w-full h-full bg-no-repeat bg-center bg-contain"
-              style="
-                background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuBMUfengIylEJjnWd9QH4Lo0cEtuAc24Fpc9P1qNQkM__4BzBKmHn4lRiliF8eCysv43MIeZmrnZU2xSYtSjwfToaxlW5qHLTB4GG9P7Hiiedf1JSq2sWVKCOpC6EOiapG7C64rX4LvKOAaUYtjj2MTiO3HPkKg2A2yr01zeDW2XFHBcr6qiw5WtL1vYLJQScx1JDd57UChoxA7rRML2i69qu-7xrfEuWSuwMFlywnbRPuDdE0Jl4NdlsR-kLgYdxkLoMFc85Qfzw&quot;);
-              "
-            ></div>
-          </div>
+            <svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.5-.2-2.2H12v4.3h5.4a4.6 4.6 0 0 1-2 3v2.8h3.3c1.9-1.8 2.9-4.5 2.9-7.9Z"/>
+              <path fill="#34A853" d="M12 22c2.7 0 5-.9 6.7-2.4l-3.3-2.8c-.9.6-2.1 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3v2.9A10 10 0 0 0 12 22Z"/>
+              <path fill="#FBBC05" d="M6.4 13.7a6 6 0 0 1 0-3.4V7.4H3a10 10 0 0 0 0 9.2l3.4-2.9Z"/>
+              <path fill="#EA4335" d="M12 6.2c1.5 0 2.8.5 3.8 1.5l2.9-2.8A9.7 9.7 0 0 0 3 7.4l3.4 2.9c.8-2.4 3-4.1 5.6-4.1Z"/>
+            </svg>
+            Continue with Google
+          </a>
+
+          {% if not google_ready %}
+          <p class="mt-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+            Google sign-in needs its client ID and secret before first use.
+          </p>
+          {% endif %}
+
+          
+          <p class="mt-12 text-center text-xs font-mono text-gray-400">
+            © 2026 EGGSort+ Systems. All rights reserved.
+          </p>
         </div>
-      </div>
+      </main>
+
+      <aside class="hidden md:block w-1/2 relative border-l border-gray-100">
+        <img
+          src="{{ url_for('static', filename='images/eggbackground.png') }}"
+          alt="Egg with a golden yolk"
+          class="absolute inset-0 h-full w-full object-cover object-center"
+        />
+      </aside>
     </div>
-    <script>
-      document.getElementById('forgot-password').addEventListener('click', (event) => {
-        event.preventDefault();
-        window.alert('Ask a signed-in administrator to reset your password from User Management.');
-      });
-    </script>
+    <script src="{{ url_for('static', filename='password-toggle.js') }}"></script>
   </body>
 </html>

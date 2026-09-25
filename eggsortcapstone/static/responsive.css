@@ -1,0 +1,319 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700;800&display=swap");
+
+/*
+ * Shared mobile-first layout safeguards.
+ * Page-specific Tailwind utilities enhance these defaults at larger breakpoints.
+ */
+:root {
+  --mobile-page-padding: 1rem;
+  --touch-target: 2.75rem;
+}
+
+html {
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  width: 100%;
+  min-width: 0;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+main,
+header,
+section,
+form,
+nav,
+div {
+  min-width: 0;
+}
+
+#sidebar {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+  font: inherit;
+}
+
+button,
+[role="button"],
+a {
+  touch-action: manipulation;
+}
+
+button,
+[role="button"] {
+  min-height: var(--touch-target);
+}
+
+table {
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  /* The custom Tailwind spacing tokens are desktop-oriented. */
+  .p-margin {
+    padding: var(--mobile-page-padding) !important;
+  }
+
+  .px-margin {
+    padding-left: var(--mobile-page-padding) !important;
+    padding-right: var(--mobile-page-padding) !important;
+  }
+
+  .py-margin {
+    padding-top: var(--mobile-page-padding) !important;
+    padding-bottom: var(--mobile-page-padding) !important;
+  }
+
+  .pt-margin {
+    padding-top: var(--mobile-page-padding) !important;
+  }
+
+  .pb-margin {
+    padding-bottom: var(--mobile-page-padding) !important;
+  }
+
+  .mb-margin {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .mt-margin {
+    margin-top: 1.5rem !important;
+  }
+
+  .gap-gutter,
+  .gap-margin {
+    gap: 1rem !important;
+  }
+
+  .p-xl {
+    padding: 2rem 1rem !important;
+  }
+
+  .text-headline-lg {
+    font-size: clamp(1.625rem, 8vw, 2rem) !important;
+    line-height: 1.2 !important;
+    overflow-wrap: anywhere;
+  }
+
+  #sidebar {
+    width: min(16rem, 88vw);
+    max-width: 100%;
+    overscroll-behavior: contain;
+  }
+
+  .overflow-x-auto {
+    max-width: 100%;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  th,
+  td {
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --mobile-page-padding: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Shared "Leahora-inspired" design system: warm cream canvas, forest actions,
+ * white elevated cards, rounded controls and editorial serif headings.
+ * ------------------------------------------------------------------------- */
+:root {
+  --eggsort-cream: #faf9f4;
+  --eggsort-cream-deep: #f2f0e7;
+  --eggsort-card: #ffffff;
+  --eggsort-forest: #35573b;
+  --eggsort-forest-deep: #274430;
+  --eggsort-sage: #dfe8d7;
+  --eggsort-ink: #1e241c;
+  --eggsort-muted: #6a7166;
+  --eggsort-line: #e4e1d4;
+  --eggsort-shadow: 0 18px 40px -32px rgba(31, 45, 32, 0.55);
+  --eggsort-shadow-hover: 0 22px 44px -30px rgba(31, 45, 32, 0.5);
+}
+
+body {
+  background-color: var(--eggsort-cream) !important;
+  color: var(--eggsort-ink);
+  font-family: "Manrope", system-ui, -apple-system, sans-serif;
+}
+
+body h1,
+body h2,
+body h3,
+body .font-headline-lg,
+body .font-headline-md {
+  font-family: "DM Serif Display", Georgia, "Times New Roman", serif !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.015em;
+}
+
+body .font-label-caps {
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+
+main {
+  background-color: var(--eggsort-cream);
+}
+
+.bg-inverse-surface {
+  background-color: #232b21 !important;
+}
+
+.bg-primary-container {
+  background-color: var(--eggsort-forest) !important;
+}
+
+#sidebar {
+  background-color: #232b21 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: none !important;
+}
+
+#sidebar a {
+  border-radius: 999px;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+#sidebar a:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+main .bg-surface-container-lowest,
+main .bg-white.rounded-xl,
+main section.bg-surface-container-lowest,
+body > main.bg-white {
+  background-color: var(--eggsort-card) !important;
+  border-radius: 24px !important;
+  box-shadow: var(--eggsort-shadow) !important;
+}
+
+body > main.bg-white {
+  border: 1px solid var(--eggsort-line);
+  border-radius: 32px !important;
+}
+
+.login-container {
+  border-radius: 32px !important;
+  box-shadow: var(--eggsort-shadow) !important;
+}
+
+main .bg-white.rounded-xl,
+main .bg-surface-container-lowest {
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+button {
+  border-radius: 999px !important;
+  font-weight: 600;
+}
+
+main a[class*="bg-primary-container"] {
+  border-radius: 999px !important;
+}
+
+main input:not([type="checkbox"]):not([type="radio"]),
+main select,
+main textarea,
+.login-container input {
+  min-height: 2.75rem;
+  border-radius: 14px !important;
+  border-color: var(--eggsort-line) !important;
+  background-color: var(--eggsort-card) !important;
+  color: var(--eggsort-ink);
+}
+
+main input:focus,
+main select:focus,
+main textarea:focus,
+.login-container input:focus {
+  border-color: var(--eggsort-forest) !important;
+  box-shadow: 0 0 0 3px rgba(53, 87, 59, 0.14) !important;
+  outline: none !important;
+}
+
+main table thead tr {
+  background-color: #f7f5ee !important;
+}
+
+main table th {
+  color: var(--eggsort-muted) !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em;
+}
+
+main table td {
+  border-color: var(--eggsort-line) !important;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cfd6c8;
+  border: 3px solid var(--eggsort-cream);
+  border-radius: 999px;
+}
+
+@media (max-width: 767px) {
+  main .bg-surface-container-lowest,
+  main .bg-white.rounded-xl {
+    border-radius: 20px !important;
+  }
+
+  body > main.bg-white {
+    border-radius: 24px !important;
+    padding: 1.5rem !important;
+  }
+}

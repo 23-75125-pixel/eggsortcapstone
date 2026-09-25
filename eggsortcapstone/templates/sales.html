@@ -1,0 +1,658 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>EGGSor+ - Sales Ledger</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              surface: "#faf9f4",
+              "surface-bright": "#faf9f4",
+              "secondary-fixed": "#dde5d4",
+              "on-background": "#1e241c",
+              "surface-container-lowest": "#ffffff",
+              "surface-container": "#f2f0e7",
+              "on-secondary-container": "#6a7166",
+              "on-primary-fixed": "#25301f",
+              "tertiary-container": "#8c9187",
+              "inverse-primary": "#c2d3bb",
+              secondary: "#6a7166",
+              "surface-container-high": "#eceadf",
+              "on-secondary-fixed": "#232b21",
+              "on-error-container": "#93000a",
+              "on-primary": "#ffffff",
+              "on-error": "#ffffff",
+              "surface-tint": "#274430",
+              "on-surface": "#1e241c",
+              "surface-container-low": "#f7f5ee",
+              "surface-container-highest": "#e4e1d4",
+              error: "#ba1a1a",
+              "on-tertiary": "#ffffff",
+              "outline-variant": "#ccd5c4",
+              tertiary: "#5e655a",
+              "primary-fixed": "#dfe8d7",
+              "on-secondary": "#ffffff",
+              "error-container": "#ffdad6",
+              "on-secondary-fixed-variant": "#454d42",
+              "on-tertiary-container": "#2b3129",
+              "on-primary-container": "#f7f6ef",
+              "on-primary-fixed-variant": "#3c5340",
+              background: "#faf9f4",
+              "tertiary-fixed": "#e6e3d7",
+              "primary-fixed-dim": "#c2d3bb",
+              "on-surface-variant": "#5b6257",
+              "secondary-fixed-dim": "#ccd4c6",
+              "secondary-container": "#e9ede1",
+              primary: "#274430",
+              "surface-dim": "#e4e1d4",
+              "primary-container": "#35573b",
+              outline: "#767c72",
+              "on-tertiary-fixed-variant": "#4a5146",
+              "inverse-surface": "#232b21",
+              "inverse-on-surface": "#d7e3d0",
+              "surface-variant": "#e4e1d4",
+              "on-tertiary-fixed": "#232b21",
+              "tertiary-fixed-dim": "#d3d8ca",
+            },
+            borderRadius: {
+              DEFAULT: "0.5rem",
+              lg: "0.875rem",
+              xl: "1.5rem",
+              full: "9999px",
+            },
+            spacing: {
+              margin: "32px",
+              lg: "40px",
+              xl: "64px",
+              base: "8px",
+              xs: "4px",
+              md: "24px",
+              sm: "12px",
+              gutter: "24px",
+            },
+            fontFamily: {
+              "headline-md": ["Manrope"],
+              "body-md": ["Manrope"],
+              "headline-lg": ["Manrope"],
+              caption: ["Manrope"],
+              "label-caps": ["Manrope"],
+              button: ["Manrope"],
+              "headline-lg-mobile": ["Manrope"],
+              "body-lg": ["Manrope"],
+            },
+            fontSize: {
+              "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "700" }],
+              "body-md": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+              "headline-lg": [
+                "32px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "800",
+                },
+              ],
+              caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }],
+              "label-caps": [
+                "12px",
+                { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "700" },
+              ],
+              button: ["15px", { lineHeight: "1", fontWeight: "700" }],
+              "headline-lg-mobile": [
+                "26px",
+                { lineHeight: "1.2", fontWeight: "800" },
+              ],
+              "body-lg": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Manrope", sans-serif;
+        background-color: #faf9f4;
+        color: #1e241c;
+      }
+      .material-symbols-outlined {
+        font-family: "Material Symbols Outlined";
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        font-feature-settings: "liga";
+        -webkit-font-feature-settings: "liga";
+        -webkit-font-smoothing: antialiased;
+      }
+      .ambient-shadow {
+        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04);
+      }
+      .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
+    </style>
+    <link rel="stylesheet" href="/static/responsive.css" />
+  </head>
+  <body class="flex h-screen overflow-hidden bg-background">
+    <!-- SideNavBar -->
+    <nav
+      id="sidebar"
+      class="h-screen w-64 flex-col fixed left-0 top-0 bg-inverse-surface border-r border-outline-variant/10 shadow-xl flex z-50 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out"
+    >
+      <!-- Brand -->
+      <div class="px-gutter py-margin flex items-center gap-sm">
+        <div
+          class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white"
+        >
+          <span class="material-symbols-outlined filled">egg</span>
+        </div>
+        <div>
+          <h1
+            class="text-headline-md font-headline-md text-primary-fixed tracking-tight"
+          >
+            EGGSor+
+          </h1>
+          <p
+            class="font-label-caps text-label-caps text-surface-variant/70 tracking-widest mt-xs"
+          >
+            IOT EGG SORTING SYS
+          </p>
+        </div>
+      </div>
+      <!-- Links -->
+      <div class="flex flex-col py-gutter px-2 flex-1 min-h-0 overflow-y-auto">
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/dashboard"
+        >
+          <span class="material-symbols-outlined">dashboard</span>
+          <span class="font-button text-button">Dashboard</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/sorting-sessions"
+        >
+          <span class="material-symbols-outlined">precision_manufacturing</span>
+          <span class="font-button text-button">Sorting Sessions</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/egg-records"
+        >
+          <span class="material-symbols-outlined">inventory_2</span>
+          <span class="font-button text-button">Egg Records</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/alerts"
+        >
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="font-button text-button">Alerts</span>
+        </a>
+        <a
+          class="bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 flex items-center gap-3 active:scale-95 duration-150 ease-in-out nav-active-glow"
+          href="/sales"
+        >
+          <span class="material-symbols-outlined">payments</span>
+          <span class="font-button text-button">Sales</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/reports"
+        >
+          <span class="material-symbols-outlined">assessment</span>
+          <span class="font-button text-button">Reports</span>
+        </a>
+        {% if current_user_role == "admin" %}
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/user-management"
+        >
+          <span class="material-symbols-outlined">manage_accounts</span>
+          <span class="font-button text-button">User Management</span>
+        </a>
+        {% endif %}
+      </div>
+      {% include "_sidebar_footer.html" %}
+    </nav>
+    <!-- Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden hidden"></div>
+    <!-- Main Content -->
+    <main class="flex-1 md:ml-64 bg-background overflow-y-auto">
+      <div class="max-w-7xl mx-auto px-margin py-margin">
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row justify-between items-start mb-xl gap-4">
+          <div class="flex items-center gap-3">
+            <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors shrink-0">
+              <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span
+                class="font-label-caps text-label-caps text-primary uppercase tracking-widest"
+                >OPERATIONS PORTAL</span
+              >
+              <span class="text-tertiary-container text-xs">/</span>
+              <span
+                class="font-label-caps text-label-caps text-secondary uppercase tracking-widest"
+                >ADMIN</span
+              >
+            </div>
+            <h2 class="font-headline-lg text-headline-lg text-on-background">
+              Egg Sales Ledger
+            </h2>
+            </div>
+          </div>
+          <button
+            id="open-sale-modal"
+            type="button"
+            class="w-full md:w-auto bg-primary-container text-white px-6 h-12 rounded-lg font-button text-button hover:bg-primary transition-colors flex items-center justify-center gap-2 shadow-sm"
+          >
+            <span class="material-symbols-outlined">add</span>
+            Record New Sale
+            <span class="font-bold ml-1">→</span>
+          </button>
+        </header>
+        <!-- Immediate Sellable Stocks -->
+        <section
+          class="mb-xl bg-surface-container-lowest rounded-xl p-md ambient-shadow border border-surface-container"
+        >
+          <div class="mb-6 border-b border-surface-container pb-4">
+            <h3
+              class="font-label-caps text-label-caps text-secondary uppercase tracking-widest"
+            >
+              IMMEDIATE SELLABLE STOCKS (FORMATTED IN DOZENS)
+            </h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-sm">
+            <!-- Small -->
+            <div
+              data-stock-size="Small"
+              class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
+            >
+              <span
+                class="font-body-md text-body-md text-on-surface-variant mb-1"
+                >Small</span
+              >
+              <div class="flex items-baseline gap-1">
+                <span class="stock-dozens font-headline-md text-headline-md text-error"
+                  >0</span
+                >
+                <span class="font-caption text-caption text-error font-bold"
+                  >doz</span
+                >
+              </div>
+              <span class="stock-units font-caption text-caption text-tertiary mt-1"
+                >(0 units)</span
+              >
+            </div>
+            <!-- Medium -->
+            <div
+              data-stock-size="Medium"
+              class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
+            >
+              <span
+                class="font-body-md text-body-md text-on-surface-variant mb-1"
+                >Medium</span
+              >
+              <div class="flex items-baseline gap-1">
+                <span class="stock-dozens font-headline-md text-headline-md text-error"
+                  >0</span
+                >
+                <span class="font-caption text-caption text-error font-bold"
+                  >doz</span
+                >
+              </div>
+              <span class="stock-units font-caption text-caption text-tertiary mt-1"
+                >(0 units)</span
+              >
+            </div>
+            <!-- Large -->
+            <div
+              data-stock-size="Large"
+              class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
+            >
+              <span
+                class="font-body-md text-body-md text-on-surface-variant mb-1"
+                >Large</span
+              >
+              <div class="flex items-baseline gap-1">
+                <span class="stock-dozens font-headline-md text-headline-md text-error"
+                  >0</span
+                >
+                <span class="font-caption text-caption text-error font-bold"
+                  >doz</span
+                >
+              </div>
+              <span class="stock-units font-caption text-caption text-tertiary mt-1"
+                >(0 units)</span
+              >
+            </div>
+            <!-- Extra Large -->
+            <div
+              data-stock-size="Extra Large"
+              class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
+            >
+              <span
+                class="font-body-md text-body-md text-on-surface-variant mb-1"
+                >Extra Large</span
+              >
+              <div class="flex items-baseline gap-1">
+                <span class="stock-dozens font-headline-md text-headline-md text-error"
+                  >0</span
+                >
+                <span class="font-caption text-caption text-error font-bold"
+                  >doz</span
+                >
+              </div>
+              <span class="stock-units font-caption text-caption text-tertiary mt-1"
+                >(0 units)</span
+              >
+            </div>
+            <!-- Jumbo -->
+            <div
+              data-stock-size="Jumbo"
+              class="bg-surface-container p-4 rounded-lg flex flex-col items-center justify-center text-center"
+            >
+              <span
+                class="font-body-md text-body-md text-on-surface-variant mb-1"
+                >Jumbo</span
+              >
+              <div class="flex items-baseline gap-1">
+                <span class="stock-dozens font-headline-md text-headline-md text-error"
+                  >0</span
+                >
+                <span class="font-caption text-caption text-error font-bold"
+                  >doz</span
+                >
+              </div>
+              <span class="stock-units font-caption text-caption text-tertiary mt-1"
+                >(0 units)</span
+              >
+            </div>
+          </div>
+        </section>
+        <!-- Ledger Invoice Directory -->
+        <section
+          class="bg-surface-container-lowest rounded-xl ambient-shadow border border-surface-container overflow-hidden"
+        >
+          <div class="p-4 border-b border-surface-container flex flex-col sm:flex-row gap-3">
+            <input id="sale-search" type="search" placeholder="Search invoice, buyer, or size..."
+              class="flex-1 bg-[#faf9f4] border border-surface-variant rounded-lg px-4 py-3 focus:outline-none focus:border-primary" />
+            <select id="sale-status-filter"
+              class="bg-[#faf9f4] border border-surface-variant rounded-lg px-4 py-3">
+              <option>All Statuses</option>
+              <option>Completed</option>
+              <option>Cancelled</option>
+            </select>
+            <button id="reset-sale-filters" type="button"
+              class="px-5 py-3 rounded-lg border border-surface-variant text-secondary hover:bg-surface-container">
+              Reset
+            </button>
+          </div>
+          <div
+            class="p-md border-b border-surface-container flex justify-between items-center bg-surface-bright"
+          >
+            <h3 class="font-button text-button text-on-background">
+              Ledger Invoice Directory
+            </h3>
+            <div class="font-caption text-caption text-secondary">
+              Total Deals: <span id="total-deals" class="font-bold text-on-background">0</span>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr
+                  class="bg-surface-container-low border-b border-surface-container"
+                >
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    INVOICE ID
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    BUYER NAME
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    DATE FILED
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    COMMODITY SUMMARY
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    BILLING TOTAL
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    METHOD
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase"
+                  >
+                    STATE
+                  </th>
+                  <th
+                    class="py-4 px-6 font-label-caps text-label-caps text-secondary uppercase text-right"
+                  >
+                    ACTION
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="sales-body">
+                <!-- Empty State -->
+                <tr>
+                  <td
+                    class="py-12 text-center text-tertiary font-body-md bg-white"
+                    colspan="8"
+                  >
+                    <div
+                      class="flex flex-col items-center justify-center opacity-60"
+                    >
+                      <span
+                        class="material-symbols-outlined text-4xl mb-3 text-outline"
+                        >receipt_long</span
+                      >
+                      <p>No invoices recorded yet.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+    <div id="sale-modal" class="hidden fixed inset-0 z-[80] bg-black/50 p-4 items-center justify-center">
+      <form id="sale-form" class="w-full max-w-lg bg-white rounded-xl p-6 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-headline-md text-headline-md">Record New Sale</h3>
+          <button id="close-sale-modal" type="button" class="p-2 rounded-lg hover:bg-surface-container" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <p id="sale-error" class="hidden rounded-lg bg-error-container text-error p-3" role="alert"></p>
+        <label class="block">Buyer Name
+          <input name="buyer_name" required class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
+        </label>
+        <label class="block">Egg Size
+          <select name="size" required class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3">
+            <option>Small</option><option>Medium</option><option>Large</option>
+            <option>Extra Large</option><option>Jumbo</option>
+          </select>
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label>Quantity (eggs)
+            <input name="quantity" type="number" min="1" required class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
+          </label>
+          <label>Total Amount (PHP)
+            <input name="total_amount" type="number" min="0" step="0.01" required class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
+          </label>
+        </div>
+        <label class="block">Payment Method
+          <select name="payment_method" required class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3">
+            <option>Cash</option><option>GCash</option><option>Bank Transfer</option>
+          </select>
+        </label>
+        <button type="submit" class="w-full h-12 rounded-lg bg-primary-container text-white font-button">
+          Save Sale
+        </button>
+      </form>
+    </div>
+    <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    }
+
+    const salesBody = document.getElementById('sales-body');
+    const saleModal = document.getElementById('sale-modal');
+    const saleForm = document.getElementById('sale-form');
+    const saleError = document.getElementById('sale-error');
+    const saleSearch = document.getElementById('sale-search');
+    const saleStatus = document.getElementById('sale-status-filter');
+    let saleSearchTimer = null;
+
+    function openSaleModal() {
+      saleModal.classList.remove('hidden');
+      saleModal.classList.add('flex');
+      saleError.classList.add('hidden');
+      saleForm.elements.buyer_name.focus();
+    }
+
+    function closeSaleModal() {
+      saleModal.classList.add('hidden');
+      saleModal.classList.remove('flex');
+      saleForm.reset();
+    }
+
+    function renderSales(sales) {
+      salesBody.replaceChildren();
+      if (!sales.length) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 8;
+        cell.className = 'py-12 text-center text-tertiary';
+        cell.textContent = 'No invoices match the current search and filters.';
+        row.appendChild(cell);
+        salesBody.appendChild(row);
+        return;
+      }
+      sales.forEach((sale) => {
+        const row = document.createElement('tr');
+        row.className = 'border-b border-surface-container';
+        const values = [
+          sale.invoice_id,
+          sale.buyer_name,
+          new Date(sale.sold_at).toLocaleString(),
+          `${sale.quantity} ${sale.size} eggs`,
+          `PHP ${Number(sale.total_amount).toFixed(2)}`,
+          sale.payment_method,
+          sale.status
+        ];
+        values.forEach((value) => {
+          const cell = document.createElement('td');
+          cell.className = 'py-4 px-6 whitespace-nowrap';
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+        const action = document.createElement('td');
+        action.className = 'py-4 px-6 text-right text-secondary';
+        action.textContent = 'Recorded';
+        row.appendChild(action);
+        salesBody.appendChild(row);
+      });
+    }
+
+    async function refreshSales() {
+      const params = new URLSearchParams({
+        q: saleSearch.value.trim(),
+        status: saleStatus.value
+      });
+      const response = await fetch(`/api/sales?${params}`);
+      if (response.redirected) {
+        window.location.href = response.url;
+        return;
+      }
+      const payload = await response.json();
+      if (!response.ok) return;
+      document.getElementById('total-deals').textContent = payload.total_deals;
+      Object.entries(payload.stocks).forEach(([size, units]) => {
+        const card = document.querySelector(`[data-stock-size="${size}"]`);
+        if (!card) return;
+        card.querySelector('.stock-dozens').textContent = Math.floor(units / 12);
+        card.querySelector('.stock-units').textContent = `(${units} units)`;
+      });
+      renderSales(payload.sales);
+    }
+
+    document.getElementById('open-sale-modal').addEventListener('click', openSaleModal);
+    document.getElementById('close-sale-modal').addEventListener('click', closeSaleModal);
+    saleModal.addEventListener('click', (event) => {
+      if (event.target === saleModal) closeSaleModal();
+    });
+    saleSearch.addEventListener('input', () => {
+      clearTimeout(saleSearchTimer);
+      saleSearchTimer = setTimeout(refreshSales, 250);
+    });
+    saleStatus.addEventListener('change', refreshSales);
+    document.getElementById('reset-sale-filters').addEventListener('click', () => {
+      saleSearch.value = '';
+      saleStatus.value = 'All Statuses';
+      refreshSales();
+    });
+    saleForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(saleForm);
+      const response = await fetch('/api/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(formData.entries()))
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        saleError.textContent = payload.error || 'Unable to save sale.';
+        saleError.classList.remove('hidden');
+        return;
+      }
+      closeSaleModal();
+      refreshSales();
+    });
+
+    refreshSales();
+    setInterval(refreshSales, 3000);
+    </script>
+  </body>
+</html>

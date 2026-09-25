@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Operations Portal - Sorting Sessions</title>
+<!-- Tailwind CSS & Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Config Injection -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#faf9f4",
+                        "surface-container": "#f2f0e7",
+                        "on-tertiary": "#ffffff",
+                        "primary-container": "#35573b",
+                        "secondary-container": "#e9ede1",
+                        "background": "#faf9f4",
+                        "surface-container-low": "#f7f5ee",
+                        "primary-fixed": "#dfe8d7",
+                        "surface-variant": "#e4e1d4",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#c2d3bb",
+                        "inverse-on-surface": "#d7e3d0",
+                        "on-surface-variant": "#5b6257",
+                        "outline-variant": "#ccd5c4",
+                        "on-secondary-fixed-variant": "#454d42",
+                        "on-primary-container": "#f7f6ef",
+                        "primary": "#274430",
+                        "on-tertiary-container": "#2b3129",
+                        "secondary": "#6a7166",
+                        "tertiary-fixed": "#e6e3d7",
+                        "tertiary-fixed-dim": "#d3d8ca",
+                        "on-secondary-container": "#6a7166",
+                        "primary-fixed-dim": "#c2d3bb",
+                        "inverse-surface": "#232b21",
+                        "surface-dim": "#e4e1d4",
+                        "surface-bright": "#faf9f4",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#8c9187",
+                        "surface-tint": "#274430",
+                        "on-secondary-fixed": "#232b21",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#ccd4c6",
+                        "on-tertiary-fixed-variant": "#4a5146",
+                        "surface-container-high": "#eceadf",
+                        "surface-container-highest": "#e4e1d4",
+                        "tertiary": "#5e655a",
+                        "on-background": "#1e241c",
+                        "on-tertiary-fixed": "#232b21",
+                        "outline": "#767c72",
+                        "secondary-fixed": "#dde5d4",
+                        "on-surface": "#1e241c",
+                        "on-primary-fixed": "#25301f",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#3c5340"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.875rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "xs": "4px",
+                        "xl": "64px",
+                        "lg": "40px",
+                        "base": "8px",
+                        "sm": "12px",
+                        "gutter": "24px",
+                        "md": "24px",
+                        "margin": "32px"
+                    },
+                    fontFamily: {
+                        "caption": ["Manrope"],
+                        "headline-md": ["Manrope"],
+                        "button": ["Manrope"],
+                        "headline-lg": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "headline-lg-mobile": ["Manrope"],
+                        "body-md": ["Manrope"]
+                    },
+                    fontSize: {
+                        "caption": ["12px", { lineHeight: "1.4", fontWeight: "400" }],
+                        "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "700" }],
+                        "button": ["15px", { lineHeight: "1", fontWeight: "700" }],
+                        "headline-lg": ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "800" }],
+                        "body-lg": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+                        "label-caps": ["12px", { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "700" }],
+                        "headline-lg-mobile": ["26px", { lineHeight: "1.2", fontWeight: "800" }],
+                        "body-md": ["14px", { lineHeight: "1.5", fontWeight: "400" }]
+                    },
+                    boxShadow: {
+                        'glow': '0 0 40px -10px rgba(53, 87, 59, 0.15)',
+                        'ambient': '0 10px 30px -10px rgba(0, 0, 0, 0.04)'
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
+</style>
+<link rel="stylesheet" href="/static/responsive.css" />
+</head>
+<body class="bg-background text-on-background antialiased flex w-full min-h-screen overflow-x-hidden">
+<!-- SideNavBar -->
+<nav
+  id="sidebar"
+  class="h-screen w-64 flex-col fixed left-0 top-0 bg-inverse-surface border-r border-outline-variant/10 shadow-xl flex z-50 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out"
+>
+  <!-- Brand -->
+  <div class="px-gutter py-margin flex items-center gap-sm">
+    <div
+      class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white"
+    >
+      <span class="material-symbols-outlined filled">egg</span>
+    </div>
+    <div>
+      <h1
+        class="text-headline-md font-headline-md text-primary-fixed tracking-tight"
+      >
+        EGGSor+
+      </h1>
+      <p
+        class="font-label-caps text-label-caps text-surface-variant/70 tracking-widest mt-xs"
+      >
+        IOT EGG SORTING SYS
+      </p>
+    </div>
+  </div>
+  <!-- Links -->
+  <div class="flex flex-col py-gutter px-2 flex-1 min-h-0 overflow-y-auto">
+    <a
+      class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+      href="/dashboard"
+    >
+      <span class="material-symbols-outlined">dashboard</span>
+      <span class="font-button text-button">Dashboard</span>
+    </a>
+    <a
+      class="bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 flex items-center gap-3 active:scale-95 duration-150 ease-in-out nav-active-glow"
+      href="/sorting-sessions"
+    >
+      <span class="material-symbols-outlined">precision_manufacturing</span>
+      <span class="font-button text-button">Sorting Sessions</span>
+    </a>
+    <a
+      class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+      href="/egg-records"
+    >
+      <span class="material-symbols-outlined">inventory_2</span>
+      <span class="font-button text-button">Egg Records</span>
+    </a>
+    <a
+      class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+      href="/alerts"
+    >
+      <span class="material-symbols-outlined">notifications</span>
+      <span class="font-button text-button">Alerts</span>
+    </a>
+    <a
+      class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+      href="/sales"
+    >
+      <span class="material-symbols-outlined">payments</span>
+      <span class="font-button text-button">Sales</span>
+    </a>
+    <a
+      class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+      href="/reports"
+    >
+      <span class="material-symbols-outlined">assessment</span>
+      <span class="font-button text-button">Reports</span>
+    </a>
+    {% if current_user_role == "admin" %}
+    <a
+      class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+      href="/user-management"
+    >
+      <span class="material-symbols-outlined">manage_accounts</span>
+      <span class="font-button text-button">User Management</span>
+    </a>
+    {% endif %}
+  </div>
+  {% include "_sidebar_footer.html" %}
+</nav>
+<!-- Overlay -->
+<div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden hidden"></div>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 flex-1 flex flex-col min-h-screen bg-background">
+<!-- Header -->
+<header class="w-full px-margin flex flex-col pb-6 border-b border-surface-container shrink-0 sticky top-0 bg-background/90 backdrop-blur-md z-30 pt-16 md:pt-0 md:h-32 md:justify-end">
+  <div class="flex items-center gap-2 mb-2 md:hidden">
+    <button onclick="toggleSidebar()" class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors shrink-0">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+  </div>
+<div class="flex items-baseline gap-2 mb-1">
+<p class="font-label-caps text-label-caps text-primary tracking-widest uppercase">Operations Portal</p>
+<span class="text-surface-dim font-bold text-[10px] mx-1">/</span>
+<p class="font-label-caps text-label-caps text-secondary tracking-widest uppercase">Admin</p>
+</div>
+    <h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">Sorting Sessions</h2>
+</header>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-y-auto px-4 md:px-margin py-margin max-w-6xl w-full mx-auto space-y-md md:space-y-margin">
+<!-- Live Camera / Detection Session -->
+<section class="bg-surface-container-lowest rounded-xl shadow-ambient border border-surface-container-highest p-4 md:p-6 relative overflow-hidden">
+<div id="camera-idle" class="py-4 md:py-6 flex flex-col items-center justify-center text-center relative">
+  <div class="absolute inset-0 bg-gradient-to-b from-primary-container/5 to-transparent opacity-50 pointer-events-none rounded-xl"></div>
+  <div class="w-14 md:w-16 h-14 md:h-16 rounded-2xl bg-surface-container-low flex items-center justify-center mb-4 md:mb-6 border border-surface-variant/50 relative z-10">
+    <span class="material-symbols-outlined text-[28px] md:text-[32px] text-primary-container" style="font-variation-settings: 'FILL' 0;">photo_camera</span>
+  </div>
+  <h3 class="font-headline-md text-headline-md text-on-surface mb-2 relative z-10">No Active Sorting Session</h3>
+  <p class="font-body-md text-body-md text-secondary max-w-md mx-auto mb-6 md:mb-8 relative z-10">Open this device's camera and detect eggs in real time with your YOLO <strong>best.pt</strong> model.</p>
+  <button id="start-camera" type="button" class="h-12 bg-[#35573b] hover:bg-primary transition-colors text-white font-button text-button px-5 md:px-8 rounded-lg flex items-center gap-2 shadow-sm relative z-10 w-full md:w-auto justify-center">
+    <span class="material-symbols-outlined text-[20px]">videocam</span>
+    Start Session &amp; Open Camera
+  </button>
+</div>
+
+<div id="camera-active" class="hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <span id="camera-indicator" class="w-2.5 h-2.5 rounded-full bg-primary-container animate-pulse"></span>
+        <h3 class="font-button text-button text-on-surface">Live YOLO Detection</h3>
+      </div>
+      <p id="detection-status" class="font-caption text-caption text-secondary mt-1" aria-live="polite">Starting camera...</p>
+    </div>
+    <button id="stop-camera" type="button" class="w-full sm:w-auto h-11 px-5 rounded-lg border border-error/30 bg-error-container text-error font-button text-button flex items-center justify-center gap-2 hover:bg-error/10 transition-colors">
+      <span class="material-symbols-outlined text-[18px]">stop_circle</span>
+      Stop Session
+    </button>
+  </div>
+
+  <div class="relative w-full overflow-hidden rounded-xl bg-black aspect-video">
+    <img id="camera-feed" class="w-full h-full object-contain" alt="Live camera feed with YOLO detection boxes" />
+    <div id="camera-loading" class="absolute inset-0 flex items-center justify-center bg-black/60 text-white">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined animate-spin">progress_activity</span>
+        <span class="font-body-md text-body-md">Starting persistent camera session...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <div class="flex items-center justify-between gap-4 mb-2">
+      <p class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Current frame detections</p>
+      <span id="detection-total" class="font-button text-button text-primary">0 objects</span>
+    </div>
+    <div id="detection-counts" class="flex flex-wrap gap-2">
+      <span class="px-3 py-2 rounded-lg bg-surface-container text-secondary font-body-md text-body-md">Waiting for detections...</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 pt-4 border-t border-surface-container">
+    <div class="rounded-lg bg-surface-container-low p-3">
+      <p class="font-label-caps text-label-caps text-secondary uppercase">Arduino link</p>
+      <p id="hardware-status" class="font-button text-button text-on-surface mt-2">Connecting...</p>
+    </div>
+    <div class="rounded-lg bg-surface-container-low p-3">
+      <p class="font-label-caps text-label-caps text-secondary uppercase">Latest sensor event</p>
+      <p id="hardware-event" class="font-body-md text-body-md text-on-surface mt-2">Waiting for load cell...</p>
+    </div>
+    <div class="rounded-lg bg-surface-container-low p-3">
+      <p class="font-label-caps text-label-caps text-secondary uppercase">Latest egg record</p>
+      <p id="latest-egg-record" class="font-body-md text-body-md text-on-surface mt-2">No completed egg yet</p>
+    </div>
+  </div>
+
+  <button id="trigger-stopper" type="button" class="mt-3 w-full sm:w-auto h-11 px-5 rounded-lg bg-inverse-surface text-white font-button text-button flex items-center justify-center gap-2 hover:bg-on-surface transition-colors">
+    <span class="material-symbols-outlined text-[18px]">play_circle</span>
+    Advance Stopper
+  </button>
+</div>
+
+<div id="camera-error" class="hidden mt-4 p-4 rounded-lg bg-error-container text-on-error-container font-body-md text-body-md" role="alert"></div>
+</section>
+</div>
+</main>
+<script>
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('-translate-x-full');
+  overlay.classList.toggle('hidden');
+}
+
+const startButton = document.getElementById('start-camera');
+const stopButton = document.getElementById('stop-camera');
+const idlePanel = document.getElementById('camera-idle');
+const activePanel = document.getElementById('camera-active');
+const cameraFeed = document.getElementById('camera-feed');
+const loadingPanel = document.getElementById('camera-loading');
+const statusText = document.getElementById('detection-status');
+const errorPanel = document.getElementById('camera-error');
+const countsPanel = document.getElementById('detection-counts');
+const totalLabel = document.getElementById('detection-total');
+const hardwareStatus = document.getElementById('hardware-status');
+const hardwareEvent = document.getElementById('hardware-event');
+const latestEggRecord = document.getElementById('latest-egg-record');
+const stopperButton = document.getElementById('trigger-stopper');
+
+let statusTimer = null;
+let feedConnected = false;
+
+function showCameraError(message) {
+  errorPanel.textContent = message;
+  errorPanel.classList.remove('hidden');
+}
+
+function clearCameraError() {
+  errorPanel.textContent = '';
+  errorPanel.classList.add('hidden');
+}
+
+function setCameraState(active) {
+  idlePanel.classList.toggle('hidden', active);
+  activePanel.classList.toggle('hidden', !active);
+}
+
+async function requestJson(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: 'same-origin',
+    ...options
+  });
+
+  if (response.redirected) {
+    window.location.href = response.url;
+    throw new Error('Authentication required.');
+  }
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || 'Camera request failed.');
+  }
+  return payload;
+}
+
+function connectFeed() {
+  if (feedConnected) {
+    return;
+  }
+  feedConnected = true;
+  loadingPanel.classList.remove('hidden');
+  cameraFeed.onload = () => {
+    loadingPanel.classList.add('hidden');
+    statusText.textContent = 'Camera active. YOLO is scanning continuously.';
+  };
+  cameraFeed.onerror = () => {
+    feedConnected = false;
+    loadingPanel.classList.remove('hidden');
+  };
+  cameraFeed.src = `/api/camera/feed?connection=${Date.now()}`;
+}
+
+function updateCounts(state) {
+  totalLabel.textContent = `${state.total} ${state.total === 1 ? 'object' : 'objects'}`;
+  const entries = Object.entries(state.counts || {});
+  if (!entries.length) {
+    countsPanel.innerHTML = '<span class="px-3 py-2 rounded-lg bg-surface-container text-secondary font-body-md text-body-md">No objects detected</span>';
+    return;
+  }
+
+  countsPanel.replaceChildren(...entries.map(([label, count]) => {
+    const chip = document.createElement('span');
+    chip.className = 'px-3 py-2 rounded-lg bg-primary-fixed text-on-primary-fixed-variant font-button text-button';
+    chip.textContent = `${label}: ${count}`;
+    return chip;
+  }));
+}
+
+function showRunningSession(state, reconnectFeed = false) {
+  setCameraState(true);
+  clearCameraError();
+  updateCounts(state);
+  if (!state.frame_ready) {
+    statusText.textContent = 'Camera active. Waiting for the first video frame...';
+  } else if (!state.detection_fps) {
+    statusText.textContent = `Live video ${state.stream_fps || '—'} FPS • YOLO warming up...`;
+  } else {
+    statusText.textContent = `Live video ${state.stream_fps} FPS • YOLO ${state.detection_fps} FPS (${state.inference_ms} ms)`;
+  }
+  // MJPEG responses never finish, so some browsers never fire the image
+  // "load" event. Server frame readiness is the reliable signal.
+  loadingPanel.classList.toggle('hidden', state.frame_ready);
+  if (reconnectFeed || !feedConnected) {
+    connectFeed();
+  }
+}
+
+function showStoppedSession(state = {}) {
+  setCameraState(false);
+  feedConnected = false;
+  cameraFeed.removeAttribute('src');
+  loadingPanel.classList.add('hidden');
+  if (state.error) {
+    showCameraError(state.error);
+  }
+}
+
+async function refreshSessionState(reconnectFeed = false) {
+  try {
+    const state = await requestJson('/api/camera/status');
+    if (state.running) {
+      showRunningSession(state, reconnectFeed);
+    } else {
+      showStoppedSession(state);
+    }
+  } catch (error) {
+    showStoppedSession();
+    showCameraError(error.message);
+  }
+}
+
+async function refreshHardwareState() {
+  try {
+    const [hardware, recordsPayload] = await Promise.all([
+      requestJson('/api/hardware/status'),
+      requestJson('/api/egg-records?limit=1')
+    ]);
+    hardwareStatus.textContent = hardware.connected
+      ? `Connected on ${hardware.port} @ ${hardware.baud_rate}`
+      : hardware.running
+        ? `Reconnecting${hardware.port ? ` to ${hardware.port}` : ''}...`
+        : 'Stopped';
+    hardwareStatus.className = hardware.connected
+      ? 'font-button text-button text-green-700 mt-2'
+      : 'font-button text-button text-secondary mt-2';
+    hardwareEvent.textContent = hardware.latest_event?.message
+      || hardware.error
+      || 'Waiting for load cell...';
+
+    const record = recordsPayload.records[0];
+    latestEggRecord.textContent = record
+      ? `${record.egg_id} • ${record.weight_grams} g • ${record.size} • ${record.quality}`
+      : 'No completed egg yet';
+  } catch (error) {
+    hardwareStatus.textContent = 'Hardware status unavailable';
+    hardwareEvent.textContent = error.message;
+  }
+}
+
+function startStatusPolling() {
+  if (statusTimer) {
+    window.clearInterval(statusTimer);
+  }
+  statusTimer = window.setInterval(() => {
+    refreshSessionState(false);
+    refreshHardwareState();
+  }, 750);
+}
+
+async function startCameraSession() {
+  clearCameraError();
+  startButton.disabled = true;
+  startButton.classList.add('opacity-60', 'cursor-wait');
+  setCameraState(true);
+  loadingPanel.classList.remove('hidden');
+  statusText.textContent = 'Opening the server camera and loading YOLO...';
+
+  try {
+    const state = await requestJson('/api/camera/start', { method: 'POST' });
+    showRunningSession(state.camera, true);
+    refreshHardwareState();
+  } catch (error) {
+    showStoppedSession();
+    showCameraError(error.message);
+  } finally {
+    startButton.disabled = false;
+    startButton.classList.remove('opacity-60', 'cursor-wait');
+  }
+}
+
+async function stopCameraSession() {
+  stopButton.disabled = true;
+  stopButton.classList.add('opacity-60', 'cursor-wait');
+  statusText.textContent = 'Stopping camera session...';
+  try {
+    const state = await requestJson('/api/camera/stop', { method: 'POST' });
+    showStoppedSession(state.camera);
+    refreshHardwareState();
+  } catch (error) {
+    showCameraError(error.message);
+  } finally {
+    stopButton.disabled = false;
+    stopButton.classList.remove('opacity-60', 'cursor-wait');
+  }
+}
+
+async function triggerStopper() {
+  stopperButton.disabled = true;
+  try {
+    const result = await requestJson('/api/hardware/stopper/start', { method: 'POST' });
+    hardwareEvent.textContent = result.message;
+  } catch (error) {
+    showCameraError(error.message);
+  } finally {
+    stopperButton.disabled = false;
+  }
+}
+
+startButton.addEventListener('click', startCameraSession);
+stopButton.addEventListener('click', stopCameraSession);
+stopperButton.addEventListener('click', triggerStopper);
+refreshSessionState(true);
+refreshHardwareState();
+startStatusPolling();
+</script>
+</body>
+</html>

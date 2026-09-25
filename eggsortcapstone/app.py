@@ -167,7 +167,8 @@ def send_staff_invitation(user: "User", invite_url: str) -> None:
     missing = [name for name, value in required_settings.items() if not value]
     if missing:
         raise InvitationDeliveryError(
-            f"Email is not configured ({', '.join(missing)} is missing)."
+            f"Email is not configured ({', '.join(missing)} is missing). "
+            "Set it in .env, then verify with: flask check-mail"
         )
 
     message = EmailMessage()
@@ -1430,6 +1431,24 @@ def reports_data() -> Any:
     )
 
 
+def gravatar_url_for(email: str | None) -> str | None:
+    """Return a Gravatar URL for a Google-hosted mailbox, or None.
+
+    Google registers Gmail addresses with Gravatar, so this lets an invited
+    operator show a real profile photo before they have ever signed in. The
+    ``d=404`` parameter makes Gravatar answer with a 404 instead of a generic
+    silhouette when the person has no Gravatar image, so the browser can fall
+    back to the initial on the image error event.
+    """
+    address = (email or "").strip().lower()
+    if not EMAIL_PATTERN.match(address):
+        return None
+    if not address.endswith(("@gmail.com", "@googlemail.com")):
+        return None
+    digest = hashlib.md5(address.encode("utf-8"), usedforsecurity=False).hexdigest()
+    return f"https://www.gravatar.com/avatar/{digest}?s=160&d=404"
+
+
 @app.get("/api/users")
 @admin_required
 def users_data() -> Any:
@@ -1442,6 +1461,7 @@ def users_data() -> Any:
                 "email": user.email,
                 "display_name": user.display_name,
                 "avatar_url": user.avatar_url,
+                "gravatar_url": gravatar_url_for(user.email),
                 "role": user.role,
                 "is_active": user.is_active,
                 "password_set": user.password_set,
@@ -1701,6 +1721,72 @@ def show_admin_google_id() -> None:
         )
         return
     print(f"ADMIN_GOOGLE_SUB={admin.google_sub}")
+
+
+@app.cli.command("check-mail")
+def check_mail() -> None:
+    """Verify the SMTP settings used to deliver staff invitations."""
+    server = app.config["MAIL_SERVER"]
+    username = app.config["MAIL_USERNAME"]
+    print(f"MAIL_SERVER   = {server or '<empty>'}")
+    print(f"MAIL_PORT     = {app.config['MAIL_PORT']}")
+    print(f"MAIL_USE_TLS  = {app.config['MAIL_USE_TLS']}")
+    print(f"MAIL_USE_SSL  = {app.config['MAIL_USE_SSL']}")
+    print(f"MAIL_FROM     = {app.config['MAIL_FROM'] or '<empty>'}")
+    print(f"MAIL_USERNAME = {username or '<empty>'}")
+    # Never print the password, only whether one is present.
+    print(f"MAIL_PASSWORD = {'set' if app.config['MAIL_PASSWORD'] else '<empty>'}")
+
+    if not server:
+        print("\nFAIL: MAIL_SERVER is empty. Set it in .env (e.g. smtp.gmail.com).")
+        return
+    if not app.config["MAIL_FROM"] and not username:
+        print("\nFAIL: MAIL_FROM and MAIL_USERNAME are both empty.")
+        return
+    if not username:
+        print("\nWARN: MAIL_USERNAME is empty, so delivery is attempted unauthenticated.")
+        return
+
+    # Catch the most common misconfiguration before touching the network: a
+    # Google relay cannot authenticate an account on some other domain.
+    if "gmail.com" in server and not username.lower().endswith(
+        ("gmail.com", "googlemail.com")
+    ):
+        print(
+            f"\nFAIL: {server} only accepts Google accounts, but MAIL_USERNAME is "
+            f"{username}."
+        )
+        print("Either set MAIL_USERNAME/MAIL_FROM to the Gmail address that owns")
+        print("the app password, or point MAIL_SERVER at that account's provider.")
+        return
+
+    try:
+        if app.config["MAIL_USE_SSL"]:
+            smtp = smtplib.SMTP_SSL(server, app.config["MAIL_PORT"], timeout=15)
+        else:
+            smtp = smtplib.SMTP(server, app.config["MAIL_PORT"], timeout=15)
+        with smtp:
+            if app.config["MAIL_USE_TLS"] and not app.config["MAIL_USE_SSL"]:
+                smtp.starttls()
+            smtp.login(username, app.config["MAIL_PASSWORD"])
+    except smtplib.SMTPAuthenticationError as exc:
+        detail = exc.smtp_error
+        if isinstance(detail, bytes):
+            detail = detail.decode(errors="replace")
+        print(f"\nFAIL: the server was reached but rejected the credentials "
+              f"({exc.smtp_code} {detail}).")
+        if "outlook" in server or "office365" in server:
+            print("Microsoft 365: MAIL_PASSWORD must be this mailbox's real password,")
+            print("or a Microsoft app password registered in Entra ID. An app password")
+            print("issued by Google can never authenticate here.")
+        else:
+            print("For Gmail/Google, the app password must belong to the account in")
+            print("MAIL_USERNAME, and 2-Step Verification must be enabled on it.")
+    except (OSError, smtplib.SMTPException) as exc:
+        print(f"\nFAIL: could not complete the connection "
+              f"({type(exc).__name__}: {exc}).")
+    else:
+        print("\nOK: SMTP login succeeded, invitation emails should send.")
 
 
 

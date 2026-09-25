@@ -27,50 +27,50 @@
               surface: "#faf9f4",
               "surface-container": "#f2f0e7",
               "on-tertiary": "#ffffff",
-              "primary-container": "#35573b",
+              "primary-container": "#4a7355",
               "secondary-container": "#e9ede1",
               background: "#faf9f4",
               "surface-container-low": "#f7f5ee",
-              "primary-fixed": "#dfe8d7",
-              "surface-variant": "#e4e1d4",
+              "primary-fixed": "#d9e6d4",
+              "surface-variant": "#e6e3d7",
               "on-secondary": "#ffffff",
-              "inverse-primary": "#c2d3bb",
-              "inverse-on-surface": "#d7e3d0",
-              "on-surface-variant": "#5b6257",
-              "outline-variant": "#ccd5c4",
-              "on-secondary-fixed-variant": "#454d42",
-              "on-primary-container": "#f7f6ef",
-              primary: "#274430",
-              "on-tertiary-container": "#2b3129",
-              secondary: "#6a7166",
-              "tertiary-fixed": "#e6e3d7",
-              "tertiary-fixed-dim": "#d3d8ca",
-              "on-secondary-container": "#6a7166",
-              "primary-fixed-dim": "#c2d3bb",
-              "inverse-surface": "#232b21",
-              "surface-dim": "#e4e1d4",
+              "inverse-primary": "#ccdcc6",
+              "inverse-on-surface": "#dce6d7",
+              "on-surface-variant": "#697067",
+              "outline-variant": "#d5dccd",
+              "on-secondary-fixed-variant": "#4e564b",
+              "on-primary-container": "#f9f8f2",
+              primary: "#3e6248",
+              "on-tertiary-container": "#333c32",
+              secondary: "#6b746a",
+              "tertiary-fixed": "#e9e7dd",
+              "tertiary-fixed-dim": "#d9ddd2",
+              "on-secondary-container": "#6b746a",
+              "primary-fixed-dim": "#ccdcc6",
+              "inverse-surface": "#2c3e31",
+              "surface-dim": "#e6e3d7",
               "surface-bright": "#faf9f4",
               error: "#ba1a1a",
               "on-error": "#ffffff",
               "error-container": "#ffdad6",
-              "tertiary-container": "#8c9187",
-              "surface-tint": "#274430",
-              "on-secondary-fixed": "#232b21",
+              "tertiary-container": "#969b92",
+              "surface-tint": "#3e6248",
+              "on-secondary-fixed": "#2c3e31",
               "on-error-container": "#93000a",
-              "secondary-fixed-dim": "#ccd4c6",
-              "on-tertiary-fixed-variant": "#4a5146",
+              "secondary-fixed-dim": "#d3d8ce",
+              "on-tertiary-fixed-variant": "#555d52",
               "surface-container-high": "#eceadf",
-              "surface-container-highest": "#e4e1d4",
-              tertiary: "#5e655a",
-              "on-background": "#1e241c",
-              "on-tertiary-fixed": "#232b21",
-              outline: "#767c72",
+              "surface-container-highest": "#e6e3d7",
+              tertiary: "#686f64",
+              "on-background": "#28322b",
+              "on-tertiary-fixed": "#2c3e31",
+              outline: "#82887e",
               "secondary-fixed": "#dde5d4",
-              "on-surface": "#1e241c",
-              "on-primary-fixed": "#25301f",
+              "on-surface": "#28322b",
+              "on-primary-fixed": "#2f3a2a",
               "surface-container-lowest": "#ffffff",
               "on-primary": "#ffffff",
-              "on-primary-fixed-variant": "#3c5340",
+              "on-primary-fixed-variant": "#475f4b",
             },
             borderRadius: {
               DEFAULT: "0.5rem",
@@ -326,14 +326,17 @@
             <button
               id="refresh-report"
               type="button"
-              class="bg-[#35573b] text-white h-12 px-8 rounded flex items-center justify-center gap-2 hover:bg-primary-container/90 transition-colors active:scale-95 font-button text-button w-full md:w-auto shrink-0"
+              title="Fetch the latest report data for the selected range"
+              class="bg-[#4a7355] text-white h-12 px-8 rounded flex items-center justify-center gap-2 hover:bg-primary-container/90 transition-colors active:scale-95 font-button text-button w-full md:w-auto shrink-0 disabled:opacity-70 disabled:cursor-wait disabled:active:scale-100"
             >
-              Refresh live data
-              <span class="material-symbols-outlined text-sm"
-                >arrow_forward</span
+              <span id="refresh-report-icon" class="material-symbols-outlined text-sm"
+                >refresh</span
               >
+              <span id="refresh-report-label">Refresh live data</span>
             </button>
           </div>
+          <p id="report-status" role="status" aria-live="polite"
+            class="mt-4 hidden text-sm font-medium"></p>
         </div>
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
@@ -451,14 +454,53 @@ const reportStart = document.getElementById('report-start-date');
 const reportEnd = document.getElementById('report-end-date');
 const reportSampling = document.getElementById('report-sampling');
 const reportRows = document.getElementById('report-rows');
+const reportStatus = document.getElementById('report-status');
+const refreshButton = document.getElementById('refresh-report');
+const refreshIcon = document.getElementById('refresh-report-icon');
+let reportRequestPending = false;
+let reportSuccessTimer = null;
+
+function setReportStatus(message, isError) {
+  if (!reportStatus) return;
+  reportStatus.textContent = message || '';
+  reportStatus.classList.toggle('hidden', !message);
+  /* An arbitrary colour rather than a token, so this never depends on the
+     local Tailwind config happening to define "error". */
+  reportStatus.classList.toggle('text-[#ba1a1a]', Boolean(isError));
+  reportStatus.classList.toggle('text-secondary', !isError);
+}
+
+function setRefreshingUI(isRefreshing) {
+  if (!refreshButton || !refreshIcon) return;
+  refreshButton.disabled = isRefreshing;
+  refreshIcon.classList.toggle('animate-spin', isRefreshing);
+}
+
+function flashRefreshSuccess() {
+  if (!refreshIcon) return;
+  refreshIcon.textContent = 'check';
+  window.clearTimeout(reportSuccessTimer);
+  reportSuccessTimer = window.setTimeout(() => {
+    refreshIcon.textContent = 'refresh';
+  }, 1200);
+}
+
+/* Formats a Date as YYYY-MM-DD in the viewer's own timezone. The previous
+   code used toISOString(), which converts to UTC first, so between local
+   midnight and the viewer's UTC offset "today" was rendered as yesterday. */
+function toLocalISODate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 function setDefaultReportDates() {
-  const now = new Date();
-  const end = now.toISOString().slice(0, 10);
-  const startDate = new Date(now);
+  const end = new Date();
+  const startDate = new Date(end);
   startDate.setDate(startDate.getDate() - 29);
-  reportStart.value = startDate.toISOString().slice(0, 10);
-  reportEnd.value = end;
+  reportStart.value = toLocalISODate(startDate);
+  reportEnd.value = toLocalISODate(end);
 }
 
 function renderReportRows(rows) {
@@ -487,37 +529,62 @@ function renderReportRows(rows) {
 }
 
 async function refreshReport() {
-  const params = new URLSearchParams({
-    sampling: reportSampling.value.toLowerCase(),
-    start_date: reportStart.value,
-    end_date: reportEnd.value
-  });
-  const response = await fetch(`/api/reports?${params}`);
-  if (response.redirected) {
-    window.location.href = response.url;
+  /* The date and sampling inputs each trigger a refresh, and the button can be
+     clicked on top of that. Without this guard the overlapping responses can
+     land out of order and paint the KPIs from a stale filter. */
+  if (reportRequestPending) return;
+  if (reportStart.value && reportEnd.value && reportStart.value > reportEnd.value) {
+    setReportStatus('Start date is after the end date. Check the range.', true);
     return;
   }
-  const payload = await response.json();
-  if (!response.ok) {
-    window.alert(payload.error || 'Unable to generate report.');
-    return;
+  reportRequestPending = true;
+  setRefreshingUI(true);
+  setReportStatus('Fetching the latest report data...', false);
+  let succeeded = false;
+  try {
+    const params = new URLSearchParams({
+      sampling: reportSampling.value.toLowerCase(),
+      start_date: reportStart.value,
+      end_date: reportEnd.value
+    });
+    const response = await fetch(`/api/reports?${params}`, { cache: 'no-store' });
+    if (response.redirected) {
+      window.location.href = response.url;
+      return;
+    }
+    const payload = await response.json();
+    if (!response.ok) {
+      setReportStatus(payload.error || 'Unable to generate report.', true);
+      return;
+    }
+    document.getElementById('report-total').textContent = payload.summary.total;
+    document.getElementById('report-good').textContent = payload.summary.good;
+    document.getElementById('report-damaged').textContent = payload.summary.damaged;
+    document.getElementById('report-quality-rate').textContent = `${payload.summary.quality_rate}%`;
+    document.getElementById('report-revenue').textContent =
+      `PHP ${Number(payload.summary.revenue).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`;
+    document.getElementById('report-description').textContent =
+      `${reportSampling.value} totals from ${reportStart.value} through ${reportEnd.value}.`;
+    renderReportRows(payload.rows);
+    succeeded = true;
+    setReportStatus('Updated ' + new Date().toLocaleTimeString(), false);
+  } catch (error) {
+    /* Previously an unreachable server rejected the promise with no handler,
+       so the button did nothing at all and left no trace. */
+    console.error('Report refresh failed:', error);
+    setReportStatus('Unable to reach the server. Check that it is running.', true);
+  } finally {
+    reportRequestPending = false;
+    setRefreshingUI(false);
+    if (succeeded) flashRefreshSuccess();
   }
-  document.getElementById('report-total').textContent = payload.summary.total;
-  document.getElementById('report-good').textContent = payload.summary.good;
-  document.getElementById('report-damaged').textContent = payload.summary.damaged;
-  document.getElementById('report-quality-rate').textContent = `${payload.summary.quality_rate}%`;
-  document.getElementById('report-revenue').textContent =
-    `PHP ${Number(payload.summary.revenue).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })}`;
-  document.getElementById('report-description').textContent =
-    `${reportSampling.value} totals from ${reportStart.value} through ${reportEnd.value}.`;
-  renderReportRows(payload.rows);
 }
 
 setDefaultReportDates();
-document.getElementById('refresh-report').addEventListener('click', refreshReport);
+refreshButton.addEventListener('click', refreshReport);
 document.getElementById('print-report').addEventListener('click', () => window.print());
 reportSampling.addEventListener('change', refreshReport);
 reportStart.addEventListener('change', refreshReport);

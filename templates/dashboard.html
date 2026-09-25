@@ -1,0 +1,664 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>EGGSor+ Operational Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              surface: "#f6faff",
+              "surface-container": "#e6eff8",
+              "on-tertiary": "#ffffff",
+              "primary-container": "#e67e00",
+              "secondary-container": "#d7e0f5",
+              background: "#f6faff",
+              "surface-container-low": "#ecf5fe",
+              "primary-fixed": "#ffdcc3",
+              "surface-variant": "#dbe4ed",
+              "on-secondary": "#ffffff",
+              "inverse-primary": "#ffb77d",
+              "inverse-on-surface": "#e9f2fb",
+              "on-surface-variant": "#554335",
+              "outline-variant": "#dcc2af",
+              "on-secondary-fixed-variant": "#3e4758",
+              "on-primary-container": "#4e2700",
+              primary: "#904d00",
+              "on-tertiary-container": "#2f3132",
+              secondary: "#565f71",
+              "tertiary-fixed": "#e1e3e4",
+              "tertiary-fixed-dim": "#c5c7c8",
+              "on-secondary-container": "#5a6375",
+              "primary-fixed-dim": "#ffb77d",
+              "inverse-surface": "#293138",
+              "surface-dim": "#d2dbe4",
+              "surface-bright": "#f6faff",
+              error: "#ba1a1a",
+              "on-error": "#ffffff",
+              "error-container": "#ffdad6",
+              "tertiary-container": "#97999a",
+              "surface-tint": "#904d00",
+              "on-secondary-fixed": "#131c2b",
+              "on-error-container": "#93000a",
+              "secondary-fixed-dim": "#bec7dc",
+              "on-tertiary-fixed-variant": "#454748",
+              "surface-container-high": "#e0e9f2",
+              "surface-container-highest": "#dbe4ed",
+              tertiary: "#5c5f60",
+              "on-background": "#141d23",
+              "on-tertiary-fixed": "#191c1d",
+              outline: "#897363",
+              "secondary-fixed": "#dae2f8",
+              "on-surface": "#141d23",
+              "on-primary-fixed": "#2f1500",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#ffffff",
+              "on-primary-fixed-variant": "#6e3900",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              xs: "4px",
+              xl: "64px",
+              lg: "40px",
+              base: "8px",
+              sm: "12px",
+              gutter: "24px",
+              md: "24px",
+              margin: "32px",
+            },
+            fontFamily: {
+              caption: ["Manrope"],
+              "headline-md": ["Manrope"],
+              button: ["Manrope"],
+              "headline-lg": ["Manrope"],
+              "body-lg": ["Manrope"],
+              "label-caps": ["Manrope"],
+              "headline-lg-mobile": ["Manrope"],
+              "body-md": ["Manrope"],
+            },
+            fontSize: {
+              caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }],
+              "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "700" }],
+              button: ["15px", { lineHeight: "1", fontWeight: "700" }],
+              "headline-lg": [
+                "32px",
+                {
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "800",
+                },
+              ],
+              "body-lg": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+              "label-caps": [
+                "12px",
+                { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "700" },
+              ],
+              "headline-lg-mobile": [
+                "26px",
+                { lineHeight: "1.2", fontWeight: "800" },
+              ],
+              "body-md": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .material-symbols-outlined.filled {
+        font-variation-settings: "FILL" 1;
+      }
+      .glow-effect {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      }
+      .nav-active-glow {
+        box-shadow: -4px 0 0 0 theme("colors.primary-container") inset;
+      }
+    </style>
+    <link rel="stylesheet" href="/static/responsive.css" />
+  </head>
+  <body
+    class="bg-background text-on-background font-body-md antialiased overflow-x-hidden min-h-screen flex"
+  >
+    <!-- SideNavBar -->
+    <nav
+      id="sidebar"
+      class="h-screen w-64 flex-col fixed left-0 top-0 bg-inverse-surface border-r border-outline-variant/10 shadow-xl flex z-50 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out"
+    >
+      <!-- Brand -->
+      <div class="px-gutter py-margin flex items-center gap-sm">
+        <div
+          class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white"
+        >
+          <span class="material-symbols-outlined filled">egg</span>
+        </div>
+        <div>
+          <h1
+            class="text-headline-md font-headline-md text-primary-fixed tracking-tight"
+          >
+            EGGSor+
+          </h1>
+          <p
+            class="font-label-caps text-label-caps text-surface-variant/70 tracking-widest mt-xs"
+          >
+            IOT EGG SORTING SYS
+          </p>
+        </div>
+      </div>
+      <!-- Links -->
+      <div class="flex flex-col py-gutter px-2 flex-1 min-h-0 overflow-y-auto">
+        <!-- Active Tab: Dashboard -->
+        <a
+          class="bg-primary-container/20 text-primary-fixed font-bold border-l-4 border-primary-container mx-2 rounded-r-lg py-3 px-4 flex items-center gap-3 active:scale-95 duration-150 ease-in-out nav-active-glow"
+          href="/dashboard"
+        >
+          <span class="material-symbols-outlined">dashboard</span>
+          <span class="font-button text-button">Dashboard</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/sorting-sessions"
+        >
+          <span class="material-symbols-outlined">precision_manufacturing</span>
+          <span class="font-button text-button">Sorting Sessions</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/egg-records"
+        >
+          <span class="material-symbols-outlined">inventory_2</span>
+          <span class="font-button text-button">Egg Records</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/alerts"
+        >
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="font-button text-button">Alerts</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/sales"
+        >
+          <span class="material-symbols-outlined">payments</span>
+          <span class="font-button text-button">Sales</span>
+        </a>
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/reports"
+        >
+          <span class="material-symbols-outlined">assessment</span>
+          <span class="font-button text-button">Reports</span>
+        </a>
+        {% if current_user_role == "admin" %}
+        <a
+          class="text-surface-variant/70 hover:text-white transition-colors py-3 px-6 flex items-center gap-3 hover:bg-surface-variant/10 transition-all active:scale-95 duration-150 ease-in-out rounded-lg mx-2 mt-xs"
+          href="/user-management"
+        >
+          <span class="material-symbols-outlined">manage_accounts</span>
+          <span class="font-button text-button">User Management</span>
+        </a>
+        {% endif %}
+      </div>
+      {% include "_sidebar_footer.html" %}
+    </nav>
+    <!-- Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden hidden"></div>
+    <!-- Main Content Canvas -->
+    <main class="md:ml-64 flex-1 flex flex-col min-h-screen">
+      <!-- TopAppBar (Minimal, Content Zone) -->
+      <header
+        class="w-full h-20 sticky top-0 z-30 bg-surface/90 backdrop-blur-md flex justify-between items-center px-margin pt-4 pb-2"
+      >
+        <div class="flex items-center gap-3">
+          <button onclick="toggleSidebar()" class="md:hidden w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors shrink-0">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+          <div>
+          <p
+            class="font-label-caps text-label-caps text-primary tracking-widest uppercase mb-1"
+          >
+            Operations Portal / Admin
+          </p>
+          <h2 class="font-headline-lg text-headline-lg text-on-background">
+            Operational Dashboard
+          </h2>
+          </div>
+        </div>
+<div class="flex items-center gap-2 sm:gap-4">
+          <div
+            class="bg-surface-container-low px-3 sm:px-4 py-2 rounded-full hidden sm:flex items-center gap-2 text-primary text-sm font-bold glow-effect"
+          >
+            <span
+              class="w-2 h-2 rounded-full bg-primary-container animate-pulse"
+            ></span>
+            Dashboard ready
+          </div>
+          <button
+            id="refresh-dashboard"
+            type="button"
+            title="Refresh dashboard"
+            class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors glow-effect"
+          >
+            <span class="material-symbols-outlined">refresh</span>
+          </button>
+        </div>
+      </header>
+      <!-- Dashboard Content -->
+      <div class="p-margin pt-gutter flex-1 flex flex-col gap-gutter">
+        <!-- KPI Cards Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-sm">
+          <!-- Card 1 -->
+          <div
+            class="bg-white rounded-xl p-6 glow-effect border-l-4 border-primary-container flex flex-col justify-between h-32 relative overflow-hidden group"
+          >
+            <div
+              class="absolute -right-4 -top-4 w-24 h-24 bg-primary-container/5 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"
+            ></div>
+            <div class="flex justify-between items-start z-10">
+              <p
+                class="font-label-caps text-label-caps text-secondary uppercase tracking-wider"
+              >
+                Total Eggs Sorted
+              </p>
+              <span class="material-symbols-outlined text-primary-container"
+                >egg_alt</span
+              >
+            </div>
+            <div class="flex items-end justify-between z-10">
+              <h3 id="dashboard-total-sorted" class="font-headline-lg text-headline-lg text-on-background">
+                0
+              </h3>
+              <p
+                id="dashboard-total-note"
+                class="font-caption text-caption text-secondary flex items-center gap-1"
+              >
+                Waiting for load cell
+              </p>
+            </div>
+          </div>
+          <!-- Card 2 -->
+          <div
+            class="bg-white rounded-xl p-6 glow-effect border-l-4 border-primary-container flex flex-col justify-between h-32 relative overflow-hidden group"
+          >
+            <div
+              class="absolute -right-4 -top-4 w-24 h-24 bg-primary-container/5 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"
+            ></div>
+            <div class="flex justify-between items-start z-10">
+              <p
+                class="font-label-caps text-label-caps text-secondary uppercase tracking-wider"
+              >
+                Trays Completed
+              </p>
+              <span class="material-symbols-outlined text-primary-container"
+                >widgets</span
+              >
+            </div>
+            <div class="flex items-end justify-between z-10">
+              <h3 id="dashboard-trays" class="font-headline-lg text-headline-lg text-on-background">
+                0
+              </h3>
+              <p
+                id="dashboard-trays-note"
+                class="font-caption text-caption text-secondary flex items-center gap-1"
+              >
+                30 eggs per tray
+              </p>
+            </div>
+          </div>
+          <!-- Card 3 -->
+          <div
+            class="bg-white rounded-xl p-6 glow-effect border-l-4 border-blue-500 flex flex-col justify-between h-32 relative overflow-hidden group"
+          >
+            <div
+              class="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/5 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"
+            ></div>
+            <div class="flex justify-between items-start z-10">
+              <p
+                class="font-label-caps text-label-caps text-secondary uppercase tracking-wider"
+              >
+                Quality Rate
+              </p>
+              <span class="material-symbols-outlined text-blue-500"
+                >verified</span
+              >
+            </div>
+            <div class="flex items-end justify-between z-10">
+              <h3 id="dashboard-quality-rate" class="font-headline-lg text-headline-lg text-on-background">
+                0%
+              </h3>
+              <p
+                id="dashboard-quality-note"
+                class="font-caption text-caption text-secondary flex items-center gap-1"
+              >
+                Good eggs after sorting
+              </p>
+            </div>
+          </div>
+          <!-- Card 4 -->
+          <div
+            class="bg-white rounded-xl p-6 glow-effect border-l-4 border-surface-variant flex flex-col justify-between h-32 relative overflow-hidden group"
+          >
+            <div
+              class="absolute -right-4 -top-4 w-24 h-24 bg-surface-variant/20 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"
+            ></div>
+            <div class="flex justify-between items-start z-10">
+              <p
+                class="font-label-caps text-label-caps text-secondary uppercase tracking-wider"
+              >
+                Camera Eggs Visible
+              </p>
+              <span class="material-symbols-outlined text-secondary"
+                >visibility</span
+              >
+            </div>
+            <div class="flex items-end justify-between z-10">
+              <h3 id="dashboard-camera-visible" class="font-headline-lg text-headline-lg text-on-background">
+                0
+              </h3>
+              <p
+                id="dashboard-camera-note"
+                class="font-caption text-caption text-secondary flex items-center gap-1"
+              >
+                Camera session stopped
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- Revenue Banner -->
+        <div
+          class="bg-inverse-surface rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden"
+        >
+          <!-- Abstract glowing background element -->
+          <div
+            class="absolute -right-20 -bottom-20 w-64 h-64 bg-primary-container rounded-full blur-[80px] opacity-20 pointer-events-none"
+          ></div>
+          <div class="flex items-center gap-4 z-10">
+            <div
+              class="w-12 h-12 rounded-xl bg-primary-container/20 border border-primary-container/30 flex items-center justify-center text-primary-fixed"
+            >
+              <span class="material-symbols-outlined">payments</span>
+            </div>
+            <div>
+              <p
+                class="font-label-caps text-label-caps text-primary-fixed uppercase tracking-widest mb-1"
+              >
+                Consolidated Customer Revenue
+              </p>
+              <h3 id="dashboard-revenue" class="font-headline-lg text-headline-lg text-white">
+                PHP 0.00
+              </h3>
+              <p id="dashboard-revenue-note" class="font-caption text-caption text-surface-variant/70 mt-1">
+                No completed sales yet
+              </p>
+            </div>
+          </div>
+          <button
+            class="bg-primary-container hover:bg-primary transition-colors text-white font-button text-button px-6 py-3 rounded-lg flex items-center gap-2 h-12 whitespace-nowrap z-10 w-full md:w-auto justify-center"
+            onclick="window.location.href='/sales'"
+          >
+            Open Sales Ledger
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+          </button>
+        </div>
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+          <!-- Size Distribution (Empty State) -->
+          <div
+            class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col items-center justify-center min-h-[300px]"
+          >
+            <div id="dashboard-size-distribution" class="text-center w-full">
+              <span class="material-symbols-outlined text-5xl text-secondary-fixed-dim mb-4">donut_large</span>
+              <h4
+                class="font-headline-md text-body-lg font-bold text-on-background mb-2"
+              >
+                Size Distribution
+              </h4>
+              <p class="font-caption text-caption text-secondary">
+                No sorting data available yet. Start a sorting session to see size distribution.
+              </p>
+            </div>
+          </div>
+          <!-- Daily Sorting Trend -->
+          <div
+            class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 flex flex-col items-center justify-center min-h-[300px]"
+          >
+            <div id="dashboard-daily-trend" class="w-full">
+              <span class="material-symbols-outlined text-5xl text-secondary-fixed-dim mb-4">bar_chart</span>
+              <h4
+                class="font-headline-md text-body-lg font-bold text-on-background mb-2"
+              >
+                Daily Sorting Trend
+              </h4>
+              <p class="font-caption text-caption text-secondary">
+                No sorting sessions recorded yet. Data will appear here after the first session.
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- Audit Logs -->
+        <div
+          class="bg-white rounded-2xl p-6 glow-effect border border-outline-variant/20 mb-8"
+        >
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h4
+                class="font-headline-md text-body-lg font-bold text-on-background"
+              >
+                System Security Audit Logs
+              </h4>
+              <p class="font-caption text-caption text-secondary mt-1">
+                Chronological directory of operator logins &amp; physical
+                machine sorting events
+              </p>
+            </div>
+          </div>
+          <div id="dashboard-audit-logs" class="flex flex-col items-center justify-center py-12 text-center">
+            <span class="material-symbols-outlined text-4xl text-secondary-fixed-dim mb-4">history</span>
+            <p class="font-body-md text-body-md text-secondary">No audit log entries yet.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    }
+
+    const sizeOrder = ['Peewee', 'Small', 'Medium', 'Large', 'Extra Large', 'Jumbo'];
+
+    function renderDailyTrend(trend) {
+      const container = document.getElementById('dashboard-daily-trend');
+      container.replaceChildren();
+
+      const title = document.createElement('h4');
+      title.className = 'font-headline-md text-body-lg font-bold text-on-background mb-6';
+      title.textContent = 'Daily Sorting Trend';
+      container.appendChild(title);
+
+      const chart = document.createElement('div');
+      chart.className = 'h-48 flex items-end justify-between gap-2 sm:gap-3';
+      const maxCount = Math.max(1, ...trend.map((entry) => entry.count));
+
+      trend.forEach((entry) => {
+        const column = document.createElement('div');
+        column.className = 'h-full flex-1 min-w-0 flex flex-col items-center justify-end';
+        column.title = `${entry.date}: ${entry.count} eggs`;
+
+        const count = document.createElement('span');
+        count.className = 'text-xs font-bold text-on-surface mb-2';
+        count.textContent = entry.count;
+
+        const track = document.createElement('div');
+        track.className = 'w-full max-w-10 h-32 rounded-t-lg bg-surface-container flex items-end overflow-hidden';
+        const bar = document.createElement('div');
+        bar.className = 'w-full bg-primary-container rounded-t-lg transition-all duration-500';
+        bar.style.height = entry.count
+          ? `${Math.max(8, entry.count / maxCount * 100)}%`
+          : '0%';
+        track.appendChild(bar);
+
+        const label = document.createElement('span');
+        label.className = 'text-xs text-secondary mt-2';
+        label.textContent = entry.label;
+        column.append(count, track, label);
+        chart.appendChild(column);
+      });
+      container.appendChild(chart);
+    }
+
+    function auditIcon(eventType) {
+      if (eventType === 'login' || eventType === 'logout') return 'login';
+      if (eventType === 'login_failed') return 'warning';
+      if (eventType === 'egg_sorted') return 'egg_alt';
+      if (eventType.startsWith('camera')) return 'videocam';
+      if (eventType.startsWith('user')) return 'manage_accounts';
+      if (eventType.startsWith('sale')) return 'payments';
+      return 'settings';
+    }
+
+    function renderAuditLogs(logs) {
+      const container = document.getElementById('dashboard-audit-logs');
+      container.replaceChildren();
+      container.className = logs.length
+        ? 'divide-y divide-surface-variant/50'
+        : 'flex flex-col items-center justify-center py-12 text-center';
+
+      if (!logs.length) {
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined text-4xl text-secondary-fixed-dim mb-4';
+        icon.textContent = 'history';
+        const message = document.createElement('p');
+        message.className = 'font-body-md text-body-md text-secondary';
+        message.textContent = 'No audit log entries yet.';
+        container.append(icon, message);
+        return;
+      }
+
+      logs.forEach((log) => {
+        const row = document.createElement('article');
+        row.className = 'py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center gap-3';
+        const iconBox = document.createElement('div');
+        iconBox.className = 'w-10 h-10 rounded-full bg-surface-container text-primary flex items-center justify-center shrink-0';
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined text-xl';
+        icon.textContent = auditIcon(log.event_type);
+        iconBox.appendChild(icon);
+
+        const details = document.createElement('div');
+        details.className = 'flex-1 min-w-0';
+        const description = document.createElement('p');
+        description.className = 'font-body-md text-body-md text-on-surface';
+        description.textContent = log.description;
+        const meta = document.createElement('p');
+        meta.className = 'font-caption text-caption text-secondary mt-1';
+        meta.textContent = `${log.actor} • ${new Date(log.created_at).toLocaleString()}`;
+        details.append(description, meta);
+
+        const badge = document.createElement('span');
+        badge.className = 'self-start sm:self-center px-2.5 py-1 rounded-full bg-surface-container text-secondary text-xs uppercase';
+        badge.textContent = log.event_type.replaceAll('_', ' ');
+        row.append(iconBox, details, badge);
+        container.appendChild(row);
+      });
+    }
+
+    async function refreshDashboard() {
+      try {
+        const response = await fetch('/api/dashboard/stats', {
+          credentials: 'same-origin'
+        });
+        if (response.redirected) {
+          window.location.href = response.url;
+          return;
+        }
+        const stats = await response.json();
+        if (!response.ok) throw new Error(stats.error || 'Dashboard update failed.');
+
+        document.getElementById('dashboard-total-sorted').textContent = stats.total_sorted;
+        document.getElementById('dashboard-total-note').textContent =
+          stats.latest_record
+            ? `Latest: ${stats.latest_record.weight_grams} g • ${stats.latest_record.size}`
+            : 'Waiting for load cell';
+        document.getElementById('dashboard-trays').textContent = stats.trays_completed;
+        document.getElementById('dashboard-trays-note').textContent =
+          `${stats.total_sorted % 30}/30 eggs in current tray`;
+        document.getElementById('dashboard-quality-rate').textContent =
+          `${stats.quality_rate}%`;
+        document.getElementById('dashboard-quality-note').textContent =
+          `${stats.quality_counts.Good || 0} good eggs`;
+        document.getElementById('dashboard-camera-visible').textContent =
+          stats.camera_eggs_visible;
+        document.getElementById('dashboard-camera-note').textContent =
+          stats.camera_running ? 'Live camera detection' : 'Camera session stopped';
+        document.getElementById('dashboard-revenue').textContent =
+          `PHP ${Number(stats.total_revenue || 0).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })}`;
+        document.getElementById('dashboard-revenue-note').textContent =
+          stats.total_revenue > 0 ? 'Completed sales revenue' : 'No completed sales yet';
+        renderDailyTrend(stats.daily_trend || []);
+        renderAuditLogs(stats.audit_logs || []);
+
+        const distribution = document.getElementById('dashboard-size-distribution');
+        const maxCount = Math.max(1, ...Object.values(stats.size_counts));
+        distribution.innerHTML = `
+          <h4 class="font-headline-md text-body-lg font-bold text-on-background mb-4">Size Distribution</h4>
+          <div class="space-y-3 text-left">
+            ${sizeOrder.map((size) => {
+              const count = stats.size_counts[size] || 0;
+              const width = Math.max(count ? 8 : 0, count / maxCount * 100);
+              return `
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span>${size}</span><strong>${count}</strong>
+                  </div>
+                  <div class="h-2 rounded-full bg-surface-container overflow-hidden">
+                    <div class="h-full bg-primary-container rounded-full transition-all" style="width:${width}%"></div>
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>`;
+      } catch (error) {
+        console.error('Dashboard refresh failed:', error);
+      }
+    }
+
+    document.getElementById('refresh-dashboard').addEventListener('click', refreshDashboard);
+    refreshDashboard();
+    window.setInterval(refreshDashboard, 750);
+    </script>
+  </body>
+</html>

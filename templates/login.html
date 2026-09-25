@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Login - Eggsort+</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Manrope", "sans-serif"] },
+            colors: {
+              brand: {
+                DEFAULT: "#E67E00",
+                hover: "#CC7000",
+                text: "#1E293B",
+                muted: "#64748B",
+                border: "#E2E8F0",
+                bg: "#F8FAFC",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body { background-color: #e2e8f0; }
+      .login-container {
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .bg-illustration {
+        background:
+          radial-gradient(circle at 70% 30%, rgba(255, 245, 230, 0.9), #fff 62%);
+      }
+    </style>
+    <link rel="stylesheet" href="/static/responsive.css" />
+  </head>
+  <body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+    <div
+      class="login-container w-full max-w-[1100px] bg-white rounded-2xl sm:rounded-[32px] overflow-hidden flex flex-col md:flex-row min-h-[620px]"
+    >
+      <main class="w-full md:w-1/2 p-6 sm:p-10 lg:p-16 flex items-center">
+        <div class="max-w-[400px] w-full mx-auto">
+          <div class="mb-10">
+            <p class="text-sm font-extrabold uppercase tracking-[0.2em] text-brand mb-4">
+              EggSort+
+            </p>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-[#1a202c] mb-3 tracking-tight">
+              Welcome Back
+            </h1>
+            <p class="text-gray-500 font-medium">
+              Sign in with your EggSort+ account or continue with Google.
+            </p>
+          </div>
+
+          {% if notice %}
+          <div
+            class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-lg text-sm font-medium"
+            role="status"
+          >
+            {{ notice }}
+          </div>
+          {% endif %}
+
+          {% if error %}
+          <div
+            class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg text-sm font-medium"
+            role="alert"
+          >
+            {{ error }}
+          </div>
+          {% endif %}
+
+          <form method="post" action="{{ url_for('login') }}" class="space-y-4">
+            <div>
+              <label for="identifier" class="block text-sm font-bold text-gray-700 mb-2">
+                USERNAME OR EMAIL
+              </label>
+              <input
+                id="identifier"
+                name="identifier"
+                type="text"
+                autocomplete="username"
+                required
+                value="{{ request.form.get('identifier', '') }}"
+                class="block w-full px-4 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50"
+                placeholder="Enter username or email"
+              />
+            </div>
+            <div>
+              <label for="password" class="block text-sm font-bold text-gray-700 mb-2">
+                PASSWORD
+              </label>
+              <div class="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  required
+                  class="block w-full px-4 pr-12 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50"
+                  placeholder="Enter password"
+                />
+                <button
+                  type="button"
+                  data-password-toggle="password"
+                  class="absolute inset-y-0 right-0 w-12 flex items-center justify-center text-gray-500 hover:text-gray-800"
+                  aria-label="Show password"
+                  aria-pressed="false"
+                ></button>
+              </div>
+            </div>
+            <label class="flex items-center gap-2 text-sm text-gray-600 font-medium">
+              <input
+                name="remember-me"
+                type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand"
+              />
+              Keep me signed in
+            </label>
+            <button
+              type="submit"
+              class="w-full py-3.5 px-4 rounded-xl text-base font-bold text-white bg-brand hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-colors"
+            >
+              Sign In
+            </button>
+          </form>
+
+          <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-200"></div>
+            </div>
+            <div class="relative flex justify-center text-xs font-bold uppercase tracking-wider">
+              <span class="bg-white px-3 text-gray-400">OR</span>
+            </div>
+          </div>
+
+          <a
+            href="{{ url_for('google_login') }}"
+            class="w-full flex justify-center items-center gap-3 py-4 px-4 border border-gray-300 rounded-xl shadow-sm text-base font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-colors"
+          >
+            <svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.5-.2-2.2H12v4.3h5.4a4.6 4.6 0 0 1-2 3v2.8h3.3c1.9-1.8 2.9-4.5 2.9-7.9Z"/>
+              <path fill="#34A853" d="M12 22c2.7 0 5-.9 6.7-2.4l-3.3-2.8c-.9.6-2.1 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3v2.9A10 10 0 0 0 12 22Z"/>
+              <path fill="#FBBC05" d="M6.4 13.7a6 6 0 0 1 0-3.4V7.4H3a10 10 0 0 0 0 9.2l3.4-2.9Z"/>
+              <path fill="#EA4335" d="M12 6.2c1.5 0 2.8.5 3.8 1.5l2.9-2.8A9.7 9.7 0 0 0 3 7.4l3.4 2.9c.8-2.4 3-4.1 5.6-4.1Z"/>
+            </svg>
+            Continue with Google
+          </a>
+
+          {% if not google_ready %}
+          <p class="mt-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+            Google sign-in needs its client ID and secret before first use.
+          </p>
+          {% endif %}
+
+          
+          <p class="mt-12 text-center text-xs font-mono text-gray-400">
+            © 2026 EGGSort+ Systems. All rights reserved.
+          </p>
+        </div>
+      </main>
+
+      <aside class="hidden md:block w-1/2 relative border-l border-gray-100">
+        <img
+          src="{{ url_for('static', filename='images/eggbackground.png') }}"
+          alt="Egg with a golden yolk"
+          class="absolute inset-0 h-full w-full object-cover object-center"
+        />
+      </aside>
+    </div>
+    <script src="{{ url_for('static', filename='password-toggle.js') }}"></script>
+  </body>
+</html>

@@ -27,50 +27,50 @@
               surface: "#faf9f4",
               "surface-bright": "#faf9f4",
               "secondary-fixed": "#dde5d4",
-              "on-background": "#1e241c",
+              "on-background": "#28322b",
               "surface-container-lowest": "#ffffff",
               "surface-container": "#f2f0e7",
-              "on-secondary-container": "#6a7166",
-              "on-primary-fixed": "#25301f",
-              "tertiary-container": "#8c9187",
-              "inverse-primary": "#c2d3bb",
-              secondary: "#6a7166",
+              "on-secondary-container": "#6b746a",
+              "on-primary-fixed": "#2f3a2a",
+              "tertiary-container": "#969b92",
+              "inverse-primary": "#ccdcc6",
+              secondary: "#6b746a",
               "surface-container-high": "#eceadf",
-              "on-secondary-fixed": "#232b21",
+              "on-secondary-fixed": "#2c3e31",
               "on-error-container": "#93000a",
               "on-primary": "#ffffff",
               "on-error": "#ffffff",
-              "surface-tint": "#274430",
-              "on-surface": "#1e241c",
+              "surface-tint": "#3e6248",
+              "on-surface": "#28322b",
               "surface-container-low": "#f7f5ee",
-              "surface-container-highest": "#e4e1d4",
+              "surface-container-highest": "#e6e3d7",
               error: "#ba1a1a",
               "on-tertiary": "#ffffff",
-              "outline-variant": "#ccd5c4",
-              tertiary: "#5e655a",
-              "primary-fixed": "#dfe8d7",
+              "outline-variant": "#d5dccd",
+              tertiary: "#686f64",
+              "primary-fixed": "#d9e6d4",
               "on-secondary": "#ffffff",
               "error-container": "#ffdad6",
-              "on-secondary-fixed-variant": "#454d42",
-              "on-tertiary-container": "#2b3129",
-              "on-primary-container": "#f7f6ef",
-              "on-primary-fixed-variant": "#3c5340",
+              "on-secondary-fixed-variant": "#4e564b",
+              "on-tertiary-container": "#333c32",
+              "on-primary-container": "#f9f8f2",
+              "on-primary-fixed-variant": "#475f4b",
               background: "#faf9f4",
-              "tertiary-fixed": "#e6e3d7",
-              "primary-fixed-dim": "#c2d3bb",
-              "on-surface-variant": "#5b6257",
-              "secondary-fixed-dim": "#ccd4c6",
+              "tertiary-fixed": "#e9e7dd",
+              "primary-fixed-dim": "#ccdcc6",
+              "on-surface-variant": "#697067",
+              "secondary-fixed-dim": "#d3d8ce",
               "secondary-container": "#e9ede1",
-              primary: "#274430",
-              "surface-dim": "#e4e1d4",
-              "primary-container": "#35573b",
-              outline: "#767c72",
-              "on-tertiary-fixed-variant": "#4a5146",
-              "inverse-surface": "#232b21",
-              "inverse-on-surface": "#d7e3d0",
-              "surface-variant": "#e4e1d4",
-              "on-tertiary-fixed": "#232b21",
-              "tertiary-fixed-dim": "#d3d8ca",
+              primary: "#3e6248",
+              "surface-dim": "#e6e3d7",
+              "primary-container": "#4a7355",
+              outline: "#82887e",
+              "on-tertiary-fixed-variant": "#555d52",
+              "inverse-surface": "#2c3e31",
+              "inverse-on-surface": "#dce6d7",
+              "surface-variant": "#e6e3d7",
+              "on-tertiary-fixed": "#2c3e31",
+              "tertiary-fixed-dim": "#d9ddd2",
             },
             borderRadius: {
               DEFAULT: "0.5rem",
@@ -129,7 +129,7 @@
       body {
         font-family: "Manrope", sans-serif;
         background-color: #faf9f4;
-        color: #1e241c;
+        color: #28322b;
       }
       .material-symbols-outlined {
         font-family: "Material Symbols Outlined";
@@ -400,17 +400,26 @@
           <div class="p-4 border-b border-surface-container flex flex-col sm:flex-row gap-3">
             <input id="sale-search" type="search" placeholder="Search invoice, buyer, or size..."
               class="flex-1 bg-[#faf9f4] border border-surface-variant rounded-lg px-4 py-3 focus:outline-none focus:border-primary" />
+            {#
+              pr-10 reserves room for the chevron the Tailwind forms plugin
+              paints on selects. The previous px-4 set padding-right too, so the
+              label ran underneath that chevron and the two overlapped.
+            #}
             <select id="sale-status-filter"
-              class="bg-[#faf9f4] border border-surface-variant rounded-lg px-4 py-3">
+              class="bg-[#faf9f4] border border-surface-variant rounded-lg pl-4 pr-10 py-3">
               <option>All Statuses</option>
               <option>Completed</option>
               <option>Cancelled</option>
             </select>
             <button id="reset-sale-filters" type="button"
-              class="px-5 py-3 rounded-lg border border-surface-variant text-secondary hover:bg-surface-container">
-              Reset
+              title="Clear the search box and the status filter"
+              class="px-5 py-3 rounded-lg border border-surface-variant text-secondary hover:bg-surface-container flex items-center justify-center gap-2 transition-colors">
+              <span class="material-symbols-outlined text-[18px]">filter_alt_off</span>
+              <span id="reset-sale-filters-label">Reset</span>
             </button>
           </div>
+          <p id="sales-status" role="status" aria-live="polite"
+            class="hidden px-4 pb-3 text-sm font-medium"></p>
           <div
             class="p-md border-b border-surface-container flex justify-between items-center bg-surface-bright"
           >
@@ -543,7 +552,28 @@
     const saleError = document.getElementById('sale-error');
     const saleSearch = document.getElementById('sale-search');
     const saleStatus = document.getElementById('sale-status-filter');
+    const salesStatusLine = document.getElementById('sales-status');
+    const resetLabel = document.getElementById('reset-sale-filters-label');
     let saleSearchTimer = null;
+    let salesRequestPending = false;
+    let resetFeedbackTimer = null;
+
+    function showSalesStatus(message, isError) {
+      if (!salesStatusLine) return;
+      salesStatusLine.textContent = message || '';
+      salesStatusLine.classList.toggle('hidden', !message);
+      salesStatusLine.classList.toggle('text-error', Boolean(isError));
+      salesStatusLine.classList.toggle('text-secondary', !isError);
+    }
+
+    function flashResetFeedback() {
+      if (!resetLabel) return;
+      resetLabel.textContent = 'Cleared';
+      window.clearTimeout(resetFeedbackTimer);
+      resetFeedbackTimer = window.setTimeout(() => {
+        resetLabel.textContent = 'Reset';
+      }, 1400);
+    }
 
     function openSaleModal() {
       saleModal.classList.remove('hidden');
@@ -597,25 +627,41 @@
     }
 
     async function refreshSales() {
+      /* The 3s poll below can fire while a reset or a save is still in flight.
+         Without this guard the overlapping responses can land out of order and
+         repaint the table with a stale filter. */
+      if (salesRequestPending) return;
+      salesRequestPending = true;
       const params = new URLSearchParams({
         q: saleSearch.value.trim(),
         status: saleStatus.value
       });
-      const response = await fetch(`/api/sales?${params}`);
-      if (response.redirected) {
-        window.location.href = response.url;
-        return;
+      try {
+        const response = await fetch(`/api/sales?${params}`, { cache: 'no-store' });
+        if (response.redirected) {
+          window.location.href = response.url;
+          return;
+        }
+        const payload = await response.json();
+        if (!response.ok) {
+          showSalesStatus(payload.error || 'Unable to load sales.', true);
+          return;
+        }
+        document.getElementById('total-deals').textContent = payload.total_deals;
+        Object.entries(payload.stocks).forEach(([size, units]) => {
+          const card = document.querySelector(`[data-stock-size="${size}"]`);
+          if (!card) return;
+          card.querySelector('.stock-dozens').textContent = Math.floor(units / 12);
+          card.querySelector('.stock-units').textContent = `(${units} units)`;
+        });
+        renderSales(payload.sales);
+        showSalesStatus('', false);
+      } catch (error) {
+        console.error('Sales refresh failed:', error);
+        showSalesStatus('Unable to reach the server. Retrying…', true);
+      } finally {
+        salesRequestPending = false;
       }
-      const payload = await response.json();
-      if (!response.ok) return;
-      document.getElementById('total-deals').textContent = payload.total_deals;
-      Object.entries(payload.stocks).forEach(([size, units]) => {
-        const card = document.querySelector(`[data-stock-size="${size}"]`);
-        if (!card) return;
-        card.querySelector('.stock-dozens').textContent = Math.floor(units / 12);
-        card.querySelector('.stock-units').textContent = `(${units} units)`;
-      });
-      renderSales(payload.sales);
     }
 
     document.getElementById('open-sale-modal').addEventListener('click', openSaleModal);
@@ -629,9 +675,18 @@
     });
     saleStatus.addEventListener('change', refreshSales);
     document.getElementById('reset-sale-filters').addEventListener('click', () => {
+      /* Cancel the debounced search first. Typing schedules a refresh 250ms
+         out; without this, clicking Reset inside that window cleared the box
+         and then the pending callback refetched with a stale term. */
+      window.clearTimeout(saleSearchTimer);
       saleSearch.value = '';
-      saleStatus.value = 'All Statuses';
+      /* Reset by index, not by label. Matching on the option text means the
+         filter silently fails to clear if that text is ever reworded, and
+         assigning a value with no matching option throws the select back to
+         its original selection. */
+      saleStatus.selectedIndex = 0;
       refreshSales();
+      flashResetFeedback();
     });
     saleForm.addEventListener('submit', async (event) => {
       event.preventDefault();

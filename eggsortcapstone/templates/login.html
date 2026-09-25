@@ -18,10 +18,10 @@
             fontFamily: { sans: ["Manrope", "sans-serif"] },
             colors: {
               brand: {
-                DEFAULT: "#35573b",
-                hover: "#274430",
-                text: "#1e241c",
-                muted: "#6a7166",
+                DEFAULT: "#4a7355",
+                hover: "#3e6248",
+                text: "#28322b",
+                muted: "#6b746a",
                 border: "#f2f0e7",
                 bg: "#faf9f4",
               },
@@ -41,23 +41,96 @@
         background:
           radial-gradient(circle at 70% 30%, rgba(226, 233, 218, 0.9), #fff 62%);
       }
+      /*
+       * Landscape split layout.
+       * The card is capped at 1080px and its height is driven by the form, so
+       * the artwork panel never grows dead space below the fold. The aside only
+       * joins the row at lg+ (1024px): between md and lg a 50/50 split would
+       * squeeze the 400px form into a ~384px column, so those widths get the
+       * full-width single-column form instead.
+       */
+      .login-panel {
+        /* Beats the shared "main { background: cream }" rule in responsive.css
+           so the card reads as one continuous white surface. */
+        background-color: #fff !important;
+      }
+      /*
+       * Machine render for the right-hand panel.
+       * The artwork is a wide (3:2) render on a plain white field, so:
+       * - "contain" keeps the whole machine visible; "cover" would crop the
+       *   conveyor ends off inside the panel.
+       * - "multiply" dissolves that white field into the panel gradient, so
+       *   the machine reads as sitting on the panel instead of floating in a
+       *   white rectangle. The aside sets "isolate" to keep the blend local.
+       * - "scale" trims the machine's own built-in white margin so the render
+       *   reads larger in the panel. It only ever crops blank field, and the
+       *   aside clips the overflow. Drop it if the art is ever swapped for
+       *   something that is not shot against white.
+       */
+      .eggsort-machine-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center;
+        mix-blend-mode: multiply;
+        transform: scale(1.12);
+      }
+      /*
+       * Safety net for images/eggmachine.png: if that file is ever moved,
+       * renamed or missing from the deploy, this artwork fills the panel edge
+       * to edge the way it did before the machine swap.
+       */
+      .eggsort-machine-fallback {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        transform: none;
+      }
+
+      /*
+       * Short viewports (768/800px-tall laptops) compress the vertical rhythm
+       * so the whole card still fits on screen without scrolling. Written
+       * !important to outrank the Tailwind Play CDN, matching responsive.css.
+       */
+      @media (max-height: 880px) {
+        .login-head {
+          margin-bottom: 1.5rem !important;
+        }
+        .login-divider {
+          margin-top: 1.25rem !important;
+          margin-bottom: 1.25rem !important;
+        }
+        .login-footnote {
+          margin-top: 1.75rem !important;
+        }
+      }
+
+      @media (max-height: 740px) {
+        .login-panel {
+          padding: 1.5rem !important;
+        }
+        .login-title {
+          font-size: 1.875rem !important;
+        }
+      }
     </style>
     <link rel="stylesheet" href="/static/responsive.css" />
   </head>
-  <body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+  <body class="min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 lg:p-8">
     <div
-      class="login-container w-full max-w-[1100px] bg-white rounded-2xl sm:rounded-[32px] overflow-hidden flex flex-col md:flex-row min-h-[620px]"
+      class="login-container w-full max-w-[1080px] bg-white rounded-2xl sm:rounded-[32px] overflow-hidden flex flex-col lg:flex-row"
     >
-      <main class="w-full md:w-1/2 p-6 sm:p-10 lg:p-16 flex items-center">
+      <main class="login-panel w-full lg:w-1/2 p-6 sm:p-8 lg:p-10 xl:p-12 flex items-center">
         <div class="max-w-[400px] w-full mx-auto">
-          <div class="mb-10">
+          <div class="login-head mb-8 lg:mb-10">
             <p class="text-sm font-extrabold uppercase tracking-[0.2em] text-brand mb-4">
               EggSort+
             </p>
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-[#1e241c] mb-3 tracking-tight">
+            <h1 class="login-title text-3xl sm:text-4xl font-extrabold text-[#28322b] mb-3 tracking-tight">
               Welcome Back
             </h1>
-            <p class="text-[#6a7166] font-medium">
+            <p class="text-[#6b746a] font-medium">
               Sign in with your EggSort+ account or continue with Google.
             </p>
           </div>
@@ -82,48 +155,75 @@
 
           <form method="post" action="{{ url_for('login') }}" class="space-y-4">
             <div>
-              <label for="identifier" class="block text-sm font-bold text-[#4a5146] mb-2">
+              <label for="identifier" class="block text-sm font-bold text-[#555d52] mb-2">
                 USERNAME OR EMAIL
               </label>
-              <input
-                id="identifier"
-                name="identifier"
-                type="text"
-                autocomplete="username"
-                required
-                value="{{ request.form.get('identifier', '') }}"
-                class="block w-full px-4 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50"
-                placeholder="Enter username or email"
-              />
+              <div class="relative">
+                <svg
+                  class="eggsort-field-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="2.5" y="4.5" width="19" height="15" rx="2.5" />
+                  <path d="m3.2 6.6 7.9 5.4a1.6 1.6 0 0 0 1.8 0l7.9-5.4" />
+                </svg>
+                <input
+                  id="identifier"
+                  name="identifier"
+                  type="text"
+                  autocomplete="username"
+                  required
+                  value="{{ request.form.get('identifier', '') }}"
+                  class="block w-full pl-12 pr-4 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50"
+                />
+              </div>
             </div>
             <div>
-              <label for="password" class="block text-sm font-bold text-[#4a5146] mb-2">
+              <label for="password" class="block text-sm font-bold text-[#555d52] mb-2">
                 PASSWORD
               </label>
               <div class="relative">
+                <svg
+                  class="eggsort-field-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="4" y="10.5" width="16" height="10" rx="2.5" />
+                  <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+                  <path d="M12 14.6v2.4" />
+                </svg>
                 <input
                   id="password"
                   name="password"
                   type="password"
                   autocomplete="current-password"
                   required
-                  class="block w-full px-4 pr-12 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50"
-                  placeholder="Enter password"
+                  class="block w-full pl-12 pr-12 py-3.5 border border-brand-border rounded-xl focus:ring-brand focus:border-brand bg-brand-bg/50"
                 />
                 <button
                   type="button"
                   data-password-toggle="password"
-                  class="absolute inset-y-0 right-0 w-12 flex items-center justify-center text-[#6a7166] hover:text-[#333a31]"
+                  class="absolute inset-y-0 right-0 w-12 flex items-center justify-center text-[#6b746a] hover:text-[#3a4238]"
                   aria-label="Show password"
                   aria-pressed="false"
                 ></button>
               </div>
             </div>
-            <label class="flex items-center gap-2 text-sm text-gray-600 font-medium">
+            <label class="flex items-center gap-2.5 text-sm text-[#555d52] font-medium cursor-pointer select-none">
               <input
                 name="remember-me"
                 type="checkbox"
-                class="h-4 w-4 rounded border-[#d9d6c7] text-brand focus:ring-brand"
+                class="eggsort-checkbox"
               />
               Keep me signed in
             </label>
@@ -135,18 +235,18 @@
             </button>
           </form>
 
-          <div class="relative my-6">
+          <div class="login-divider relative my-6">
             <div class="absolute inset-0 flex items-center">
               <div class="w-full border-t border-[#D5E0D7]"></div>
             </div>
             <div class="relative flex justify-center text-xs font-bold uppercase tracking-wider">
-              <span class="bg-white px-3 text-[#8c9187]">OR</span>
+              <span class="bg-white px-3 text-[#969b92]">OR</span>
             </div>
           </div>
 
           <a
             href="{{ url_for('google_login') }}"
-            class="w-full flex justify-center items-center gap-3 py-4 px-4 border border-[#d9d6c7] rounded-xl shadow-sm text-base font-bold text-[#4a5146] bg-white hover:bg-[#faf9f4] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-colors"
+            class="w-full flex justify-center items-center gap-3 py-4 px-4 border border-[#dedccf] rounded-xl shadow-sm text-base font-bold text-[#555d52] bg-white hover:bg-[#faf9f4] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand transition-colors"
           >
             <svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.5-.2-2.2H12v4.3h5.4a4.6 4.6 0 0 1-2 3v2.8h3.3c1.9-1.8 2.9-4.5 2.9-7.9Z"/>
@@ -158,23 +258,33 @@
           </a>
 
           {% if not google_ready %}
-          <p class="mt-4 rounded-lg bg-[#f1f3e9] border border-[#d9d6c7] p-3 text-sm text-[#4a5146]">
+          <p class="mt-4 rounded-lg bg-[#f2f4ea] border border-[#dedccf] p-3 text-sm text-[#555d52]">
             Google sign-in needs its client ID and secret before first use.
           </p>
           {% endif %}
 
           
-          <p class="mt-12 text-center text-xs font-mono text-[#8c9187]">
+          <p class="login-footnote mt-10 lg:mt-12 text-center text-xs font-mono text-[#969b92]">
             © 2026 EGGSort+ Systems. All rights reserved.
           </p>
         </div>
       </main>
 
-      <aside class="hidden md:block w-1/2 relative border-l border-gray-100">
+      <aside
+        class="login-art hidden lg:flex lg:w-1/2 relative isolate items-center justify-center overflow-hidden p-4 sm:p-6 lg:p-4 bg-illustration border-l border-gray-100"
+      >
+        {#
+          Preferred artwork is images/eggmachine.png. If that file is missing
+          the request 404s, so onerror swaps in the original egg background and
+          re-applies "cover" sizing. Keep the fallback so a bad deploy degrades
+          to the original artwork rather than a broken-image icon.
+        #}
         <img
-          src="{{ url_for('static', filename='images/eggbackground.png') }}"
-          alt="Egg with a golden yolk"
-          class="absolute inset-0 h-full w-full object-cover object-center"
+          src="{{ url_for('static', filename='images/eggmachine.png') }}"
+          alt="EggSort+ automatic egg sorting machine with green conveyor belts and grading trays"
+          class="eggsort-machine-image"
+          decoding="async"
+          onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/eggbackground.png') }}';this.alt='Egg with a golden yolk';this.className='eggsort-machine-fallback';"
         />
       </aside>
     </div>

@@ -165,14 +165,14 @@ table {
   --eggsort-cream: #faf9f4;
   --eggsort-cream-deep: #f2f0e7;
   --eggsort-card: #ffffff;
-  --eggsort-forest: #35573b;
-  --eggsort-forest-deep: #274430;
-  --eggsort-sage: #dfe8d7;
-  --eggsort-ink: #1e241c;
-  --eggsort-muted: #6a7166;
-  --eggsort-line: #e4e1d4;
-  --eggsort-shadow: 0 18px 40px -32px rgba(31, 45, 32, 0.55);
-  --eggsort-shadow-hover: 0 22px 44px -30px rgba(31, 45, 32, 0.5);
+  --eggsort-forest: #4a7355;
+  --eggsort-forest-deep: #3e6248;
+  --eggsort-sage: #d9e6d4;
+  --eggsort-ink: #28322b;
+  --eggsort-muted: #6b746a;
+  --eggsort-line: #e6e3d7;
+  --eggsort-shadow: 0 18px 40px -32px rgba(46, 62, 49, 0.45);
+  --eggsort-shadow-hover: 0 22px 44px -30px rgba(46, 62, 49, 0.42);
 }
 
 body {
@@ -201,7 +201,7 @@ main {
 }
 
 .bg-inverse-surface {
-  background-color: #232b21 !important;
+  background-color: #2c3e31 !important;
 }
 
 .bg-primary-container {
@@ -209,18 +209,44 @@ main {
 }
 
 #sidebar {
-  background-color: #232b21 !important;
+  background-color: #2c3e31 !important;
   border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
   box-shadow: none !important;
 }
 
-#sidebar a {
+#sidebar a[href] {
   border-radius: 999px;
-  transition: background-color 160ms ease, color 160ms ease;
+  color: rgba(255, 255, 255, 0.72);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
-#sidebar a:hover {
-  background-color: rgba(255, 255, 255, 0.06) !important;
+#sidebar a[href]:not([href="/logout"]):hover,
+#sidebar a[href]:not([href="/logout"]):focus-visible {
+  background-color: #ffffff !important;
+  color: var(--eggsort-forest) !important;
+  outline: none;
+  transform: translateX(2px);
+}
+
+#sidebar a[href]:not([href="/logout"]):hover *,
+#sidebar a[href]:not([href="/logout"]):focus-visible * {
+  color: var(--eggsort-forest) !important;
+}
+
+#sidebar a[class*="bg-primary-container"] {
+  background-color: #ffffff !important;
+  color: var(--eggsort-forest) !important;
+  border-left-width: 0 !important;
+  box-shadow: 0 12px 24px -18px rgba(46, 62, 49, 0.35) !important;
+  font-weight: 700;
+}
+
+#sidebar a[class*="bg-primary-container"] * {
+  color: var(--eggsort-forest) !important;
 }
 
 main .bg-surface-container-lowest,
@@ -259,7 +285,7 @@ main a[class*="bg-primary-container"] {
 main input:not([type="checkbox"]):not([type="radio"]),
 main select,
 main textarea,
-.login-container input {
+.login-container input:not([type="checkbox"]):not([type="radio"]) {
   min-height: 2.75rem;
   border-radius: 14px !important;
   border-color: var(--eggsort-line) !important;
@@ -267,13 +293,78 @@ main textarea,
   color: var(--eggsort-ink);
 }
 
-main input:focus,
+main input:not([type="checkbox"]):not([type="radio"]):focus,
 main select:focus,
 main textarea:focus,
-.login-container input:focus {
+.login-container input:not([type="checkbox"]):not([type="radio"]):focus {
   border-color: var(--eggsort-forest) !important;
-  box-shadow: 0 0 0 3px rgba(53, 87, 59, 0.14) !important;
+  box-shadow: 0 0 0 3px rgba(74, 115, 85, 0.16) !important;
   outline: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * Opt-in form controls.
+ * The input rules above deliberately skip checkbox and radio inputs, so a
+ * checkbox keeps a fixed square footprint. The Tailwind forms reset removes
+ * the native rendering, so the tick and the focus ring are declared here.
+ * Selectors are written attribute-first to outrank the forms plugin reset
+ * regardless of stylesheet order.
+ * ------------------------------------------------------------------------- */
+input[type="checkbox"].eggsort-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  min-height: 0;
+  min-width: 0;
+  max-width: 1.15rem;
+  margin: 0;
+  border: 1.5px solid #c9cfbf;
+  border-radius: 6px;
+  background-color: var(--eggsort-card);
+  background-image: none;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 0.8rem 0.8rem;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+input[type="checkbox"].eggsort-checkbox:checked {
+  border-color: var(--eggsort-forest);
+  background-color: var(--eggsort-forest);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m3.5 8.5 3 3 6-7'/%3e%3c/svg%3e");
+}
+
+input[type="checkbox"].eggsort-checkbox:hover:not(:disabled) {
+  border-color: var(--eggsort-forest);
+}
+
+input[type="checkbox"].eggsort-checkbox:disabled {
+  border-color: #dcdace;
+  background-color: #f1f0e8;
+  cursor: not-allowed;
+}
+
+input[type="checkbox"].eggsort-checkbox:focus-visible {
+  outline: 2px solid var(--eggsort-forest);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(74, 115, 85, 0.16);
+}
+
+/* Leading icon for text inputs; the field keeps pl-12 so text clears it. */
+.eggsort-field-icon {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  transform: translateY(-50%);
+  color: var(--eggsort-muted);
+  pointer-events: none;
 }
 
 main table thead tr {

@@ -323,6 +323,12 @@
           <input name="email" type="email" required autocomplete="off"
             class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
         </label>
+        <label class="block">Profile photo URL
+          <input name="avatar_url" type="url" maxlength="1024" autocomplete="off"
+            placeholder="https://lh3.googleusercontent.com/..."
+            class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
+          <span class="text-xs text-secondary">Paste the staff member's Google profile photo link. Leave blank to use the photo captured when they first sign in.</span>
+        </label>
         <button type="submit" class="w-full h-12 rounded-lg bg-primary-container text-white font-button">
           Save Staff
         </button>
@@ -390,6 +396,7 @@
       userForm.elements.display_name.value = user?.display_name || '';
       userForm.elements.username.value = user?.username || '';
       userForm.elements.email.value = user?.email || '';
+      userForm.elements.avatar_url.value = user?.avatar_url || '';
       document.getElementById('user-modal-title').textContent =
         user ? 'Edit Staff' : 'Invite Staff';
       userModal.classList.remove('hidden');
@@ -562,6 +569,7 @@
         display_name: formData.get('display_name'),
         username: formData.get('username'),
         email: formData.get('email'),
+        avatar_url: formData.get('avatar_url'),
       };
       const response = await fetch(userId ? `/api/users/${userId}` : '/api/users', {
         method: userId ? 'PATCH' : 'POST',

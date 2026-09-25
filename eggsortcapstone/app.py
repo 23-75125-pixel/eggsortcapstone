@@ -1431,6 +1431,12 @@ def reports_data() -> Any:
     )
 
 
+def normalize_avatar_url(value: Any) -> str | None:
+    """Accept only https image URLs, matching the Google sign-in capture."""
+    candidate = str(value or "").strip()[:1024]
+    return candidate if candidate.startswith("https://") else None
+
+
 def gravatar_url_for(email: str | None) -> str | None:
     """Return a Gravatar URL for a Google-hosted mailbox, or None.
 
@@ -1505,6 +1511,7 @@ def create_user() -> Any:
         password=generate_password_hash(secrets.token_urlsafe(32)),
         email=email,
         display_name=display_name,
+        avatar_url=normalize_avatar_url(payload.get("avatar_url")),
         role="staff",
         is_active=True,
         password_set=False,
@@ -1574,6 +1581,11 @@ def update_user(user_id: int) -> Any:
     user.email = email
     user.username = username
     user.display_name = display_name
+    # A blank field leaves the existing photo alone, so renaming an operator
+    # never wipes the picture captured at Google sign-in.
+    requested_avatar = normalize_avatar_url(payload.get("avatar_url"))
+    if requested_avatar:
+        user.avatar_url = requested_avatar
     write_audit_log(
         "user_updated",
         f"Staff account '{username}' was updated.",
@@ -1585,6 +1597,7 @@ def update_user(user_id: int) -> Any:
         email=user.email,
         username=user.username,
         display_name=user.display_name,
+        avatar_url=user.avatar_url,
         role=user.role,
     )
 

@@ -7,7 +7,7 @@
     <title>EGGSor+ - Egg Grading Records</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap"
       rel="stylesheet"
     />
     <link
@@ -24,58 +24,58 @@
         theme: {
           extend: {
             colors: {
-              surface: "#f6faff",
-              "surface-bright": "#f6faff",
-              "secondary-fixed": "#dae2f8",
-              "on-background": "#141d23",
+              surface: "#faf9f4",
+              "surface-bright": "#faf9f4",
+              "secondary-fixed": "#dde5d4",
+              "on-background": "#28322b",
               "surface-container-lowest": "#ffffff",
-              "surface-container": "#e6eff8",
-              "on-secondary-container": "#5a6375",
-              "on-primary-fixed": "#2f1500",
-              "tertiary-container": "#97999a",
-              "inverse-primary": "#ffb77d",
-              secondary: "#565f71",
-              "surface-container-high": "#e0e9f2",
-              "on-secondary-fixed": "#131c2b",
+              "surface-container": "#f2f0e7",
+              "on-secondary-container": "#6b746a",
+              "on-primary-fixed": "#2f3a2a",
+              "tertiary-container": "#969b92",
+              "inverse-primary": "#ccdcc6",
+              secondary: "#6b746a",
+              "surface-container-high": "#eceadf",
+              "on-secondary-fixed": "#2c3e31",
               "on-error-container": "#93000a",
               "on-primary": "#ffffff",
               "on-error": "#ffffff",
-              "surface-tint": "#904d00",
-              "on-surface": "#141d23",
-              "surface-container-low": "#ecf5fe",
-              "surface-container-highest": "#dbe4ed",
+              "surface-tint": "#3e6248",
+              "on-surface": "#28322b",
+              "surface-container-low": "#f7f5ee",
+              "surface-container-highest": "#e6e3d7",
               error: "#ba1a1a",
               "on-tertiary": "#ffffff",
-              "outline-variant": "#dcc2af",
-              tertiary: "#5c5f60",
-              "primary-fixed": "#ffdcc3",
+              "outline-variant": "#d5dccd",
+              tertiary: "#686f64",
+              "primary-fixed": "#d9e6d4",
               "on-secondary": "#ffffff",
               "error-container": "#ffdad6",
-              "on-secondary-fixed-variant": "#3e4758",
-              "on-tertiary-container": "#2f3132",
-              "on-primary-container": "#4e2700",
-              "on-primary-fixed-variant": "#6e3900",
-              background: "#f6faff",
-              "tertiary-fixed": "#e1e3e4",
-              "primary-fixed-dim": "#ffb77d",
-              "on-surface-variant": "#554335",
-              "secondary-fixed-dim": "#bec7dc",
-              "secondary-container": "#d7e0f5",
-              primary: "#904d00",
-              "surface-dim": "#d2dbe4",
-              "primary-container": "#e67e00",
-              outline: "#897363",
-              "on-tertiary-fixed-variant": "#454748",
-              "inverse-surface": "#293138",
-              "inverse-on-surface": "#e9f2fb",
-              "surface-variant": "#dbe4ed",
-              "on-tertiary-fixed": "#191c1d",
-              "tertiary-fixed-dim": "#c5c7c8",
+              "on-secondary-fixed-variant": "#4e564b",
+              "on-tertiary-container": "#333c32",
+              "on-primary-container": "#f9f8f2",
+              "on-primary-fixed-variant": "#475f4b",
+              background: "#faf9f4",
+              "tertiary-fixed": "#e9e7dd",
+              "primary-fixed-dim": "#ccdcc6",
+              "on-surface-variant": "#697067",
+              "secondary-fixed-dim": "#d3d8ce",
+              "secondary-container": "#e9ede1",
+              primary: "#3e6248",
+              "surface-dim": "#e6e3d7",
+              "primary-container": "#4a7355",
+              outline: "#82887e",
+              "on-tertiary-fixed-variant": "#555d52",
+              "inverse-surface": "#2c3e31",
+              "inverse-on-surface": "#dce6d7",
+              "surface-variant": "#e6e3d7",
+              "on-tertiary-fixed": "#2c3e31",
+              "tertiary-fixed-dim": "#d9ddd2",
             },
             borderRadius: {
-              DEFAULT: "0.25rem",
-              lg: "0.5rem",
-              xl: "0.75rem",
+              DEFAULT: "0.5rem",
+              lg: "0.875rem",
+              xl: "1.5rem",
               full: "9999px",
             },
             spacing: {
@@ -89,14 +89,14 @@
               gutter: "24px",
             },
             fontFamily: {
-              "headline-md": ["Manrope"],
-              "body-md": ["Manrope"],
-              "headline-lg": ["Manrope"],
-              caption: ["Manrope"],
-              "label-caps": ["Manrope"],
-              button: ["Manrope"],
-              "headline-lg-mobile": ["Manrope"],
-              "body-lg": ["Manrope"],
+              "headline-md": ["Poppins", "sans-serif"],
+              "body-md": ["Poppins", "sans-serif"],
+              "headline-lg": ["Poppins", "sans-serif"],
+              caption: ["Poppins", "sans-serif"],
+              "label-caps": ["Poppins", "sans-serif"],
+              button: ["Poppins", "sans-serif"],
+              "headline-lg-mobile": ["Poppins", "sans-serif"],
+              "body-lg": ["Poppins", "sans-serif"],
             },
             fontSize: {
               "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "700" }],
@@ -127,7 +127,7 @@
     </script>
     <style>
       body {
-        background-color: #f6faff;
+        background-color: #faf9f4;
       }
       .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
     </style>
@@ -277,7 +277,7 @@
             >
             <input
               id="record-search"
-              class="w-full bg-[#F8F9FA] border border-surface-variant/50 rounded-lg py-3 pl-12 pr-4 text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              class="w-full bg-[#faf9f4] border border-surface-variant/50 rounded-lg py-3 pl-12 pr-4 text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               placeholder="Search by egg ID, weight, or session..."
               type="text"
             />
@@ -285,7 +285,7 @@
           <button
             id="search-records"
             type="button"
-            class="px-6 py-3 bg-[#F8F9FA] border border-surface-variant/50 rounded-lg font-button text-button text-secondary hover:bg-surface-container transition-colors"
+            class="px-6 py-3 bg-[#faf9f4] border border-surface-variant/50 rounded-lg font-button text-button text-secondary hover:bg-surface-container transition-colors"
           >
             Search
           </button>
@@ -293,7 +293,7 @@
           <div class="flex gap-3">
             <select
               id="size-filter"
-              class="bg-[#F8F9FA] border border-surface-variant/50 rounded-lg py-3 px-4 pr-10 text-body-md text-secondary focus:outline-none focus:border-primary appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23565f71%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_12px_center] bg-[length:16px]"
+              class="bg-[#faf9f4] border border-surface-variant/50 rounded-lg py-3 px-4 pr-10 text-body-md text-secondary focus:outline-none focus:border-primary appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%235a6b5f%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_12px_center] bg-[length:16px]"
             >
               <option>All Sizes</option>
               <option>Peewee</option>
@@ -305,18 +305,19 @@
             </select>
             <select
               id="quality-filter"
-              class="bg-[#F8F9FA] border border-surface-variant/50 rounded-lg py-3 px-4 pr-10 text-body-md text-secondary focus:outline-none focus:border-primary appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23565f71%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_12px_center] bg-[length:16px]"
+              class="bg-[#faf9f4] border border-surface-variant/50 rounded-lg py-3 px-4 pr-10 text-body-md text-secondary focus:outline-none focus:border-primary appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%235a6b5f%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_12px_center] bg-[length:16px]"
             >
               <option>All Qualities</option>
               <option>Good</option>
-              <option>Dirty</option>
-              <option>Damaged</option>
+              <option>Crack</option>
+              <option>Rotten</option>
+              <option>Undefined</option>
             </select>
             <button
               id="reset-record-filters"
               type="button"
               title="Reset filters"
-              class="p-3 bg-[#F8F9FA] border border-surface-variant/50 rounded-lg text-secondary hover:bg-surface-container transition-colors flex items-center justify-center"
+              class="p-3 bg-[#faf9f4] border border-surface-variant/50 rounded-lg text-secondary hover:bg-surface-container transition-colors flex items-center justify-center"
             >
               <span class="material-symbols-outlined text-[20px]">refresh</span>
             </button>
@@ -429,8 +430,9 @@
     function qualityClasses(quality) {
       const normalized = quality.toLowerCase();
       if (normalized === 'good') return 'bg-green-100 text-green-800';
-      if (normalized === 'dirty') return 'bg-amber-100 text-amber-800';
-      if (normalized === 'damaged') return 'bg-red-100 text-red-800';
+      if (normalized === 'crack') return 'bg-red-100 text-red-800';
+      if (normalized === 'rotten') return 'bg-amber-100 text-amber-900';
+      if (normalized === 'undefined') return 'bg-slate-100 text-slate-700';
       return 'bg-surface-container text-secondary';
     }
 

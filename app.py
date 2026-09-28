@@ -6,9 +6,13 @@ import smtplib
 from datetime import datetime, time, timedelta, timezone
 from email.message import EmailMessage
 from functools import wraps
+from threading import RLock, Thread
+from time import sleep
 from typing import Callable, Any
 from authlib.integrations.base_client.errors import OAuthError
 from authlib.integrations.flask_client import OAuth
+from joserfc.errors import JoseError
+
 from dotenv import load_dotenv
 from flask import (
     abort,
@@ -31,7 +35,7 @@ load_dotenv()
 
 from camera_session import CAMERA_SESSION, CameraSessionError
 from egg_standards import SIZE_ORDER, classify_egg_size
-from hardware_bridge import ARDUINO_BRIDGE
+from esp32_bridge import ESP32_BRIDGE
 from detection_service import (
     DetectorUnavailableError,
     InvalidFrameError,
@@ -67,6 +71,9 @@ app.config["PUBLIC_BASE_URL"] = os.environ.get(
 app.config["SESSION_COOKIE_SECURE"] = app.config["PUBLIC_BASE_URL"].startswith(
     "https://"
 )
+app.config["GOOGLE_AUTH_CLOCK_SKEW_SECONDS"] = int(
+    os.environ.get("GOOGLE_AUTH_CLOCK_SKEW_SECONDS", "120")
+)
 app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "")
 app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", "587"))
 app.config["MAIL_USE_TLS"] = os.environ.get(
@@ -86,6 +93,11 @@ app.config["MAIL_FROM"] = os.environ.get(
     "MAIL_FROM",
     app.config["MAIL_USERNAME"],
 )
+app.config["AUTO_START_SORTING_ON_LOGIN"] = os.environ.get(
+    "AUTO_START_SORTING_ON_LOGIN",
+    "1",
+).lower() in {"1", "true", "yes", "on"}
+SORTING_RUNTIME_INSTANCE = secrets.token_hex(8)
 
 
 # SQLite database configuration
@@ -162,7 +174,8 @@ def send_staff_invitation(user: "User", invite_url: str) -> None:
     missing = [name for name, value in required_settings.items() if not value]
     if missing:
         raise InvitationDeliveryError(
-            f"Email is not configured ({', '.join(missing)} is missing)."
+            f"Email is not configured ({', '.join(missing)} is missing). "
+            "Set it in .env, then verify with: flask check-mail"
         )
 
     message = EmailMessage()
@@ -210,6 +223,25 @@ can ignore this email.
         ) from exc
 
 
+def start_sorting_runtime() -> tuple[dict[str, Any], dict[str, Any]]:
+    """Start camera inference and the ESP32 link as one station runtime."""
+    camera_state = CAMERA_SESSION.start()
+    try:
+        hardware_state = ESP32_BRIDGE.start()
+    except Exception:
+        CAMERA_SESSION.stop()
+        raise
+    return camera_state, hardware_state
+
+
+def stop_sorting_runtime() -> tuple[dict[str, Any], dict[str, Any]]:
+    """Stop the ESP32 link before releasing the camera and detector."""
+    reset_egg_flow()
+    hardware_state = ESP32_BRIDGE.stop()
+    camera_state = CAMERA_SESSION.stop()
+    return camera_state, hardware_state
+
+
 def sign_in_user(user: "User", remember: bool = False) -> None:
     session.clear()
     session["user_id"] = user.id
@@ -218,6 +250,17 @@ def sign_in_user(user: "User", remember: bool = False) -> None:
     session["role"] = user.role
     session["avatar_url"] = user.avatar_url or ""
     session.permanent = remember
+    if app.config["AUTO_START_SORTING_ON_LOGIN"]:
+        try:
+            start_sorting_runtime()
+            session["sorting_runtime_started"] = True
+            session.pop("sorting_runtime_error", None)
+        except Exception as exc:
+            app.logger.exception("Unable to auto-start the sorting runtime")
+            session["sorting_runtime_started"] = False
+            session["sorting_runtime_error"] = str(exc)
+        finally:
+            session["sorting_runtime_instance"] = SORTING_RUNTIME_INSTANCE
 
 
 
@@ -488,12 +531,15 @@ with app.app_context():
 
 
 QUALITY_NAMES = {
-    "demage": "Damaged",
-    "damage": "Damaged",
-    "damaged": "Damaged",
-    "dirty": "Dirty",
+    "crack": "Crack",
     "good": "Good",
+    "rotten": "Rotten",
+    "undefined": "Undefined",
 }
+CAMERA_QUALITY_SAMPLES = max(
+    2,
+    int(os.environ.get("CAMERA_QUALITY_SAMPLES", "3")),
+)
 
 SALE_SIZES = ["Small", "Medium", "Large", "Extra Large", "Jumbo"]
 
@@ -618,34 +664,229 @@ with app.app_context():
     backfill_sorting_audit_logs()
 
 
-def persist_arduino_event(event: dict[str, Any]) -> None:
-    if event.get("type") != "egg_complete":
-        return
+EGG_FLOW_LOCK = RLock()
+EGG_FLOW_SEQUENCE = 0
+EGG_FLOW_STAGE = "idle"
+EGG_FLOW_QUALITY: dict[str, Any] | None = None
+EGG_FLOW_PENDING: dict[str, Any] | None = None
+
+
+def reset_egg_flow() -> None:
+    global EGG_FLOW_SEQUENCE, EGG_FLOW_STAGE
+    global EGG_FLOW_QUALITY, EGG_FLOW_PENDING
+    with EGG_FLOW_LOCK:
+        EGG_FLOW_SEQUENCE += 1
+        EGG_FLOW_STAGE = "idle"
+        EGG_FLOW_QUALITY = None
+        EGG_FLOW_PENDING = None
+
+
+def _flow_is_current(
+    sequence: int,
+    allowed_stages: set[str] | None = None,
+) -> bool:
+    with EGG_FLOW_LOCK:
+        return (
+            sequence == EGG_FLOW_SEQUENCE
+            and (
+                allowed_stages is None
+                or EGG_FLOW_STAGE in allowed_stages
+            )
+        )
+
+
+def _inspect_then_measure(sequence: int) -> None:
+    """Lock this egg's camera quality before authorizing weight readings."""
+    global EGG_FLOW_STAGE, EGG_FLOW_QUALITY
+    while _flow_is_current(sequence, {"inspecting"}):
+        quality_result = CAMERA_SESSION.wait_for_egg_quality(
+            timeout=1.0,
+            min_samples=CAMERA_QUALITY_SAMPLES,
+        )
+        if quality_result is None:
+            camera_state = CAMERA_SESSION.status()
+            if not camera_state["running"] or camera_state.get("error"):
+                ESP32_BRIDGE.publish_status(
+                    "Egg held: camera/YOLO is not available for quality inspection.",
+                    "flow_error",
+                )
+                return
+            continue
+
+        raw_quality = str(quality_result["label"]).lower()
+        quality = QUALITY_NAMES.get(raw_quality)
+        if quality is None:
+            continue
+        captured = {
+            "label": quality,
+            "confidence": float(quality_result["confidence"]),
+        }
+        with EGG_FLOW_LOCK:
+            if (
+                sequence != EGG_FLOW_SEQUENCE
+                or EGG_FLOW_STAGE != "inspecting"
+            ):
+                return
+            EGG_FLOW_QUALITY = captured
+        ESP32_BRIDGE.publish_status(
+            f"Camera quality locked: {quality}. Starting weight measurement."
+        )
+
+        reported_wait = False
+        while _flow_is_current(sequence, {"inspecting"}):
+            try:
+                ESP32_BRIDGE.measure_egg(quality)
+                with EGG_FLOW_LOCK:
+                    if (
+                        sequence == EGG_FLOW_SEQUENCE
+                        and EGG_FLOW_STAGE == "inspecting"
+                    ):
+                        EGG_FLOW_STAGE = "measuring"
+                return
+            except RuntimeError:
+                if not reported_wait:
+                    ESP32_BRIDGE.publish_status(
+                        "Egg held: waiting for the ESP32 connection before weighing.",
+                        "flow_error",
+                    )
+                    reported_wait = True
+                sleep(1)
+
+
+def begin_egg_flow() -> None:
+    """Start a new camera-first inspection for the egg held on the scale."""
+    global EGG_FLOW_SEQUENCE, EGG_FLOW_STAGE
+    global EGG_FLOW_QUALITY, EGG_FLOW_PENDING
+    with EGG_FLOW_LOCK:
+        if EGG_FLOW_STAGE != "idle":
+            return
+        EGG_FLOW_SEQUENCE += 1
+        sequence = EGG_FLOW_SEQUENCE
+        EGG_FLOW_STAGE = "inspecting"
+        EGG_FLOW_QUALITY = None
+        EGG_FLOW_PENDING = None
+    CAMERA_SESSION.begin_egg_inspection()
+    ESP32_BRIDGE.publish_status(
+        "Egg held on load cell. Waiting for one stable camera quality."
+    )
+    Thread(
+        target=_inspect_then_measure,
+        args=(sequence,),
+        name=f"eggsort-inspection-{sequence}",
+        daemon=True,
+    ).start()
+
+
+def queue_sort_after_measurement(event: dict[str, Any]) -> None:
+    """Keep the egg held, remember its result, and command its size route."""
+    global EGG_FLOW_STAGE, EGG_FLOW_PENDING
     weight = event.get("weight_grams")
     if weight is None:
+        ESP32_BRIDGE.publish_status(
+            "Egg held: ESP32 did not provide a final weight.",
+            "flow_error",
+        )
         return
 
-    quality_result = CAMERA_SESSION.quality_snapshot(window_seconds=4.0)
-    raw_quality = str(quality_result["label"]).lower()
-    quality = QUALITY_NAMES.get(raw_quality, raw_quality.title() or "Unknown")
-    session_ref = (
-        CAMERA_SESSION.status().get("session_ref")
-        or "NO-ACTIVE-SESSION"
-    )
+    with EGG_FLOW_LOCK:
+        if EGG_FLOW_STAGE != "measuring":
+            return
+        quality_result = dict(EGG_FLOW_QUALITY) if EGG_FLOW_QUALITY else None
+        sequence = EGG_FLOW_SEQUENCE
+    if quality_result is None:
+        ESP32_BRIDGE.publish_status(
+            "Egg held: no camera quality is locked for this measurement.",
+            "flow_error",
+        )
+        return
 
     size = classify_egg_size(int(weight))
-    with app.app_context():
-        record = EggRecord(
-            weight_grams=int(weight),
-            size=size,
-            quality=quality,
-            confidence=float(quality_result["confidence"]),
-            session_ref=session_ref,
+    pending = {
+        "weight_grams": int(weight),
+        "size": size,
+        "quality": quality_result["label"],
+        "confidence": quality_result["confidence"],
+        "session_ref": (
+            CAMERA_SESSION.status().get("session_ref")
+            or "NO-ACTIVE-SESSION"
+        ),
+    }
+    with EGG_FLOW_LOCK:
+        if (
+            sequence != EGG_FLOW_SEQUENCE
+            or EGG_FLOW_STAGE != "measuring"
+        ):
+            return
+        EGG_FLOW_PENDING = pending
+        EGG_FLOW_STAGE = "route_pending"
+
+    ESP32_BRIDGE.publish_status(
+        f"Weight locked: {weight} g ({size}). Sending servo route."
+    )
+    Thread(
+        target=_send_sort_when_connected,
+        args=(sequence, size),
+        name=f"eggsort-route-{sequence}",
+        daemon=True,
+    ).start()
+
+
+def _send_sort_when_connected(sequence: int, size: str) -> None:
+    """Retry the route command while this egg remains held."""
+    global EGG_FLOW_STAGE
+    reported_wait = False
+    while _flow_is_current(sequence, {"route_pending"}):
+        try:
+            ESP32_BRIDGE.sort_egg(size)
+            with EGG_FLOW_LOCK:
+                if (
+                    sequence == EGG_FLOW_SEQUENCE
+                    and EGG_FLOW_STAGE == "route_pending"
+                ):
+                    EGG_FLOW_STAGE = "sorting"
+            return
+        except RuntimeError:
+            if not reported_wait:
+                ESP32_BRIDGE.publish_status(
+                    "Egg held: waiting for the ESP32 connection before sorting.",
+                    "flow_error",
+                )
+                reported_wait = True
+            sleep(1)
+
+
+def save_sorted_egg(event: dict[str, Any]) -> None:
+    """Persist only after the ESP32 confirms that its servo route completed."""
+    global EGG_FLOW_STAGE, EGG_FLOW_PENDING
+    with EGG_FLOW_LOCK:
+        # Moving to "saving" before touching the database makes repeated
+        # SERVO SORTED lines idempotent: one physical egg can create one row.
+        if EGG_FLOW_STAGE not in {"route_pending", "sorting"}:
+            return
+        pending = dict(EGG_FLOW_PENDING) if EGG_FLOW_PENDING else None
+        if pending is not None:
+            EGG_FLOW_STAGE = "saving"
+    if pending is None:
+        ESP32_BRIDGE.publish_status(
+            "Sort confirmation received without a pending egg record.",
+            "flow_error",
         )
+        return
+
+    confirmed_size = event.get("size")
+    if confirmed_size and confirmed_size != pending["size"]:
+        ESP32_BRIDGE.publish_status(
+            "ESP32 route confirmation did not match the measured size; "
+            "saving the load-cell classification.",
+            "flow_error",
+        )
+
+    with app.app_context():
+        record = EggRecord(**pending)
         db.session.add(record)
         db.session.flush()
         total_sorted = EggRecord.query.count()
-        create_tray_alert_if_needed(total_sorted, session_ref)
+        create_tray_alert_if_needed(total_sorted, pending["session_ref"])
         write_audit_log(
             "egg_sorted",
             (
@@ -656,14 +897,52 @@ def persist_arduino_event(event: dict[str, Any]) -> None:
             commit=False,
         )
         db.session.commit()
+        egg_id = record.id
+    with EGG_FLOW_LOCK:
+        EGG_FLOW_PENDING = None
+        EGG_FLOW_STAGE = "waiting_removal"
+    ESP32_BRIDGE.publish_status(
+        f"EGG-{egg_id:06d} sorted and saved to Egg Records."
+    )
+
+
+def handle_esp32_event(event: dict[str, Any]) -> None:
+    event_type = event.get("type")
+    if event_type == "egg_detected":
+        begin_egg_flow()
+    elif event_type == "egg_complete":
+        queue_sort_after_measurement(event)
+    elif event_type == "sort_complete":
+        save_sorted_egg(event)
+    elif event_type == "egg_left":
+        reset_egg_flow()
+
+
+ESP32_BRIDGE.set_event_handler(handle_esp32_event)
+
+
+@app.before_request
+def ensure_authenticated_sorting_runtime() -> None:
+    """Restore the station runtime for authenticated sessions after restart."""
+    if not app.config["AUTO_START_SORTING_ON_LOGIN"]:
+        return
+    if "user_id" not in session:
+        return
+    if request.endpoint in {"logout", "static"}:
+        return
+    if session.get("sorting_runtime_instance") == SORTING_RUNTIME_INSTANCE:
+        return
+
     try:
-        ARDUINO_BRIDGE.sort_egg(size)
-    except RuntimeError:
-        # The completed record remains valid if the servo disconnects.
-        pass
-
-
-ARDUINO_BRIDGE.set_event_handler(persist_arduino_event)
+        start_sorting_runtime()
+        session["sorting_runtime_started"] = True
+        session.pop("sorting_runtime_error", None)
+    except Exception as exc:
+        app.logger.exception("Unable to restore the sorting runtime")
+        session["sorting_runtime_started"] = False
+        session["sorting_runtime_error"] = str(exc)
+    finally:
+        session["sorting_runtime_instance"] = SORTING_RUNTIME_INSTANCE
 
 
 
@@ -805,13 +1084,22 @@ def google_login() -> Any:
 @app.get("/auth/google/callback")
 def google_callback() -> Any:
     try:
-        token = oauth.google.authorize_access_token()
+        token = oauth.google.authorize_access_token(
+            leeway=app.config["GOOGLE_AUTH_CLOCK_SKEW_SECONDS"]
+        )
         userinfo = token.get("userinfo")
         if not userinfo:
             userinfo = oauth.google.userinfo(token=token).json()
     except OAuthError:
         session["login_error"] = (
             "Google sign-in was cancelled or could not be verified."
+        )
+        return redirect(url_for("login"))
+    except JoseError as exc:
+        app.logger.warning("Google ID token validation failed: %s", exc)
+        session["login_error"] = (
+            "Google sign-in could not be verified. This computer's date and "
+            "time may be incorrect. Synchronize Windows Time and try again."
         )
         return redirect(url_for("login"))
 
@@ -1046,8 +1334,7 @@ def detect() -> Any:
 @login_required
 def start_camera() -> Any:
     try:
-        camera_state = CAMERA_SESSION.start()
-        hardware_state = ARDUINO_BRIDGE.start()
+        camera_state, hardware_state = start_sorting_runtime()
         write_audit_log(
             "camera_started",
             f"Sorting camera session {camera_state.get('session_ref')} started.",
@@ -1060,8 +1347,7 @@ def start_camera() -> Any:
 @app.post("/api/camera/stop")
 @login_required
 def stop_camera() -> Any:
-    hardware_state = ARDUINO_BRIDGE.stop()
-    camera_state = CAMERA_SESSION.stop()
+    camera_state, hardware_state = stop_sorting_runtime()
     write_audit_log(
         "camera_stopped",
         "Sorting camera and hardware session stopped manually.",
@@ -1114,19 +1400,19 @@ def camera_feed() -> Any:
 @app.get("/api/hardware/status")
 @login_required
 def hardware_status() -> Any:
-    return jsonify(ARDUINO_BRIDGE.status())
+    return jsonify(ESP32_BRIDGE.status())
 
 
-@app.post("/api/hardware/stopper/start")
+@app.post("/api/hardware/gate/advance")
 @login_required
-def trigger_stopper() -> Any:
+def advance_load_cell_gate() -> Any:
     try:
-        ARDUINO_BRIDGE.trigger_stopper()
+        ESP32_BRIDGE.advance_gate()
         write_audit_log(
-            "stopper_advanced",
-            "Operator manually advanced the egg stopper.",
+            "gate_advanced",
+            "Operator manually advanced the load-cell gate.",
         )
-        return jsonify(ok=True, message="Stopper command sent.")
+        return jsonify(ok=True, message="Load-cell gate command sent.")
     except RuntimeError as exc:
         return jsonify(error=str(exc)), 503
 
@@ -1222,7 +1508,7 @@ def dashboard_stats() -> Any:
         size_counts=size_counts,
         quality_counts=quality_counts,
         latest_record=latest_record.to_dict() if latest_record else None,
-        hardware=ARDUINO_BRIDGE.status(),
+        hardware=ESP32_BRIDGE.status(),
         unread_alerts=TrayAlert.query.filter_by(is_read=False).count(),
         daily_trend=[
             {
@@ -1387,22 +1673,41 @@ def reports_data() -> Any:
             key = sorted_at.strftime("%Y-%m")
         row = groups.setdefault(
             key,
-            {"period": key, "total": 0, "good": 0, "damaged": 0, "dirty": 0},
+            {
+                "period": key,
+                "total": 0,
+                "good": 0,
+                "crack": 0,
+                "rotten": 0,
+                "undefined": 0,
+                "other": 0,
+            },
         )
         row["total"] += 1
         quality_key = record.quality.lower()
-        if quality_key in row:
+        if quality_key in {"good", "crack", "rotten", "undefined"}:
             row[quality_key] += 1
+        else:
+            # Retain visibility of records made with an older model without
+            # relabeling those historical predictions as a new class.
+            row["other"] += 1
 
     total = len(records)
     good = sum(1 for record in records if record.quality == "Good")
-    damaged = sum(1 for record in records if record.quality == "Damaged")
+    crack = sum(1 for record in records if record.quality == "Crack")
+    rotten = sum(1 for record in records if record.quality == "Rotten")
+    undefined = sum(1 for record in records if record.quality == "Undefined")
+    other = total - good - crack - rotten - undefined
     return jsonify(
         rows=list(groups.values()),
         summary={
             "total": total,
             "good": good,
-            "damaged": damaged,
+            "crack": crack,
+            "rotten": rotten,
+            "undefined": undefined,
+            "other": other,
+            "defects": total - good,
             "quality_rate": round((good / total * 100) if total else 0, 1),
             "revenue": round(
                 float(
@@ -1414,6 +1719,30 @@ def reports_data() -> Any:
             ),
         },
     )
+
+
+def normalize_avatar_url(value: Any) -> str | None:
+    """Accept only https image URLs, matching the Google sign-in capture."""
+    candidate = str(value or "").strip()[:1024]
+    return candidate if candidate.startswith("https://") else None
+
+
+def gravatar_url_for(email: str | None) -> str | None:
+    """Return a Gravatar URL for a Google-hosted mailbox, or None.
+
+    Google registers Gmail addresses with Gravatar, so this lets an invited
+    operator show a real profile photo before they have ever signed in. The
+    ``d=404`` parameter makes Gravatar answer with a 404 instead of a generic
+    silhouette when the person has no Gravatar image, so the browser can fall
+    back to the initial on the image error event.
+    """
+    address = (email or "").strip().lower()
+    if not EMAIL_PATTERN.match(address):
+        return None
+    if not address.endswith(("@gmail.com", "@googlemail.com")):
+        return None
+    digest = hashlib.md5(address.encode("utf-8"), usedforsecurity=False).hexdigest()
+    return f"https://www.gravatar.com/avatar/{digest}?s=160&d=404"
 
 
 @app.get("/api/users")
@@ -1428,6 +1757,7 @@ def users_data() -> Any:
                 "email": user.email,
                 "display_name": user.display_name,
                 "avatar_url": user.avatar_url,
+                "gravatar_url": gravatar_url_for(user.email),
                 "role": user.role,
                 "is_active": user.is_active,
                 "password_set": user.password_set,
@@ -1471,6 +1801,7 @@ def create_user() -> Any:
         password=generate_password_hash(secrets.token_urlsafe(32)),
         email=email,
         display_name=display_name,
+        avatar_url=normalize_avatar_url(payload.get("avatar_url")),
         role="staff",
         is_active=True,
         password_set=False,
@@ -1540,6 +1871,11 @@ def update_user(user_id: int) -> Any:
     user.email = email
     user.username = username
     user.display_name = display_name
+    # A blank field leaves the existing photo alone, so renaming an operator
+    # never wipes the picture captured at Google sign-in.
+    requested_avatar = normalize_avatar_url(payload.get("avatar_url"))
+    if requested_avatar:
+        user.avatar_url = requested_avatar
     write_audit_log(
         "user_updated",
         f"Staff account '{username}' was updated.",
@@ -1551,6 +1887,7 @@ def update_user(user_id: int) -> Any:
         email=user.email,
         username=user.username,
         display_name=user.display_name,
+        avatar_url=user.avatar_url,
         role=user.role,
     )
 
@@ -1667,6 +2004,7 @@ def logout() -> Any:
             "logout",
             "Operator signed out.",
         )
+        stop_sorting_runtime()
     session.clear()
 
     return redirect(
@@ -1687,6 +2025,59 @@ def show_admin_google_id() -> None:
         )
         return
     print(f"ADMIN_GOOGLE_SUB={admin.google_sub}")
+
+
+@app.cli.command("check-mail")
+def check_mail() -> None:
+    """Verify the SMTP settings used to deliver staff invitations."""
+    server = app.config["MAIL_SERVER"]
+    username = app.config["MAIL_USERNAME"]
+    print(f"MAIL_SERVER   = {server or '<empty>'}")
+    print(f"MAIL_PORT     = {app.config['MAIL_PORT']}")
+    print(f"MAIL_USE_TLS  = {app.config['MAIL_USE_TLS']}")
+    print(f"MAIL_USE_SSL  = {app.config['MAIL_USE_SSL']}")
+    print(f"MAIL_FROM     = {app.config['MAIL_FROM'] or '<empty>'}")
+    print(f"MAIL_USERNAME = {username or '<empty>'}")
+    # Never print the password, only whether one is present.
+    print(f"MAIL_PASSWORD = {'set' if app.config['MAIL_PASSWORD'] else '<empty>'}")
+
+    if not server:
+        print("\nFAIL: MAIL_SERVER is empty. Set it in .env (e.g. smtp.gmail.com).")
+        return
+    if not app.config["MAIL_FROM"] and not username:
+        print("\nFAIL: MAIL_FROM and MAIL_USERNAME are both empty.")
+        return
+    if not username:
+        print("\nWARN: MAIL_USERNAME is empty, so delivery is attempted unauthenticated.")
+        return
+
+    try:
+        if app.config["MAIL_USE_SSL"]:
+            smtp = smtplib.SMTP_SSL(server, app.config["MAIL_PORT"], timeout=15)
+        else:
+            smtp = smtplib.SMTP(server, app.config["MAIL_PORT"], timeout=15)
+        with smtp:
+            if app.config["MAIL_USE_TLS"] and not app.config["MAIL_USE_SSL"]:
+                smtp.starttls()
+            smtp.login(username, app.config["MAIL_PASSWORD"])
+    except smtplib.SMTPAuthenticationError as exc:
+        detail = exc.smtp_error
+        if isinstance(detail, bytes):
+            detail = detail.decode(errors="replace")
+        print(f"\nFAIL: the server was reached but rejected the credentials "
+              f"({exc.smtp_code} {detail}).")
+        if "outlook" in server or "office365" in server:
+            print("Microsoft 365: MAIL_PASSWORD must be this mailbox's real password,")
+            print("or a Microsoft app password registered in Entra ID. An app password")
+            print("issued by Google can never authenticate here.")
+        else:
+            print("For Gmail/Google, the app password must belong to the account in")
+            print("MAIL_USERNAME, and 2-Step Verification must be enabled on it.")
+    except (OSError, smtplib.SMTPException) as exc:
+        print(f"\nFAIL: could not complete the connection "
+              f"({type(exc).__name__}: {exc}).")
+    else:
+        print("\nOK: SMTP login succeeded, invitation emails should send.")
 
 
 

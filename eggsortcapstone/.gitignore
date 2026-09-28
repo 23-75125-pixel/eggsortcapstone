@@ -1,8 +1,0 @@
-best.pt
-__pycache__/
-instance/
-.env
-.venv/
-*.log
-
-client_secret*.json

@@ -11,9 +11,25 @@ from typing import Any
 
 from detection_service import (
     CONFIDENCE,
+    DetectorUnavailableError,
     annotate_image,
     detect_image,
+    detector_info,
 )
+
+
+# Exact class set used by the trained five-class egg-quality model.  "no egg"
+# is a negative observation: it can break a run of quality samples, but it is
+# never saved as an egg quality.
+EGG_QUALITY_LABELS = {"crack", "good", "rotten", "undefined"}
+NO_EGG_LABEL = "no egg"
+
+
+def normalize_model_label(value: Any) -> str:
+    """Normalize model spelling/case without changing its class meaning."""
+    return " ".join(
+        str(value).strip().casefold().replace("_", " ").replace("-", " ").split()
+    )
 
 
 class CameraSessionError(RuntimeError):
@@ -27,6 +43,7 @@ class CameraDetectionSession:
         self._lock = RLock()
         self._frame_ready = Condition(self._lock)
         self._raw_frame_ready = Condition(self._lock)
+        self._quality_ready = Condition(self._lock)
         self._stop_event = Event()
         self._capture_thread: Thread | None = None
         self._inference_thread: Thread | None = None
@@ -35,6 +52,7 @@ class CameraDetectionSession:
 
         self._latest_raw_frame: Any | None = None
         self._raw_sequence = 0
+        self._inspection_min_sequence = 0
         self._latest_jpeg: bytes | None = None
         self._frame_sequence = 0
         self._latest_result: dict[str, Any] | None = None
@@ -48,6 +66,7 @@ class CameraDetectionSession:
         self._stream_fps = 0.0
         self._detection_fps = 0.0
         self._inference_ms = 0.0
+        self._model_info: dict[str, Any] | None = None
         self.camera_index = int(os.environ.get("CAMERA_INDEX", "0"))
         self.camera_backend = os.environ.get(
             "CAMERA_BACKEND",
@@ -70,12 +89,27 @@ class CameraDetectionSession:
                 "OpenCV is not installed. Run: pip install -r requirements.txt"
             ) from exc
 
+        # Fail camera startup immediately when YOLO_MODEL_PATH points to the
+        # wrong weights or the weights do not contain the trained five-class
+        # label set. This avoids showing a running session that can never
+        # produce a valid egg record.
+        try:
+            model_info = detector_info()
+        except DetectorUnavailableError as exc:
+            raise CameraSessionError(str(exc)) from exc
+
         with self._lock:
+            # Multiple dashboard/status requests can arrive immediately after
+            # login. Re-check while holding the lock so only one request may
+            # create capture/inference threads and open the physical camera.
+            if self._running:
+                return self.status()
             self._capture = None
             self._stop_event.clear()
             self._running = True
             self._latest_raw_frame = None
             self._raw_sequence = 0
+            self._inspection_min_sequence = 0
             self._latest_jpeg = None
             self._frame_sequence = 0
             self._latest_result = None
@@ -84,6 +118,7 @@ class CameraDetectionSession:
             self._stream_fps = 0.0
             self._detection_fps = 0.0
             self._inference_ms = 0.0
+            self._model_info = model_info
             self._started_at = datetime.now(timezone.utc).isoformat()
             self._session_ref = datetime.now().strftime("SES-%Y%m%d-%H%M%S")
             self._capture_thread = Thread(
@@ -107,6 +142,7 @@ class CameraDetectionSession:
             self._stop_event.set()
             self._frame_ready.notify_all()
             self._raw_frame_ready.notify_all()
+            self._quality_ready.notify_all()
 
         if capture_thread and capture_thread.is_alive():
             capture_thread.join(timeout=5)
@@ -141,6 +177,7 @@ class CameraDetectionSession:
                 "stream_fps": round(self._stream_fps, 1),
                 "detection_fps": round(self._detection_fps, 1),
                 "inference_ms": round(self._inference_ms),
+                "model": dict(self._model_info) if self._model_info else None,
             }
 
     def quality_snapshot(self, window_seconds: float = 3.0) -> dict[str, Any]:
@@ -152,17 +189,82 @@ class CameraDetectionSession:
                 for captured_at, label, confidence in self._quality_history
                 if captured_at >= cutoff
             ]
+            return self._summarize_quality(recent)
 
-        if not recent:
+    def begin_egg_inspection(self) -> None:
+        """Discard detections from earlier eggs before inspecting this egg."""
+        with self._quality_ready:
+            self._quality_history.clear()
+            # Exclude an inference already in progress on a frame captured
+            # before the load cell announced this egg.
+            self._inspection_min_sequence = self._raw_sequence + 1
+            self._quality_ready.notify_all()
+
+    def wait_for_egg_quality(
+        self,
+        timeout: float = 1.0,
+        min_samples: int = 3,
+    ) -> dict[str, Any] | None:
+        """Wait until consecutive frames agree on one quality for this egg."""
+        deadline = monotonic() + timeout
+        with self._quality_ready:
+            while True:
+                # Inference stores exactly one observation per frame. Looking
+                # only at the tail means a later "no egg", missing detection,
+                # or conflicting class invalidates an older partial match.
+                recent = list(self._quality_history)[-min_samples:]
+                if len(recent) == min_samples:
+                    labels = [sample[1] for sample in recent]
+                    label = labels[-1]
+                    if label in EGG_QUALITY_LABELS and all(
+                        candidate == label for candidate in labels
+                    ):
+                        confidences = [sample[2] for sample in recent]
+                        return {
+                            "label": label,
+                            "confidence": round(max(confidences), 4),
+                        }
+                if not self._running or self._error:
+                    return None
+                remaining = deadline - monotonic()
+                if remaining <= 0:
+                    return None
+                self._quality_ready.wait(timeout=remaining)
+
+    @staticmethod
+    def _summarize_quality(
+        samples: list[tuple[str, float]],
+    ) -> dict[str, Any]:
+        if not samples:
             return {"label": "unknown", "confidence": 0.0}
-
         scores: dict[str, float] = {}
         peaks: dict[str, float] = {}
-        for label, confidence in recent:
+        for label, confidence in samples:
             scores[label] = scores.get(label, 0.0) + confidence
             peaks[label] = max(peaks.get(label, 0.0), confidence)
         label = max(scores, key=scores.get)
         return {"label": label, "confidence": round(peaks[label], 4)}
+
+    @staticmethod
+    def _select_frame_observation(
+        detections: list[dict[str, Any]],
+    ) -> tuple[str, float]:
+        """Choose one unambiguous model observation for a camera frame.
+
+        A frame can contain overlapping YOLO boxes. Selecting one recognized
+        class with the highest confidence prevents one physical egg from
+        contributing several contradictory samples to the same cycle.
+        """
+        recognized: list[tuple[str, float]] = []
+        for detection in detections:
+            label = normalize_model_label(detection.get("label", ""))
+            if label in EGG_QUALITY_LABELS or label == NO_EGG_LABEL:
+                recognized.append(
+                    (label, float(detection.get("confidence", 0.0)))
+                )
+        if not recognized:
+            return NO_EGG_LABEL, 0.0
+        return max(recognized, key=lambda item: item[1])
 
     def wait_for_frame(
         self, previous_sequence: int, timeout: float = 2.0
@@ -278,6 +380,7 @@ class CameraDetectionSession:
                 self._capture_thread = None
                 self._stop_event.set()
                 self._raw_frame_ready.notify_all()
+                self._quality_ready.notify_all()
                 self._frame_ready.notify_all()
 
     def _inference_loop(self) -> None:
@@ -305,17 +408,17 @@ class CameraDetectionSession:
                 started = monotonic()
                 result = detect_image(frame)
                 elapsed = monotonic() - started
-                with self._lock:
+                with self._quality_ready:
                     self._latest_result = result
                     captured_at = monotonic()
-                    for detection in result["detections"]:
-                        self._quality_history.append(
-                            (
-                                captured_at,
-                                detection["label"],
-                                detection["confidence"],
-                            )
+                    if processed_sequence >= self._inspection_min_sequence:
+                        label, confidence = self._select_frame_observation(
+                            result["detections"]
                         )
+                        self._quality_history.append(
+                            (captured_at, label, confidence)
+                        )
+                    self._quality_ready.notify_all()
                     self._inference_ms = elapsed * 1000
                     self._detection_fps = 1 / elapsed if elapsed else 0.0
         except Exception as exc:
@@ -330,6 +433,7 @@ class CameraDetectionSession:
             self._stop_event.set()
             self._frame_ready.notify_all()
             self._raw_frame_ready.notify_all()
+            self._quality_ready.notify_all()
 
 
 CAMERA_SESSION = CameraDetectionSession()

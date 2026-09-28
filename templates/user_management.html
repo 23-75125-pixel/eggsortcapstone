@@ -11,7 +11,7 @@
       rel="stylesheet"
     />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap"
       rel="stylesheet"
     />
     <link
@@ -24,58 +24,58 @@
         theme: {
           extend: {
             colors: {
-              surface: "#f6faff",
-              "surface-container": "#e6eff8",
+              surface: "#faf9f4",
+              "surface-container": "#f2f0e7",
               "on-tertiary": "#ffffff",
-              "primary-container": "#e67e00",
-              "secondary-container": "#d7e0f5",
-              background: "#f6faff",
-              "surface-container-low": "#ecf5fe",
-              "primary-fixed": "#ffdcc3",
-              "surface-variant": "#dbe4ed",
+              "primary-container": "#4a7355",
+              "secondary-container": "#e9ede1",
+              background: "#faf9f4",
+              "surface-container-low": "#f7f5ee",
+              "primary-fixed": "#d9e6d4",
+              "surface-variant": "#e6e3d7",
               "on-secondary": "#ffffff",
-              "inverse-primary": "#ffb77d",
-              "inverse-on-surface": "#e9f2fb",
-              "on-surface-variant": "#554335",
-              "outline-variant": "#dcc2af",
-              "on-secondary-fixed-variant": "#3e4758",
-              "on-primary-container": "#4e2700",
-              primary: "#904d00",
-              "on-tertiary-container": "#2f3132",
-              secondary: "#565f71",
-              "tertiary-fixed": "#e1e3e4",
-              "tertiary-fixed-dim": "#c5c7c8",
-              "on-secondary-container": "#5a6375",
-              "primary-fixed-dim": "#ffb77d",
-              "inverse-surface": "#293138",
-              "surface-dim": "#d2dbe4",
-              "surface-bright": "#f6faff",
+              "inverse-primary": "#ccdcc6",
+              "inverse-on-surface": "#dce6d7",
+              "on-surface-variant": "#697067",
+              "outline-variant": "#d5dccd",
+              "on-secondary-fixed-variant": "#4e564b",
+              "on-primary-container": "#f9f8f2",
+              primary: "#3e6248",
+              "on-tertiary-container": "#333c32",
+              secondary: "#6b746a",
+              "tertiary-fixed": "#e9e7dd",
+              "tertiary-fixed-dim": "#d9ddd2",
+              "on-secondary-container": "#6b746a",
+              "primary-fixed-dim": "#ccdcc6",
+              "inverse-surface": "#2c3e31",
+              "surface-dim": "#e6e3d7",
+              "surface-bright": "#faf9f4",
               error: "#ba1a1a",
               "on-error": "#ffffff",
               "error-container": "#ffdad6",
-              "tertiary-container": "#97999a",
-              "surface-tint": "#904d00",
-              "on-secondary-fixed": "#131c2b",
+              "tertiary-container": "#969b92",
+              "surface-tint": "#3e6248",
+              "on-secondary-fixed": "#2c3e31",
               "on-error-container": "#93000a",
-              "secondary-fixed-dim": "#bec7dc",
-              "on-tertiary-fixed-variant": "#454748",
-              "surface-container-high": "#e0e9f2",
-              "surface-container-highest": "#dbe4ed",
-              tertiary: "#5c5f60",
-              "on-background": "#141d23",
-              "on-tertiary-fixed": "#191c1d",
-              outline: "#897363",
-              "secondary-fixed": "#dae2f8",
-              "on-surface": "#141d23",
-              "on-primary-fixed": "#2f1500",
+              "secondary-fixed-dim": "#d3d8ce",
+              "on-tertiary-fixed-variant": "#555d52",
+              "surface-container-high": "#eceadf",
+              "surface-container-highest": "#e6e3d7",
+              tertiary: "#686f64",
+              "on-background": "#28322b",
+              "on-tertiary-fixed": "#2c3e31",
+              outline: "#82887e",
+              "secondary-fixed": "#dde5d4",
+              "on-surface": "#28322b",
+              "on-primary-fixed": "#2f3a2a",
               "surface-container-lowest": "#ffffff",
               "on-primary": "#ffffff",
-              "on-primary-fixed-variant": "#6e3900",
+              "on-primary-fixed-variant": "#475f4b",
             },
             borderRadius: {
-              DEFAULT: "0.25rem",
-              lg: "0.5rem",
-              xl: "0.75rem",
+              DEFAULT: "0.5rem",
+              lg: "0.875rem",
+              xl: "1.5rem",
               full: "9999px",
             },
             spacing: {
@@ -89,14 +89,14 @@
               margin: "32px",
             },
             fontFamily: {
-              caption: ["Manrope"],
-              "headline-md": ["Manrope"],
-              button: ["Manrope"],
-              "headline-lg": ["Manrope"],
-              "body-lg": ["Manrope"],
-              "label-caps": ["Manrope"],
-              "headline-lg-mobile": ["Manrope"],
-              "body-md": ["Manrope"],
+              caption: ["Poppins", "sans-serif"],
+              "headline-md": ["Poppins", "sans-serif"],
+              button: ["Poppins", "sans-serif"],
+              "headline-lg": ["Poppins", "sans-serif"],
+              "body-lg": ["Poppins", "sans-serif"],
+              "label-caps": ["Poppins", "sans-serif"],
+              "headline-lg-mobile": ["Poppins", "sans-serif"],
+              "body-md": ["Poppins", "sans-serif"],
             },
             fontSize: {
               caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }],
@@ -137,7 +137,7 @@
         font-variation-settings: "FILL" 1;
       }
       body {
-        background-color: #f6faff; /* surface */
+        background-color: #faf9f4; /* surface */
       }
       .nav-active-glow { box-shadow: -4px 0 0 0 theme("colors.primary-container") inset; }
     </style>
@@ -323,6 +323,12 @@
           <input name="email" type="email" required autocomplete="off"
             class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
         </label>
+        <label class="block">Profile photo URL
+          <input name="avatar_url" type="url" maxlength="1024" autocomplete="off"
+            placeholder="https://lh3.googleusercontent.com/..."
+            class="mt-1 w-full border border-surface-variant rounded-lg px-4 py-3" />
+          <span class="text-xs text-secondary">Paste the staff member's Google profile photo link. Leave blank to use the photo captured when they first sign in.</span>
+        </label>
         <button type="submit" class="w-full h-12 rounded-lg bg-primary-container text-white font-button">
           Save Staff
         </button>
@@ -390,6 +396,7 @@
       userForm.elements.display_name.value = user?.display_name || '';
       userForm.elements.username.value = user?.username || '';
       userForm.elements.email.value = user?.email || '';
+      userForm.elements.avatar_url.value = user?.avatar_url || '';
       document.getElementById('user-modal-title').textContent =
         user ? 'Edit Staff' : 'Invite Staff';
       userModal.classList.remove('hidden');
@@ -444,9 +451,12 @@
         avatar.className = 'w-11 h-11 rounded-full bg-primary-container/15 text-primary-container flex items-center justify-center shrink-0 font-bold overflow-hidden';
         const fallbackInitial = (user.display_name || user.username || '?').charAt(0).toUpperCase();
         avatar.textContent = fallbackInitial;
-        if (user.avatar_url) {
+        // Prefer the photo captured at Google sign-in, then the Gravatar for a
+        // Google-hosted mailbox, then the initial when neither resolves.
+        const photoUrl = user.avatar_url || user.gravatar_url;
+        if (photoUrl) {
           const image = document.createElement('img');
-          image.src = user.avatar_url;
+          image.src = photoUrl;
           image.alt = `${user.display_name || user.username} profile photo`;
           image.className = 'w-full h-full object-cover';
           image.referrerPolicy = 'no-referrer';
@@ -559,6 +569,7 @@
         display_name: formData.get('display_name'),
         username: formData.get('username'),
         email: formData.get('email'),
+        avatar_url: formData.get('avatar_url'),
       };
       const response = await fetch(userId ? `/api/users/${userId}` : '/api/users', {
         method: userId ? 'PATCH' : 'POST',

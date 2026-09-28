@@ -280,12 +280,19 @@
           to the original artwork rather than a broken-image icon.
         #}
         <img
+          id="loginArtwork"
           src="{{ url_for('static', filename='images/eggmachine.png') }}"
           alt="EggSort+ automatic egg sorting machine with green conveyor belts and grading trays"
           class="eggsort-machine-image"
           decoding="async"
-          onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/eggbackground.png') }}';this.alt='Egg with a golden yolk';this.className='eggsort-machine-fallback';"
         />
+        <script>
+          document.getElementById('loginArtwork').addEventListener('error', function() {
+            this.src = {{ url_for('static', filename='images/eggbackground.png') | tojson }};
+            this.alt = 'Egg with a golden yolk';
+            this.className = 'eggsort-machine-fallback';
+          }, { once: true });
+        </script>
       </aside>
     </div>
     <script src="{{ url_for('static', filename='password-toggle.js') }}"></script>

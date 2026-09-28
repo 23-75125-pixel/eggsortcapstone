@@ -282,16 +282,24 @@
         <img
           id="loginArtwork"
           src="{{ url_for('static', filename='images/eggmachine.png') }}"
+          data-fallback="{{ url_for('static', filename='images/eggbackground.png') }}"
           alt="EggSort+ automatic egg sorting machine with green conveyor belts and grading trays"
           class="eggsort-machine-image"
           decoding="async"
         />
         <script>
-          document.getElementById('loginArtwork').addEventListener('error', function() {
-            this.src = {{ url_for('static', filename='images/eggbackground.png') | tojson }};
-            this.alt = 'Egg with a golden yolk';
-            this.className = 'eggsort-machine-fallback';
-          }, { once: true });
+          (function() {
+            var img = document.getElementById('loginArtwork');
+            if (!img) return;
+            img.addEventListener('error', function() {
+              var fallback = this.getAttribute('data-fallback');
+              if (fallback && this.src !== fallback) {
+                this.src = fallback;
+                this.alt = 'Egg with a golden yolk';
+                this.className = 'eggsort-machine-fallback';
+              }
+            }, { once: true });
+          })();
         </script>
       </aside>
     </div>

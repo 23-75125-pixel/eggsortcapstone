@@ -373,9 +373,9 @@
             <h3
               class="text-label-caps font-label-caps text-secondary uppercase tracking-widest"
             >
-              Damaged
+              Non-Good Eggs
             </h3>
-            <div id="report-damaged" class="text-headline-md font-headline-md text-on-surface">
+            <div id="report-defects" class="text-headline-md font-headline-md text-on-surface">
               0
             </div>
           </div>
@@ -432,8 +432,10 @@
                   <th class="py-3 px-5">PERIOD</th>
                   <th class="py-3 px-5">TOTAL</th>
                   <th class="py-3 px-5">GOOD</th>
-                  <th class="py-3 px-5">DIRTY</th>
-                  <th class="py-3 px-5">DAMAGED</th>
+                  <th class="py-3 px-5">CRACK</th>
+                  <th class="py-3 px-5">ROTTEN</th>
+                  <th class="py-3 px-5">UNDEFINED</th>
+                  <th class="py-3 px-5">LEGACY/OTHER</th>
                 </tr>
               </thead>
               <tbody id="report-rows"></tbody>
@@ -508,7 +510,7 @@ function renderReportRows(rows) {
   if (!rows.length) {
     const row = document.createElement('tr');
     const cell = document.createElement('td');
-    cell.colSpan = 5;
+    cell.colSpan = 7;
     cell.className = 'py-12 px-5 text-center text-secondary';
     cell.textContent = 'No sorting records match this date range.';
     row.appendChild(cell);
@@ -518,7 +520,15 @@ function renderReportRows(rows) {
   rows.forEach((entry) => {
     const row = document.createElement('tr');
     row.className = 'border-b border-surface-variant/50';
-    [entry.period, entry.total, entry.good, entry.dirty, entry.damaged].forEach((value) => {
+    [
+      entry.period,
+      entry.total,
+      entry.good,
+      entry.crack,
+      entry.rotten,
+      entry.undefined,
+      entry.other
+    ].forEach((value) => {
       const cell = document.createElement('td');
       cell.className = 'py-3 px-5';
       cell.textContent = value;
@@ -559,7 +569,7 @@ async function refreshReport() {
     }
     document.getElementById('report-total').textContent = payload.summary.total;
     document.getElementById('report-good').textContent = payload.summary.good;
-    document.getElementById('report-damaged').textContent = payload.summary.damaged;
+    document.getElementById('report-defects').textContent = payload.summary.defects;
     document.getElementById('report-quality-rate').textContent = `${payload.summary.quality_rate}%`;
     document.getElementById('report-revenue').textContent =
       `PHP ${Number(payload.summary.revenue).toLocaleString(undefined, {

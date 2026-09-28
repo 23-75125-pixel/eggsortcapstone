@@ -309,8 +309,9 @@
             >
               <option>All Qualities</option>
               <option>Good</option>
-              <option>Dirty</option>
-              <option>Damaged</option>
+              <option>Crack</option>
+              <option>Rotten</option>
+              <option>Undefined</option>
             </select>
             <button
               id="reset-record-filters"
@@ -429,8 +430,9 @@
     function qualityClasses(quality) {
       const normalized = quality.toLowerCase();
       if (normalized === 'good') return 'bg-green-100 text-green-800';
-      if (normalized === 'dirty') return 'bg-[#f2f4ea] text-[#3e6248]';
-      if (normalized === 'damaged') return 'bg-red-100 text-red-800';
+      if (normalized === 'crack') return 'bg-red-100 text-red-800';
+      if (normalized === 'rotten') return 'bg-amber-100 text-amber-900';
+      if (normalized === 'undefined') return 'bg-slate-100 text-slate-700';
       return 'bg-surface-container text-secondary';
     }
 

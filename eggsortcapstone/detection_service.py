@@ -15,6 +15,13 @@ MODEL_PATH = Path(
 CONFIDENCE = float(os.environ.get("YOLO_CONFIDENCE", "0.25"))
 IMAGE_SIZE = int(os.environ.get("YOLO_IMAGE_SIZE", "512"))
 MAX_FRAME_BYTES = 5 * 1024 * 1024
+EXPECTED_MODEL_NAMES = (
+    "Crack",
+    "Good",
+    "Rotten",
+    "Undefined",
+    "no egg",
+)
 
 _model: Any | None = None
 _model_lock = Lock()
@@ -60,6 +67,32 @@ def _load_model() -> Any:
             ) from exc
 
     return _model
+
+
+def detector_info() -> dict[str, Any]:
+    """Load and validate the exact model used by a camera session."""
+    model = _load_model()
+    names = model.names
+    if isinstance(names, dict):
+        ordered_names = tuple(
+            str(names[index]) for index in sorted(names, key=int)
+        )
+    else:
+        ordered_names = tuple(str(name) for name in names)
+
+    if ordered_names != EXPECTED_MODEL_NAMES:
+        raise DetectorUnavailableError(
+            "The configured YOLO model has unexpected classes. Expected "
+            f"{list(EXPECTED_MODEL_NAMES)}, received {list(ordered_names)}."
+        )
+
+    return {
+        "path": str(MODEL_PATH.resolve()),
+        "class_count": len(ordered_names),
+        "classes": list(ordered_names),
+        "confidence": CONFIDENCE,
+        "image_size": IMAGE_SIZE,
+    }
 
 
 def detect_image(frame: Any) -> dict[str, Any]:

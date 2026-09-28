@@ -1,4 +1,4 @@
-"""Background serial integration for the EggSort Arduino controllers."""
+"""Background serial integration for the EggSort ESP32 controller."""
 
 from __future__ import annotations
 
@@ -7,7 +7,6 @@ import re
 from collections import deque
 from datetime import datetime, timezone
 from threading import Event, RLock, Thread
-from time import sleep
 from typing import Any, Callable
 from egg_standards import classify_egg_size, servo_command
 
@@ -15,12 +14,17 @@ from egg_standards import classify_egg_size, servo_command
 EventHandler = Callable[[dict[str, Any]], None]
 
 
-class ArduinoProtocolParser:
-    """Parse the existing human-readable load-cell sketch output."""
+class Esp32ProtocolParser:
+    """Parse the human-readable EggSort ESP32 serial protocol."""
 
     READING = re.compile(r"Reading\s+(\d+)\s*:\s*(-?\d+)\s*g", re.I)
     FINAL_WEIGHT = re.compile(r"FINAL WEIGHT\s*:\s*(-?\d+)\s*g", re.I)
     SIZE = re.compile(r"SIZE\s*:\s*([A-Z _]+)", re.I)
+    SORTED = re.compile(r"SERVO SORTED\s*:\s*([A-Z _]+)", re.I)
+    LIVE_WEIGHT = re.compile(r"LIVE WEIGHT\s*:\s*(-?\d+)\s*g", re.I)
+    HX711_READY = re.compile(r"HX711 READY\s*:\s*(YES|NO)", re.I)
+    PCA9685_READY = re.compile(r"PCA9685 READY\s*:\s*(YES|NO)", re.I)
+    CONTROLLER_STATE = re.compile(r"CONTROLLER STATE\s*:\s*(.+)", re.I)
 
     def __init__(self) -> None:
         self.final_weight: int | None = None
@@ -34,29 +38,45 @@ class ArduinoProtocolParser:
         lowered = clean.lower()
         if lowered == "egg sorting ready":
             return [{"type": "ready", "message": clean}]
+        hx711_ready = self.HX711_READY.fullmatch(clean)
+        if hx711_ready:
+            return [{
+                "type": "hx711_status",
+                "ready": hx711_ready.group(1).upper() == "YES",
+                "message": clean,
+            }]
+        pca9685_ready = self.PCA9685_READY.fullmatch(clean)
+        if pca9685_ready:
+            return [{
+                "type": "pca9685_status",
+                "ready": pca9685_ready.group(1).upper() == "YES",
+                "message": clean,
+            }]
+        live_weight = self.LIVE_WEIGHT.fullmatch(clean)
+        if live_weight:
+            return [{
+                "type": "load_cell_status",
+                "weight_grams": int(live_weight.group(1)),
+                "message": clean,
+            }]
+        controller_state = self.CONTROLLER_STATE.fullmatch(clean)
+        if controller_state:
+            return [{
+                "type": "controller_state",
+                "state": controller_state.group(1).strip(),
+                "message": clean,
+            }]
         if lowered == "egg detected":
             self.final_weight = None
             self.readings = []
             return [{"type": "egg_detected", "message": clean}]
         if lowered == "egg left":
-            events: list[dict[str, Any]] = []
-            # The current Arduino sketch only emits FINAL WEIGHT/SIZE for
-            # Small and Large. Persist other stable weights from its last
-            # three readings so Medium, Extra Large, and Jumbo are not lost.
-            if self.readings:
-                recent = self.readings[-3:]
-                weight = round(sum(recent) / len(recent))
-                events.append({
-                    "type": "egg_complete",
-                    "weight_grams": weight,
-                    "size": self._classify_size(weight),
-                    "readings": recent,
-                    "message": f"Calculated final weight: {weight} g",
-                })
+            # Removal is never treated as a completed measurement. Only the
+            # controller's explicit FINAL WEIGHT + SIZE pair may advance an
+            # egg to sorting and persistence.
             self.final_weight = None
             self.readings = []
-            events.append({"type": "egg_left", "message": clean})
-            return events
+            return [{"type": "egg_left", "message": clean}]
 
         reading = self.READING.fullmatch(clean)
         if reading:
@@ -91,8 +111,14 @@ class ArduinoProtocolParser:
             self.readings = []
             return [event]
 
-        if lowered in {"servo running...", "servo stopped"}:
-            return [{"type": "stopper_status", "message": clean}]
+        sorted_size = self.SORTED.fullmatch(clean)
+        if sorted_size:
+            return [{
+                "type": "sort_complete",
+                "size": sorted_size.group(1).strip().replace("_", " ").title(),
+                "message": clean,
+            }]
+
         return [{"type": "serial_message", "message": clean}]
 
     @staticmethod
@@ -100,8 +126,8 @@ class ArduinoProtocolParser:
         return classify_egg_size(weight_grams)
 
 
-class ArduinoBridge:
-    """Maintain a reconnecting serial reader without blocking Flask."""
+class Esp32Bridge:
+    """Maintain a reconnecting controller link without blocking Flask."""
 
     def __init__(self) -> None:
         self._lock = RLock()
@@ -115,7 +141,13 @@ class ArduinoBridge:
         self._port: str | None = None
         self._error: str | None = None
         self._last_command: str | None = None
-        self.baud_rate = int(os.environ.get("ARDUINO_BAUD_RATE", "9600"))
+        self._diagnostics: dict[str, Any] = {
+            "hx711_ready": None,
+            "pca9685_ready": None,
+            "live_weight_grams": None,
+            "controller_state": None,
+        }
+        self.baud_rate = int(os.environ.get("ESP32_BAUD_RATE", "115200"))
 
     def set_event_handler(self, handler: EventHandler) -> None:
         self._handler = handler
@@ -129,7 +161,7 @@ class ArduinoBridge:
             self._error = None
             self._thread = Thread(
                 target=self._read_loop,
-                name="eggsort-arduino-reader",
+                name="eggsort-esp32-reader",
                 daemon=True,
             )
             self._thread.start()
@@ -161,23 +193,16 @@ class ArduinoBridge:
                 "connected": self._connected,
                 "port": self._port,
                 "baud_rate": self.baud_rate,
+                "controller": "ESP32",
                 "error": self._error,
                 "last_command": self._last_command,
+                "diagnostics": dict(self._diagnostics),
                 "latest_event": self._events[-1] if self._events else None,
             }
 
     def sort_egg(self, size: str) -> str:
         command = servo_command(size)
-        with self._lock:
-            connection = self._serial
-            if not self._connected or connection is None:
-                raise RuntimeError(
-                    "The load-cell Arduino is not connected; servo command "
-                    "was not sent."
-                )
-            connection.write(f"{command}\n".encode("ascii"))
-            connection.flush()
-            self._last_command = command
+        self._send_command(command)
         self._publish({
             "type": "servo_command",
             "size": size,
@@ -185,56 +210,88 @@ class ArduinoBridge:
         })
         return command
 
-    def trigger_stopper(self) -> None:
-        stopper_port = os.environ.get("ARDUINO_STOPPER_PORT")
-        if not stopper_port:
-            raise RuntimeError(
-                "Set ARDUINO_STOPPER_PORT to the COM port running "
-                "stooper-servo-loadcell.ino."
-            )
-        try:
-            import serial
+    def measure_egg(self, quality: str) -> str:
+        quality_code = quality.upper().replace(" ", "_")
+        if quality_code not in {"CRACK", "GOOD", "ROTTEN", "UNDEFINED"}:
+            raise ValueError(f"Unsupported egg quality: {quality}")
+        command = f"MEASURE:{quality_code}"
+        self._send_command(command)
+        self._publish({
+            "type": "measurement_command",
+            "quality": quality,
+            "message": command,
+        })
+        return command
 
-            with serial.Serial(
-                stopper_port,
-                self.baud_rate,
-                timeout=1,
-                write_timeout=1,
-            ) as connection:
-                sleep(2)
-                connection.write(b"start\n")
+    def publish_status(self, message: str, event_type: str = "flow_status") -> None:
+        """Expose application-coordinator state in the hardware status feed."""
+        self._publish({"type": event_type, "message": message})
+
+    def _send_command(self, command: str) -> None:
+        with self._lock:
+            connection = self._serial
+            if not self._connected or connection is None:
+                raise RuntimeError(
+                    "The ESP32 controller is not connected; command "
+                    "was not sent."
+                )
+            try:
+                connection.write(f"{command}\n".encode("ascii"))
                 connection.flush()
-        except Exception as exc:
-            raise RuntimeError(
-                f"Unable to trigger stopper on {stopper_port}: {exc}"
-            ) from exc
+                self._last_command = command
+            except Exception as exc:
+                self._connected = False
+                self._error = str(exc)
+                try:
+                    connection.close()
+                except Exception:
+                    pass
+                raise RuntimeError(
+                    f"Unable to send {command} to the ESP32: {exc}"
+                ) from exc
+
+    def advance_gate(self) -> None:
+        self._send_command("ADVANCE")
+        self._publish({
+            "type": "gate_command",
+            "message": "ADVANCE",
+        })
 
     def _find_port(self) -> str:
-        configured = os.environ.get("ARDUINO_LOADCELL_PORT")
+        configured = os.environ.get("ESP32_PORT")
         if configured:
             return configured
 
         from serial.tools import list_ports
 
         ports = list(list_ports.comports())
-        candidates = [
-            port.device
-            for port in ports
-            if "arduino" in (
-                f"{port.description} {port.manufacturer or ''}"
+        controller_markers = (
+            "esp32",
+            "cp210",
+            "ch340",
+            "ch341",
+            "usb serial",
+            "silicon labs",
+        )
+        candidates = []
+        for port in ports:
+            description = (
+                f"{port.description} {port.manufacturer or ''} "
+                f"{port.hwid or ''}"
             ).lower()
-        ]
+            if any(marker in description for marker in controller_markers):
+                candidates.append(port.device)
         if not candidates and len(ports) == 1:
             candidates = [ports[0].device]
         if not candidates:
             raise RuntimeError(
-                "No Arduino load-cell controller found. Connect it or set "
-                "ARDUINO_LOADCELL_PORT (for example COM5)."
+                "No ESP32 controller found. Connect it by USB or set "
+                "ESP32_PORT (for example COM5)."
             )
         return candidates[0]
 
     def _read_loop(self) -> None:
-        parser = ArduinoProtocolParser()
+        parser = Esp32ProtocolParser()
         while not self._stop_event.is_set():
             try:
                 import serial
@@ -258,6 +315,9 @@ class ArduinoBridge:
                     line = raw.decode("utf-8", errors="replace").strip()
                     for event in parser.parse(line):
                         self._publish(event)
+                        if event.get("type") == "ready":
+                            connection.write(b"STATUS\n")
+                            connection.flush()
             except Exception as exc:
                 with self._lock:
                     self._connected = False
@@ -285,9 +345,20 @@ class ArduinoBridge:
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         with self._lock:
+            event_type = event.get("type")
+            if event_type == "hx711_status":
+                self._diagnostics["hx711_ready"] = event.get("ready")
+            elif event_type == "pca9685_status":
+                self._diagnostics["pca9685_ready"] = event.get("ready")
+            elif event_type == "load_cell_status":
+                self._diagnostics["live_weight_grams"] = event.get(
+                    "weight_grams"
+                )
+            elif event_type == "controller_state":
+                self._diagnostics["controller_state"] = event.get("state")
             self._events.append(event)
         if self._handler is not None:
             self._handler(event)
 
 
-ARDUINO_BRIDGE = ArduinoBridge()
+ESP32_BRIDGE = Esp32Bridge()
